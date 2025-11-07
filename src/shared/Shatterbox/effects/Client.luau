@@ -1,6 +1,7 @@
 --#selene: allow(unused_variable)
 --#selene: allow(multiple_statements)
 
+local TaggingService = require(script.Parent.Parent:WaitForChild("lib"):WaitForChild("TaggingService"))
 local Shatterbox
 local Types = require(script.Parent.Parent:WaitForChild("Types"))
 
@@ -49,32 +50,41 @@ ClientEffects.Default = function(voxel) voxel:Destroy() end
 
 
 -- An example effect that leaves rough destructible edges around the destruction that are cleaned on smooth cleanup
-ClientEffects.Rough = function(voxel, dirtyParent, cuttingPart, isEdge)
+ClientEffects.Rough = function(voxel, dirtyParent, cuttingPart, isEdge, isAlreadyDebris)
 
-    if voxel:HasTag("StaticDebris") then
+    if isAlreadyDebris and voxel:HasTag("StaticDebris") then -- the voxel is already StaticDebris
+
         voxel.Parent = dirtyParent -- makes the debris destructible again
+
         if Shatterbox.PartEncapsulatesBlockPart(cuttingPart, voxel) then voxel:Destroy() end -- fully contained debris is destroyed
+
         return
     end
 
+
     local roll = math.random()
 
-    if isEdge and roll < 0.8 then
+    if isEdge and roll < 0.8 then -- the voxel should become StaticDebris
+
         voxel.CFrame *= CFrame.Angles(math.random() * 2 * math.pi, math.random() * 2 * math.pi, math.random() * 2 * math.pi)
         voxel.Size *= math.random() + 1
+
         voxel.Parent = dirtyParent -- makes the debris destructible again
+
         voxel:AddTag("StaticDebris")
         return
     end
 
-    if roll > 0.05 then voxel:Destroy() return end
+    if roll > 0.05 then voxel:Destroy() return end -- a small percentage of voxels are destroyed
+
+    -- all other voxels are flying debris
 
     voxel.Anchored = false
     voxel.CanCollide = false
     voxel.AssemblyLinearVelocity = (Vector3.new(math.random(), math.random(), math.random()) - Vector3.one * 0.5) * 80
     voxel.AssemblyAngularVelocity = (Vector3.new(math.random(), math.random(), math.random()) - Vector3.one * 0.5) * 20
 
-    -- remember to destroy the part
+    -- remember to destroy the voxel
     game.Debris:AddItem(voxel, 3)
 end
 

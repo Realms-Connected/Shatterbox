@@ -8,10 +8,6 @@ HowToUse Table of contents:
 
 2. Destruction function parameters explained
 
-
-3. Settings explained
-
-
 ]]
 
 
@@ -108,52 +104,4 @@ HowToUse Table of contents:
 		OnVoxelDestruct = "Fall",
 		DestructParameters = {}
 	})
-]]
-
-
-
-
---[[(3)  Settings Explained:
-
-UseSmoothCleanup:
-|	If false, the CleanupDelay will be ignored and no smooth cleanups will happen at all.
-
-UseDynamicReset: (7.6 WIP, setting is force-disabled)
-|	If true, Shatterbox.Reset() will be called when there are no destructions on the map. (turning the hierarchy back to normal)
-
-DynamicResetDelay: (7.6 WIP, setting is force-disabled)
-|	How long Shatterbox will wait after there are no destructions to call Shatterbox.Reset()
-
-MaxDivisionsPerFrame:
-|	The target number of part divisions per frame. (1 division = up to 8 new parts)
-
-DefaultSmoothCleanupDelay:
-|	The default amount of time it takes for smooth restoration to happen if no value is provided.
-|	Currently, smooth cleanup is a forced feature.
-
-DefaultGridSize:
-|	The default grid size to use when none is passed and the part doesn't have a GridSize attribute.
-
-UsePriorityQueue:
-|	If true, will process newly added divisions before continuing to process old ones.
-
-PrioritizeRecentN:
-|	Priority queue will prioritize the most recent N operations using round-robin processing.
-
-PuppetReplicationFrequency:
-|	The default of 20 means every 1/20 seconds a replication of puppet debris happens.
-
-ClientTweenPuppets:
-|	Does nothing on server-side. Whether or not to tween in between the replication of puppet CFrames.
-
-PuppetReplicationFrameLimit:
-|	How many puppets are batched per frame for replication to all clients.
-
-PuppetSleepVelocity:
-|	If a server puppet is moving slower than this magnitude, its CFrame does not get replicated to clients.
-
-SkipInstanceCheck:
-|	A function for you to specify behavior for instances that are trying to be considered for destruction.
-|	should return true if it was skipped and return false if it was not.
-
 ]]

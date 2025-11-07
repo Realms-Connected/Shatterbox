@@ -1,6 +1,7 @@
 --#selene: allow(unused_variable)
 --#selene: allow(multiple_statements)
 
+local TaggingService = require(script.Parent.Parent.lib.TaggingService)
 local Shatterbox
 local Types = require(script.Parent.Parent:WaitForChild("Types"))
 
@@ -42,7 +43,7 @@ ServerEffects.Default = function(voxel) voxel:Destroy() end
 -- Debris is tweened by clients, having the CFrames replicateed from the server.
 -- Only non-floors turn into debris (a floor has a vertical normal when casting toward it from the cuttingPart).
 -- Floors have a separate effect that makes them appear "broken".
-ServerEffects.BumpyFloorBreakWalls = function(voxel, dirtyParent, cuttingPart, isEdge, normal)
+ServerEffects.BumpyFloorBreakWalls = function(voxel, dirtyParent, cuttingPart, isEdge, isAlreadyDebris, normal)
 
     -- retrieves a clone of the untouched original part, to check if the voxel should be considered a floor
     local castTo = Shatterbox.GetOriginalPart(dirtyParent)
@@ -57,8 +58,13 @@ ServerEffects.BumpyFloorBreakWalls = function(voxel, dirtyParent, cuttingPart, i
 
     castTo.Parent = nil -- the return value of GetOriginalPart is cached and automatically deleted after 5 seconds
 
-    -- if the normal is facing up, it is a floor
-    if hitResult and hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then
+    if isAlreadyDebris then
+
+        voxel.AssemblyLinearVelocity = -hitResult.Normal * (math.random() * 25 + 50)
+
+        voxel.Parent = dirtyParent
+
+    elseif hitResult and hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then -- if the normal is facing up, it is a floor
 
         local randomYoffset = math.random() - 0.5
 
@@ -67,6 +73,7 @@ ServerEffects.BumpyFloorBreakWalls = function(voxel, dirtyParent, cuttingPart, i
         dirtyParent.Destroying:Once(function() -- the server-side dirtyParent does not replicate to clients, so we can't just parent the voxel (it wouldn't replicate)
             voxel:Destroy()
         end)
+
     else
         voxel.Anchored = false
 

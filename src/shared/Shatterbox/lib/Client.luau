@@ -168,14 +168,17 @@ Events.Reliable[7] = {}
 Queue.Reliable[7] = table.create(256)
 Events.Reliable[8] = {}
 Queue.Reliable[8] = table.create(256)
+Events.Reliable[10] = {}
+Queue.Reliable[10] = table.create(256)
 export type Shatterbox_AttributesMap = {[string]: any}
-export type Shatterbox_PartProperties = { Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_Texture = { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number }
+export type Shatterbox_PartProperties = { Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } }
 export type Shatterbox_Box = { CFrame: CFrame, Size: Vector3 }
 export type Shatterbox_Hitbox = { CFrame: CFrame, Size: Vector3, Shape: number }
-export type Shatterbox_PartInstance = { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_Dirtied = { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_OpDirty = { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } }
+export type Shatterbox_PartInstance = { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_Dirtied = { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_OpDirty = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } }
 export type Shatterbox_ImaginaryDestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }
 export type Shatterbox_DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }
 export type Shatterbox_PuppetState = { GUID: string, CFrame: CFrame }
@@ -195,7 +198,7 @@ local function Shatterbox_ReadEVENT_SignalReset(): (nil)
 	return nil
 end
 
-local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } })
+local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } })
 	-- Read BLOCK: 2 bytes
 	local BLOCK_START = Read(2)
 	-- START ARRAY
@@ -203,8 +206,8 @@ local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { GUID: string, CFrame: 
 	if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 	if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 	local Value = table.create(Length)
-		-- Read BLOCK: 53 bytes
-	local ARRAY_START_1 = Read(53 * Length)
+		-- Read BLOCK: 52 bytes
+	local ARRAY_START_1 = Read(52 * Length)
 	for Index = 1, Length do
 		local Item_1 = {} :: any
 		-- Read 2
@@ -261,38 +264,46 @@ local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { GUID: string, CFrame: 
 		local OPERATION_OFFSET_12 = ARRAY_START_1
 		ARRAY_START_1 += 1
 		Item_1.Color = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_11), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_12))
-		-- Read 2
+		-- Read 1
 		local OPERATION_OFFSET_13 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		Item_1.Material = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_13)
-		if Item_1.Material < 256 then error(`Expected "Item_1.Material" to be larger than 256, got {Item_1.Material} instead.`) end
-		if Item_1.Material > 2311 then error(`Expected "Item_1.Material" to be smaller than 2311, got {Item_1.Material} instead.`) end
-		-- Read 2
+		ARRAY_START_1 += 1
+		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_13) == 1 then
+			-- Read BLOCK: 2 bytes
+			local BLOCK_START = Read(2)
+			Item_1.Material = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			if Item_1.Material < 256 then error(`Expected "Item_1.Material" to be larger than 256, got {Item_1.Material} instead.`) end
+			if Item_1.Material > 2311 then error(`Expected "Item_1.Material" to be smaller than 2311, got {Item_1.Material} instead.`) end
+		end
+		-- Read 1
 		local OPERATION_OFFSET_14 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		local Encoded = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_14)
-		local MantissaExponent = Encoded % 0x8000
-		if MantissaExponent == 0b0_11111_0000000000  then
-			if Encoded // 0x8000 == 1 then
-				Item_1.Transparency = -math.huge
+		ARRAY_START_1 += 1
+		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_14) == 1 then
+			-- Read BLOCK: 2 bytes
+			local BLOCK_START = Read(2)
+			local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local MantissaExponent = Encoded % 0x8000
+			if MantissaExponent == 0b0_11111_0000000000  then
+				if Encoded // 0x8000 == 1 then
+					Item_1.Transparency = -math.huge
+				else
+					Item_1.Transparency = math.huge
+				end
+			elseif MantissaExponent == 0b1_11111_0000000000   then
+				Item_1.Transparency = 0 / 0
+			elseif MantissaExponent == 0b0_00000_0000000000   then
+				Item_1.Transparency = 0
 			else
-				Item_1.Transparency = math.huge
+				local Mantissa = MantissaExponent % 0x400
+				local Exponent = MantissaExponent // 0x400
+				local Fraction;
+				if Exponent == 0 then
+					Fraction = Mantissa / 0x400
+				else
+					Fraction = Mantissa / 0x800 + 0.5
+				end
+				local Result = math.ldexp(Fraction, Exponent - 14)
+				Item_1.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 			end
-		elseif MantissaExponent == 0b1_11111_0000000000   then
-			Item_1.Transparency = 0 / 0
-		elseif MantissaExponent == 0b0_00000_0000000000   then
-			Item_1.Transparency = 0
-		else
-			local Mantissa = MantissaExponent % 0x400
-			local Exponent = MantissaExponent // 0x400
-			local Fraction;
-			if Exponent == 0 then
-				Fraction = Mantissa / 0x400
-			else
-				Fraction = Mantissa / 0x800 + 0.5
-			end
-			local Result = math.ldexp(Fraction, Exponent - 14)
-			Item_1.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 		end
 		-- Read 1
 		local OPERATION_OFFSET_15 = ARRAY_START_1
@@ -300,7 +311,7 @@ local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { GUID: string, CFrame: 
 		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_15) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
-			Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			local MantissaExponent = Encoded % 0x8000
 			if MantissaExponent == 0b0_11111_0000000000  then
 				if Encoded // 0x8000 == 1 then
@@ -334,16 +345,84 @@ local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { GUID: string, CFrame: 
 			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			Item_1.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
 		end
-		-- Read 2
+		-- Read 1
 		local OPERATION_OFFSET_17 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_17)
-		Item_1.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
-		Item_1.Attributes = {}
+		ARRAY_START_1 += 1
+		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_17) == 1 then
+			-- Read BLOCK: 2 bytes
+			local BLOCK_START = Read(2)
+			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			Item_1.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		end
+		-- START ARRAY
 		-- Read 2
 		local OPERATION_OFFSET_18 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		local Elements_2 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
+		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
+		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
+		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
+		Item_1.Textures = table.create(Length)
+			-- Read BLOCK: 29 bytes
+		local ARRAY_START_2 = Read(29 * Length)
+		for Index = 1, Length do
+			local Item_2 = {} :: any
+			-- Read 1
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			-- Read 1
+			local OPERATION_OFFSET_1 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			-- Read 1
+			local OPERATION_OFFSET_2 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			Item_2.Color3 = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_0), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_1), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_2))
+			-- Read 4
+			local OPERATION_OFFSET_3 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.OffsetStudsU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
+			-- Read 4
+			local OPERATION_OFFSET_4 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.OffsetStudsV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
+			-- Read 4
+			local OPERATION_OFFSET_5 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.StudsPerTileU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
+			-- Read 4
+			local OPERATION_OFFSET_6 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.StudsPerTileV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_6)
+			-- Read 1
+			local OPERATION_OFFSET_7 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_7) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				Item_2.Texture = buffer.readstring(RecieveBuffer, Read(Length), Length)
+			end
+			-- Read 4
+			local OPERATION_OFFSET_8 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.Transparency = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_8)
+			-- Read 4
+			local OPERATION_OFFSET_9 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.ZIndex = buffer.readu32(RecieveBuffer, OPERATION_OFFSET_9)
+			-- Read 1
+			local OPERATION_OFFSET_10 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			Item_2.Face = buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10)
+			if Item_2.Face < 0 then error(`Expected "Item_2.Face" to be larger than 0, got {Item_2.Face} instead.`) end
+			if Item_2.Face > 5 then error(`Expected "Item_2.Face" to be smaller than 5, got {Item_2.Face} instead.`) end
+			table.insert(Item_1.Textures, Item_2)
+		end
+		-- END ARRAY
+		Item_1.Attributes = {}
+		-- Read 2
+		local OPERATION_OFFSET_19 = ARRAY_START_1
+		ARRAY_START_1 += 2
+		local Elements_2 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_19)
 		for _ = 1, Elements_2 do
 			local OFFSET_0 = Read(2)
 			Length = buffer.readu16(RecieveBuffer, OFFSET_0)
@@ -354,9 +433,9 @@ local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { GUID: string, CFrame: 
 		end
 		-- START ARRAY
 		-- Read 2
-		local OPERATION_OFFSET_19 = ARRAY_START_1
+		local OPERATION_OFFSET_20 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_19)
+		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_20)
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 		Item_1.Tags = table.create(Length)
@@ -434,7 +513,7 @@ local function Shatterbox_ReadEVENT_DestroyPuppet(): (string)
 	return Value
 end
 
-local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } })
+local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } } }, { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } })
 	-- Read BLOCK: 4 bytes
 	local BLOCK_START = Read(4)
 	-- START ARRAY
@@ -442,8 +521,8 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 	if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 	if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 	local Value1 = table.create(Length)
-		-- Read BLOCK: 4 bytes
-	local ARRAY_START_1 = Read(4 * Length)
+		-- Read BLOCK: 41 bytes
+	local ARRAY_START_1 = Read(41 * Length)
 	for Index = 1, Length do
 		local Item_1 = {} :: any
 		-- Read 2
@@ -451,44 +530,90 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 		ARRAY_START_1 += 2
 		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_0)
 		Item_1.ID = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		Item_1.CuttingPart = {} :: any
+		-- Read 4
+		local OPERATION_OFFSET_1 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		local X = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_1)
+		-- Read 4
+		local OPERATION_OFFSET_2 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		local Y = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_2)
+		-- Read 4
+		local OPERATION_OFFSET_3 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		local Z = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
+		local Position = Vector3.new(X, Y, Z)
+		-- Read 4
+		local OPERATION_OFFSET_4 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		local rX = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
+		-- Read 4
+		local OPERATION_OFFSET_5 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		local rY = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
+		-- Read 4
+		local OPERATION_OFFSET_6 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		local rZ = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_6)
+		Item_1.CuttingPart.CFrame = CFrame.new(Position) * CFrame.fromOrientation(rX, rY, rZ)
+		-- Read 4
+		local OPERATION_OFFSET_7 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		X = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_7)
+		-- Read 4
+		local OPERATION_OFFSET_8 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		Y = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_8)
+		-- Read 4
+		local OPERATION_OFFSET_9 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		Z = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_9)
+		Item_1.CuttingPart.Size = Vector3.new(X, Y, Z)
+		-- Read 1
+		local OPERATION_OFFSET_10 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		Item_1.CuttingPart.Shape = buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10)
+		if Item_1.CuttingPart.Shape < 0 then error(`Expected "Item_1.CuttingPart.Shape" to be larger than 0, got {Item_1.CuttingPart.Shape} instead.`) end
+		if Item_1.CuttingPart.Shape > 4 then error(`Expected "Item_1.CuttingPart.Shape" to be smaller than 4, got {Item_1.CuttingPart.Shape} instead.`) end
 		-- START ARRAY
 		-- Read 2
-		local OPERATION_OFFSET_1 = ARRAY_START_1
+		local OPERATION_OFFSET_11 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_1)
+		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_11)
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 		Item_1.Dirties = table.create(Length)
-			-- Read BLOCK: 53 bytes
-		local ARRAY_START_2 = Read(53 * Length)
+			-- Read BLOCK: 52 bytes
+		local ARRAY_START_2 = Read(52 * Length)
 		for Index = 1, Length do
 			local Item_2 = {} :: any
 			Item_2.OriginalPart = {} :: any
 			-- Read 4
 			local OPERATION_OFFSET_0 = ARRAY_START_2
 			ARRAY_START_2 += 4
-			local X = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_0)
+			X = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_0)
 			-- Read 4
 			local OPERATION_OFFSET_1 = ARRAY_START_2
 			ARRAY_START_2 += 4
-			local Y = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_1)
+			Y = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_1)
 			-- Read 4
 			local OPERATION_OFFSET_2 = ARRAY_START_2
 			ARRAY_START_2 += 4
-			local Z = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_2)
-			local Position = Vector3.new(X, Y, Z)
+			Z = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_2)
+			Position = Vector3.new(X, Y, Z)
 			-- Read 4
 			local OPERATION_OFFSET_3 = ARRAY_START_2
 			ARRAY_START_2 += 4
-			local rX = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
+			rX = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
 			-- Read 4
 			local OPERATION_OFFSET_4 = ARRAY_START_2
 			ARRAY_START_2 += 4
-			local rY = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
+			rY = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
 			-- Read 4
 			local OPERATION_OFFSET_5 = ARRAY_START_2
 			ARRAY_START_2 += 4
-			local rZ = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
+			rZ = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
 			Item_2.OriginalPart.CFrame = CFrame.new(Position) * CFrame.fromOrientation(rX, rY, rZ)
 			-- Read 4
 			local OPERATION_OFFSET_6 = ARRAY_START_2
@@ -567,38 +692,46 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 			local OPERATION_OFFSET_12 = ARRAY_START_2
 			ARRAY_START_2 += 1
 			Item_2.Color = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_11), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_12))
-			-- Read 2
+			-- Read 1
 			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			Item_2.Material = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_13)
-			if Item_2.Material < 256 then error(`Expected "Item_2.Material" to be larger than 256, got {Item_2.Material} instead.`) end
-			if Item_2.Material > 2311 then error(`Expected "Item_2.Material" to be smaller than 2311, got {Item_2.Material} instead.`) end
-			-- Read 2
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_13) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				Item_2.Material = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				if Item_2.Material < 256 then error(`Expected "Item_2.Material" to be larger than 256, got {Item_2.Material} instead.`) end
+				if Item_2.Material > 2311 then error(`Expected "Item_2.Material" to be smaller than 2311, got {Item_2.Material} instead.`) end
+			end
+			-- Read 1
 			local OPERATION_OFFSET_14 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			local Encoded = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_14)
-			local MantissaExponent = Encoded % 0x8000
-			if MantissaExponent == 0b0_11111_0000000000  then
-				if Encoded // 0x8000 == 1 then
-					Item_2.Transparency = -math.huge
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_14) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				local MantissaExponent = Encoded % 0x8000
+				if MantissaExponent == 0b0_11111_0000000000  then
+					if Encoded // 0x8000 == 1 then
+						Item_2.Transparency = -math.huge
+					else
+						Item_2.Transparency = math.huge
+					end
+				elseif MantissaExponent == 0b1_11111_0000000000   then
+					Item_2.Transparency = 0 / 0
+				elseif MantissaExponent == 0b0_00000_0000000000   then
+					Item_2.Transparency = 0
 				else
-					Item_2.Transparency = math.huge
+					local Mantissa = MantissaExponent % 0x400
+					local Exponent = MantissaExponent // 0x400
+					local Fraction;
+					if Exponent == 0 then
+						Fraction = Mantissa / 0x400
+					else
+						Fraction = Mantissa / 0x800 + 0.5
+					end
+					local Result = math.ldexp(Fraction, Exponent - 14)
+					Item_2.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 				end
-			elseif MantissaExponent == 0b1_11111_0000000000   then
-				Item_2.Transparency = 0 / 0
-			elseif MantissaExponent == 0b0_00000_0000000000   then
-				Item_2.Transparency = 0
-			else
-				local Mantissa = MantissaExponent % 0x400
-				local Exponent = MantissaExponent // 0x400
-				local Fraction;
-				if Exponent == 0 then
-					Fraction = Mantissa / 0x400
-				else
-					Fraction = Mantissa / 0x800 + 0.5
-				end
-				local Result = math.ldexp(Fraction, Exponent - 14)
-				Item_2.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 			end
 			-- Read 1
 			local OPERATION_OFFSET_15 = ARRAY_START_2
@@ -606,7 +739,7 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_15) == 1 then
 				-- Read BLOCK: 2 bytes
 				local BLOCK_START = Read(2)
-				Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 				local MantissaExponent = Encoded % 0x8000
 				if MantissaExponent == 0b0_11111_0000000000  then
 					if Encoded // 0x8000 == 1 then
@@ -640,16 +773,84 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 				Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 				Item_2.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
 			end
-			-- Read 2
+			-- Read 1
 			local OPERATION_OFFSET_17 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_17)
-			Item_2.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
-			Item_2.Attributes = {}
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_17) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				Item_2.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
+			end
+			-- START ARRAY
 			-- Read 2
 			local OPERATION_OFFSET_18 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			local Elements_3 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
+			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
+			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
+			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
+			Item_2.Textures = table.create(Length)
+				-- Read BLOCK: 29 bytes
+			local ARRAY_START_3 = Read(29 * Length)
+			for Index = 1, Length do
+				local Item_3 = {} :: any
+				-- Read 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				-- Read 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				-- Read 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				Item_3.Color3 = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_0), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_1), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_2))
+				-- Read 4
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.OffsetStudsU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
+				-- Read 4
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.OffsetStudsV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
+				-- Read 4
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.StudsPerTileU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
+				-- Read 4
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.StudsPerTileV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_6)
+				-- Read 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_7) == 1 then
+					-- Read BLOCK: 2 bytes
+					local BLOCK_START = Read(2)
+					Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+					Item_3.Texture = buffer.readstring(RecieveBuffer, Read(Length), Length)
+				end
+				-- Read 4
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.Transparency = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_8)
+				-- Read 4
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.ZIndex = buffer.readu32(RecieveBuffer, OPERATION_OFFSET_9)
+				-- Read 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				Item_3.Face = buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10)
+				if Item_3.Face < 0 then error(`Expected "Item_3.Face" to be larger than 0, got {Item_3.Face} instead.`) end
+				if Item_3.Face > 5 then error(`Expected "Item_3.Face" to be smaller than 5, got {Item_3.Face} instead.`) end
+				table.insert(Item_2.Textures, Item_3)
+			end
+			-- END ARRAY
+			Item_2.Attributes = {}
+			-- Read 2
+			local OPERATION_OFFSET_19 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			local Elements_3 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_19)
 			for _ = 1, Elements_3 do
 				local OFFSET_0 = Read(2)
 				Length = buffer.readu16(RecieveBuffer, OFFSET_0)
@@ -660,9 +861,9 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 			end
 			-- START ARRAY
 			-- Read 2
-			local OPERATION_OFFSET_19 = ARRAY_START_2
+			local OPERATION_OFFSET_20 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_19)
+			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_20)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Item_2.Tags = table.create(Length)
@@ -688,8 +889,8 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 	if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 	if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 	local Value2 = table.create(Length)
-		-- Read BLOCK: 51 bytes
-	local ARRAY_START_1 = Read(51 * Length)
+		-- Read BLOCK: 50 bytes
+	local ARRAY_START_1 = Read(50 * Length)
 	for Index = 1, Length do
 		local Item_1 = {} :: any
 		-- Read 4
@@ -741,38 +942,46 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 		local OPERATION_OFFSET_11 = ARRAY_START_1
 		ARRAY_START_1 += 1
 		Item_1.Color = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_9), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_11))
-		-- Read 2
+		-- Read 1
 		local OPERATION_OFFSET_12 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		Item_1.Material = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_12)
-		if Item_1.Material < 256 then error(`Expected "Item_1.Material" to be larger than 256, got {Item_1.Material} instead.`) end
-		if Item_1.Material > 2311 then error(`Expected "Item_1.Material" to be smaller than 2311, got {Item_1.Material} instead.`) end
-		-- Read 2
+		ARRAY_START_1 += 1
+		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_12) == 1 then
+			-- Read BLOCK: 2 bytes
+			local BLOCK_START = Read(2)
+			Item_1.Material = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			if Item_1.Material < 256 then error(`Expected "Item_1.Material" to be larger than 256, got {Item_1.Material} instead.`) end
+			if Item_1.Material > 2311 then error(`Expected "Item_1.Material" to be smaller than 2311, got {Item_1.Material} instead.`) end
+		end
+		-- Read 1
 		local OPERATION_OFFSET_13 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		local Encoded = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_13)
-		local MantissaExponent = Encoded % 0x8000
-		if MantissaExponent == 0b0_11111_0000000000  then
-			if Encoded // 0x8000 == 1 then
-				Item_1.Transparency = -math.huge
+		ARRAY_START_1 += 1
+		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_13) == 1 then
+			-- Read BLOCK: 2 bytes
+			local BLOCK_START = Read(2)
+			local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local MantissaExponent = Encoded % 0x8000
+			if MantissaExponent == 0b0_11111_0000000000  then
+				if Encoded // 0x8000 == 1 then
+					Item_1.Transparency = -math.huge
+				else
+					Item_1.Transparency = math.huge
+				end
+			elseif MantissaExponent == 0b1_11111_0000000000   then
+				Item_1.Transparency = 0 / 0
+			elseif MantissaExponent == 0b0_00000_0000000000   then
+				Item_1.Transparency = 0
 			else
-				Item_1.Transparency = math.huge
+				local Mantissa = MantissaExponent % 0x400
+				local Exponent = MantissaExponent // 0x400
+				local Fraction;
+				if Exponent == 0 then
+					Fraction = Mantissa / 0x400
+				else
+					Fraction = Mantissa / 0x800 + 0.5
+				end
+				local Result = math.ldexp(Fraction, Exponent - 14)
+				Item_1.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 			end
-		elseif MantissaExponent == 0b1_11111_0000000000   then
-			Item_1.Transparency = 0 / 0
-		elseif MantissaExponent == 0b0_00000_0000000000   then
-			Item_1.Transparency = 0
-		else
-			local Mantissa = MantissaExponent % 0x400
-			local Exponent = MantissaExponent // 0x400
-			local Fraction;
-			if Exponent == 0 then
-				Fraction = Mantissa / 0x400
-			else
-				Fraction = Mantissa / 0x800 + 0.5
-			end
-			local Result = math.ldexp(Fraction, Exponent - 14)
-			Item_1.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 		end
 		-- Read 1
 		local OPERATION_OFFSET_14 = ARRAY_START_1
@@ -780,7 +989,7 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_14) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
-			Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			local MantissaExponent = Encoded % 0x8000
 			if MantissaExponent == 0b0_11111_0000000000  then
 				if Encoded // 0x8000 == 1 then
@@ -814,16 +1023,84 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			Item_1.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
 		end
-		-- Read 2
+		-- Read 1
 		local OPERATION_OFFSET_16 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_16)
-		Item_1.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
-		Item_1.Attributes = {}
+		ARRAY_START_1 += 1
+		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_16) == 1 then
+			-- Read BLOCK: 2 bytes
+			local BLOCK_START = Read(2)
+			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			Item_1.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		end
+		-- START ARRAY
 		-- Read 2
 		local OPERATION_OFFSET_17 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		local Elements_2 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_17)
+		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_17)
+		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
+		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
+		Item_1.Textures = table.create(Length)
+			-- Read BLOCK: 29 bytes
+		local ARRAY_START_2 = Read(29 * Length)
+		for Index = 1, Length do
+			local Item_2 = {} :: any
+			-- Read 1
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			-- Read 1
+			local OPERATION_OFFSET_1 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			-- Read 1
+			local OPERATION_OFFSET_2 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			Item_2.Color3 = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_0), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_1), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_2))
+			-- Read 4
+			local OPERATION_OFFSET_3 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.OffsetStudsU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
+			-- Read 4
+			local OPERATION_OFFSET_4 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.OffsetStudsV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
+			-- Read 4
+			local OPERATION_OFFSET_5 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.StudsPerTileU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
+			-- Read 4
+			local OPERATION_OFFSET_6 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.StudsPerTileV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_6)
+			-- Read 1
+			local OPERATION_OFFSET_7 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_7) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				Item_2.Texture = buffer.readstring(RecieveBuffer, Read(Length), Length)
+			end
+			-- Read 4
+			local OPERATION_OFFSET_8 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.Transparency = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_8)
+			-- Read 4
+			local OPERATION_OFFSET_9 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			Item_2.ZIndex = buffer.readu32(RecieveBuffer, OPERATION_OFFSET_9)
+			-- Read 1
+			local OPERATION_OFFSET_10 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			Item_2.Face = buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10)
+			if Item_2.Face < 0 then error(`Expected "Item_2.Face" to be larger than 0, got {Item_2.Face} instead.`) end
+			if Item_2.Face > 5 then error(`Expected "Item_2.Face" to be smaller than 5, got {Item_2.Face} instead.`) end
+			table.insert(Item_1.Textures, Item_2)
+		end
+		-- END ARRAY
+		Item_1.Attributes = {}
+		-- Read 2
+		local OPERATION_OFFSET_18 = ARRAY_START_1
+		ARRAY_START_1 += 2
+		local Elements_2 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
 		for _ = 1, Elements_2 do
 			local OFFSET_0 = Read(2)
 			Length = buffer.readu16(RecieveBuffer, OFFSET_0)
@@ -834,9 +1111,9 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 		end
 		-- START ARRAY
 		-- Read 2
-		local OPERATION_OFFSET_18 = ARRAY_START_1
+		local OPERATION_OFFSET_19 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
+		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_19)
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 		Item_1.Tags = table.create(Length)
@@ -857,7 +1134,7 @@ local function Shatterbox_ReadEVENT_ReplicateMap(): ({ { ID: string, Dirties: { 
 	return Value1, Value2
 end
 
-local function Shatterbox_ReadEVENT_ReplicateDestruction(): ({ ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?)
+local function Shatterbox_ReadEVENT_ReplicateDestruction(): ({ ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?)
 	-- Read BLOCK: 47 bytes
 	local BLOCK_START = Read(47)
 	local Value1 = {} :: any
@@ -940,8 +1217,8 @@ local function Shatterbox_ReadEVENT_ReplicateDestruction(): ({ ID: string, Cutti
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 		Value2 = table.create(Length)
-			-- Read BLOCK: 51 bytes
-		local ARRAY_START_2 = Read(51 * Length)
+			-- Read BLOCK: 50 bytes
+		local ARRAY_START_2 = Read(50 * Length)
 		for Index = 1, Length do
 			local Item_2 = {} :: any
 			-- Read 4
@@ -993,38 +1270,46 @@ local function Shatterbox_ReadEVENT_ReplicateDestruction(): ({ ID: string, Cutti
 			local OPERATION_OFFSET_11 = ARRAY_START_2
 			ARRAY_START_2 += 1
 			Item_2.Color = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_9), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_11))
-			-- Read 2
+			-- Read 1
 			local OPERATION_OFFSET_12 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			Item_2.Material = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_12)
-			if Item_2.Material < 256 then error(`Expected "Item_2.Material" to be larger than 256, got {Item_2.Material} instead.`) end
-			if Item_2.Material > 2311 then error(`Expected "Item_2.Material" to be smaller than 2311, got {Item_2.Material} instead.`) end
-			-- Read 2
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_12) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				Item_2.Material = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				if Item_2.Material < 256 then error(`Expected "Item_2.Material" to be larger than 256, got {Item_2.Material} instead.`) end
+				if Item_2.Material > 2311 then error(`Expected "Item_2.Material" to be smaller than 2311, got {Item_2.Material} instead.`) end
+			end
+			-- Read 1
 			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			local Encoded = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_13)
-			local MantissaExponent = Encoded % 0x8000
-			if MantissaExponent == 0b0_11111_0000000000  then
-				if Encoded // 0x8000 == 1 then
-					Item_2.Transparency = -math.huge
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_13) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				local MantissaExponent = Encoded % 0x8000
+				if MantissaExponent == 0b0_11111_0000000000  then
+					if Encoded // 0x8000 == 1 then
+						Item_2.Transparency = -math.huge
+					else
+						Item_2.Transparency = math.huge
+					end
+				elseif MantissaExponent == 0b1_11111_0000000000   then
+					Item_2.Transparency = 0 / 0
+				elseif MantissaExponent == 0b0_00000_0000000000   then
+					Item_2.Transparency = 0
 				else
-					Item_2.Transparency = math.huge
+					local Mantissa = MantissaExponent % 0x400
+					local Exponent = MantissaExponent // 0x400
+					local Fraction;
+					if Exponent == 0 then
+						Fraction = Mantissa / 0x400
+					else
+						Fraction = Mantissa / 0x800 + 0.5
+					end
+					local Result = math.ldexp(Fraction, Exponent - 14)
+					Item_2.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 				end
-			elseif MantissaExponent == 0b1_11111_0000000000   then
-				Item_2.Transparency = 0 / 0
-			elseif MantissaExponent == 0b0_00000_0000000000   then
-				Item_2.Transparency = 0
-			else
-				local Mantissa = MantissaExponent % 0x400
-				local Exponent = MantissaExponent // 0x400
-				local Fraction;
-				if Exponent == 0 then
-					Fraction = Mantissa / 0x400
-				else
-					Fraction = Mantissa / 0x800 + 0.5
-				end
-				local Result = math.ldexp(Fraction, Exponent - 14)
-				Item_2.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 			end
 			-- Read 1
 			local OPERATION_OFFSET_14 = ARRAY_START_2
@@ -1032,7 +1317,7 @@ local function Shatterbox_ReadEVENT_ReplicateDestruction(): ({ ID: string, Cutti
 			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_14) == 1 then
 				-- Read BLOCK: 2 bytes
 				local BLOCK_START = Read(2)
-				Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 				local MantissaExponent = Encoded % 0x8000
 				if MantissaExponent == 0b0_11111_0000000000  then
 					if Encoded // 0x8000 == 1 then
@@ -1066,16 +1351,84 @@ local function Shatterbox_ReadEVENT_ReplicateDestruction(): ({ ID: string, Cutti
 				Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 				Item_2.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
 			end
-			-- Read 2
+			-- Read 1
 			local OPERATION_OFFSET_16 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_16)
-			Item_2.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
-			Item_2.Attributes = {}
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_16) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				Item_2.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
+			end
+			-- START ARRAY
 			-- Read 2
 			local OPERATION_OFFSET_17 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			local Elements_3 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_17)
+			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_17)
+			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
+			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
+			Item_2.Textures = table.create(Length)
+				-- Read BLOCK: 29 bytes
+			local ARRAY_START_3 = Read(29 * Length)
+			for Index = 1, Length do
+				local Item_3 = {} :: any
+				-- Read 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				-- Read 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				-- Read 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				Item_3.Color3 = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_0), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_1), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_2))
+				-- Read 4
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.OffsetStudsU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
+				-- Read 4
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.OffsetStudsV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
+				-- Read 4
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.StudsPerTileU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
+				-- Read 4
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.StudsPerTileV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_6)
+				-- Read 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_7) == 1 then
+					-- Read BLOCK: 2 bytes
+					local BLOCK_START = Read(2)
+					Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+					Item_3.Texture = buffer.readstring(RecieveBuffer, Read(Length), Length)
+				end
+				-- Read 4
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.Transparency = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_8)
+				-- Read 4
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.ZIndex = buffer.readu32(RecieveBuffer, OPERATION_OFFSET_9)
+				-- Read 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				Item_3.Face = buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10)
+				if Item_3.Face < 0 then error(`Expected "Item_3.Face" to be larger than 0, got {Item_3.Face} instead.`) end
+				if Item_3.Face > 5 then error(`Expected "Item_3.Face" to be smaller than 5, got {Item_3.Face} instead.`) end
+				table.insert(Item_2.Textures, Item_3)
+			end
+			-- END ARRAY
+			Item_2.Attributes = {}
+			-- Read 2
+			local OPERATION_OFFSET_18 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			local Elements_3 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
 			for _ = 1, Elements_3 do
 				local OFFSET_0 = Read(2)
 				Length = buffer.readu16(RecieveBuffer, OFFSET_0)
@@ -1086,9 +1439,9 @@ local function Shatterbox_ReadEVENT_ReplicateDestruction(): ({ ID: string, Cutti
 			end
 			-- START ARRAY
 			-- Read 2
-			local OPERATION_OFFSET_18 = ARRAY_START_2
+			local OPERATION_OFFSET_19 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
+			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_19)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Item_2.Tags = table.create(Length)
@@ -1110,7 +1463,7 @@ local function Shatterbox_ReadEVENT_ReplicateDestruction(): ({ ID: string, Cutti
 	return Value1, Value2
 end
 
-local function Shatterbox_ReadEVENT_ReplicateImaginary(): ({ ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?)
+local function Shatterbox_ReadEVENT_ReplicateImaginary(): ({ ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?)
 	-- Read BLOCK: 43 bytes
 	local BLOCK_START = Read(43)
 	local Value1 = {} :: any
@@ -1171,8 +1524,8 @@ local function Shatterbox_ReadEVENT_ReplicateImaginary(): ({ ID: string, Cutting
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 		Value2 = table.create(Length)
-			-- Read BLOCK: 51 bytes
-		local ARRAY_START_2 = Read(51 * Length)
+			-- Read BLOCK: 50 bytes
+		local ARRAY_START_2 = Read(50 * Length)
 		for Index = 1, Length do
 			local Item_2 = {} :: any
 			-- Read 4
@@ -1224,38 +1577,46 @@ local function Shatterbox_ReadEVENT_ReplicateImaginary(): ({ ID: string, Cutting
 			local OPERATION_OFFSET_11 = ARRAY_START_2
 			ARRAY_START_2 += 1
 			Item_2.Color = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_9), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_11))
-			-- Read 2
+			-- Read 1
 			local OPERATION_OFFSET_12 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			Item_2.Material = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_12)
-			if Item_2.Material < 256 then error(`Expected "Item_2.Material" to be larger than 256, got {Item_2.Material} instead.`) end
-			if Item_2.Material > 2311 then error(`Expected "Item_2.Material" to be smaller than 2311, got {Item_2.Material} instead.`) end
-			-- Read 2
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_12) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				Item_2.Material = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				if Item_2.Material < 256 then error(`Expected "Item_2.Material" to be larger than 256, got {Item_2.Material} instead.`) end
+				if Item_2.Material > 2311 then error(`Expected "Item_2.Material" to be smaller than 2311, got {Item_2.Material} instead.`) end
+			end
+			-- Read 1
 			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			local Encoded = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_13)
-			local MantissaExponent = Encoded % 0x8000
-			if MantissaExponent == 0b0_11111_0000000000  then
-				if Encoded // 0x8000 == 1 then
-					Item_2.Transparency = -math.huge
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_13) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				local MantissaExponent = Encoded % 0x8000
+				if MantissaExponent == 0b0_11111_0000000000  then
+					if Encoded // 0x8000 == 1 then
+						Item_2.Transparency = -math.huge
+					else
+						Item_2.Transparency = math.huge
+					end
+				elseif MantissaExponent == 0b1_11111_0000000000   then
+					Item_2.Transparency = 0 / 0
+				elseif MantissaExponent == 0b0_00000_0000000000   then
+					Item_2.Transparency = 0
 				else
-					Item_2.Transparency = math.huge
+					local Mantissa = MantissaExponent % 0x400
+					local Exponent = MantissaExponent // 0x400
+					local Fraction;
+					if Exponent == 0 then
+						Fraction = Mantissa / 0x400
+					else
+						Fraction = Mantissa / 0x800 + 0.5
+					end
+					local Result = math.ldexp(Fraction, Exponent - 14)
+					Item_2.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 				end
-			elseif MantissaExponent == 0b1_11111_0000000000   then
-				Item_2.Transparency = 0 / 0
-			elseif MantissaExponent == 0b0_00000_0000000000   then
-				Item_2.Transparency = 0
-			else
-				local Mantissa = MantissaExponent % 0x400
-				local Exponent = MantissaExponent // 0x400
-				local Fraction;
-				if Exponent == 0 then
-					Fraction = Mantissa / 0x400
-				else
-					Fraction = Mantissa / 0x800 + 0.5
-				end
-				local Result = math.ldexp(Fraction, Exponent - 14)
-				Item_2.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 			end
 			-- Read 1
 			local OPERATION_OFFSET_14 = ARRAY_START_2
@@ -1263,7 +1624,7 @@ local function Shatterbox_ReadEVENT_ReplicateImaginary(): ({ ID: string, Cutting
 			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_14) == 1 then
 				-- Read BLOCK: 2 bytes
 				local BLOCK_START = Read(2)
-				Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 				local MantissaExponent = Encoded % 0x8000
 				if MantissaExponent == 0b0_11111_0000000000  then
 					if Encoded // 0x8000 == 1 then
@@ -1297,16 +1658,84 @@ local function Shatterbox_ReadEVENT_ReplicateImaginary(): ({ ID: string, Cutting
 				Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 				Item_2.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
 			end
-			-- Read 2
+			-- Read 1
 			local OPERATION_OFFSET_16 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_16)
-			Item_2.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
-			Item_2.Attributes = {}
+			ARRAY_START_2 += 1
+			if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_16) == 1 then
+				-- Read BLOCK: 2 bytes
+				local BLOCK_START = Read(2)
+				Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+				Item_2.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
+			end
+			-- START ARRAY
 			-- Read 2
 			local OPERATION_OFFSET_17 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			local Elements_3 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_17)
+			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_17)
+			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
+			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
+			Item_2.Textures = table.create(Length)
+				-- Read BLOCK: 29 bytes
+			local ARRAY_START_3 = Read(29 * Length)
+			for Index = 1, Length do
+				local Item_3 = {} :: any
+				-- Read 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				-- Read 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				-- Read 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				Item_3.Color3 = Color3.fromRGB(buffer.readu8(RecieveBuffer, OPERATION_OFFSET_0), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_1), buffer.readu8(RecieveBuffer, OPERATION_OFFSET_2))
+				-- Read 4
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.OffsetStudsU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
+				-- Read 4
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.OffsetStudsV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
+				-- Read 4
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.StudsPerTileU = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
+				-- Read 4
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.StudsPerTileV = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_6)
+				-- Read 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_7) == 1 then
+					-- Read BLOCK: 2 bytes
+					local BLOCK_START = Read(2)
+					Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+					Item_3.Texture = buffer.readstring(RecieveBuffer, Read(Length), Length)
+				end
+				-- Read 4
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.Transparency = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_8)
+				-- Read 4
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				Item_3.ZIndex = buffer.readu32(RecieveBuffer, OPERATION_OFFSET_9)
+				-- Read 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				Item_3.Face = buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10)
+				if Item_3.Face < 0 then error(`Expected "Item_3.Face" to be larger than 0, got {Item_3.Face} instead.`) end
+				if Item_3.Face > 5 then error(`Expected "Item_3.Face" to be smaller than 5, got {Item_3.Face} instead.`) end
+				table.insert(Item_2.Textures, Item_3)
+			end
+			-- END ARRAY
+			Item_2.Attributes = {}
+			-- Read 2
+			local OPERATION_OFFSET_18 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			local Elements_3 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
 			for _ = 1, Elements_3 do
 				local OFFSET_0 = Read(2)
 				Length = buffer.readu16(RecieveBuffer, OFFSET_0)
@@ -1317,9 +1746,9 @@ local function Shatterbox_ReadEVENT_ReplicateImaginary(): ({ ID: string, Cutting
 			end
 			-- START ARRAY
 			-- Read 2
-			local OPERATION_OFFSET_18 = ARRAY_START_2
+			local OPERATION_OFFSET_19 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_18)
+			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_19)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Item_2.Tags = table.create(Length)
@@ -1345,6 +1774,10 @@ local function Shatterbox_WriteEVENT_ClientInitComplete(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 9)
+end
+
+local function Shatterbox_ReadEVENT_SignalPrintState(): (nil)
+	return nil
 end
 
 if not RunService:IsRunning() then
@@ -1380,6 +1813,9 @@ if not RunService:IsRunning() then
 		},
 		ClientInitComplete = {
 			Fire = NOOP
+		},
+		SignalPrintState = {
+			On = NOOP
 		},
 	},
 	})
@@ -1456,7 +1892,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[2], {Value} :: {any})
 			end
 		elseif Index == 3 then
-			local Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } = Shatterbox_ReadEVENT_CreatePuppets()
+			local Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } = Shatterbox_ReadEVENT_CreatePuppets()
 			if #Events.Reliable[3] > 0 then
 				for _, Listener in Events.Reliable[3] do
 					task.spawn(Listener, Value)
@@ -1492,7 +1928,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[5], {Value} :: {any})
 			end
 		elseif Index == 6 then
-			local Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } = Shatterbox_ReadEVENT_ReplicateMap()
+			local Value1: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } = Shatterbox_ReadEVENT_ReplicateMap()
 			if #Events.Reliable[6] > 0 then
 				for _, Listener in Events.Reliable[6] do
 					task.spawn(Listener, Value1, Value2)
@@ -1504,7 +1940,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[6], {Value1, Value2} :: {any})
 			end
 		elseif Index == 7 then
-			local Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }? = Shatterbox_ReadEVENT_ReplicateDestruction()
+			local Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }? = Shatterbox_ReadEVENT_ReplicateDestruction()
 			if #Events.Reliable[7] > 0 then
 				for _, Listener in Events.Reliable[7] do
 					task.spawn(Listener, Value1, Value2)
@@ -1516,7 +1952,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[7], {Value1, Value2} :: {any})
 			end
 		elseif Index == 8 then
-			local Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }? = Shatterbox_ReadEVENT_ReplicateImaginary()
+			local Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }? = Shatterbox_ReadEVENT_ReplicateImaginary()
 			if #Events.Reliable[8] > 0 then
 				for _, Listener in Events.Reliable[8] do
 					task.spawn(Listener, Value1, Value2)
@@ -1526,6 +1962,18 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 					warn("[Blink]: Event queue of \"ReplicateImaginary\" exceeded 256, did you forget to implement a listener?")
 				end
 				table.insert(Queue.Reliable[8], {Value1, Value2} :: {any})
+			end
+		elseif Index == 10 then
+			local Value: nil = Shatterbox_ReadEVENT_SignalPrintState()
+			if #Events.Reliable[10] > 0 then
+				for _, Listener in Events.Reliable[10] do
+					task.spawn(Listener, Value)
+				end
+			else
+				if #Queue.Reliable[10] > 256 then
+					warn("[Blink]: Event queue of \"SignalPrintState\" exceeded 256, did you forget to implement a listener?")
+				end
+				table.insert(Queue.Reliable[10], {Value} :: {any})
 			end
 		end
 	end
@@ -1594,7 +2042,7 @@ local Returns = table.freeze({
 			end
 		},
 		CreatePuppets = {
-			On = function(Listener: (Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }) -> ()): () -> ()
+			On = function(Listener: (Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }) -> ()): () -> ()
 				table.insert(Events.Reliable[3], Listener)
 				for Index, Arguments in Queue.Reliable[3] do
 					task.spawn(Listener, table.unpack(Arguments))
@@ -1639,7 +2087,7 @@ local Returns = table.freeze({
 			end
 		},
 		ReplicateMap = {
-			On = function(Listener: (Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }) -> ()): () -> ()
+			On = function(Listener: (Value1: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }) -> ()): () -> ()
 				table.insert(Events.Reliable[6], Listener)
 				for Index, Arguments in Queue.Reliable[6] do
 					task.spawn(Listener, table.unpack(Arguments))
@@ -1654,7 +2102,7 @@ local Returns = table.freeze({
 			end
 		},
 		ReplicateDestruction = {
-			On = function(Listener: (Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?) -> ()): () -> ()
+			On = function(Listener: (Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?) -> ()): () -> ()
 				table.insert(Events.Reliable[7], Listener)
 				for Index, Arguments in Queue.Reliable[7] do
 					task.spawn(Listener, table.unpack(Arguments))
@@ -1669,7 +2117,7 @@ local Returns = table.freeze({
 			end
 		},
 		ReplicateImaginary = {
-			On = function(Listener: (Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?) -> ()): () -> ()
+			On = function(Listener: (Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?) -> ()): () -> ()
 				table.insert(Events.Reliable[8], Listener)
 				for Index, Arguments in Queue.Reliable[8] do
 					task.spawn(Listener, table.unpack(Arguments))
@@ -1686,6 +2134,21 @@ local Returns = table.freeze({
 		ClientInitComplete = {
 			Fire = function(Value: nil): ()
 				Shatterbox_WriteEVENT_ClientInitComplete(Value)
+			end
+		},
+		SignalPrintState = {
+			On = function(Listener: (Value: nil) -> ()): () -> ()
+				table.insert(Events.Reliable[10], Listener)
+				for Index, Arguments in Queue.Reliable[10] do
+					task.spawn(Listener, table.unpack(Arguments))
+				end
+				Queue.Reliable[10] = {}
+				return function (): ()
+					local Index = table.find(Events.Reliable[10], Listener)
+					if Index ~= nil then
+						table.remove(Events.Reliable[10], Index)
+					end
+				end
 			end
 		},
 	},

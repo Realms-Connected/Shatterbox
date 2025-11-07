@@ -153,13 +153,14 @@ local Queue: any = {
 
 Queue.Reliable[9] = table.create(256)
 export type Shatterbox_AttributesMap = {[string]: any}
-export type Shatterbox_PartProperties = { Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_Texture = { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number }
+export type Shatterbox_PartProperties = { Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } }
 export type Shatterbox_Box = { CFrame: CFrame, Size: Vector3 }
 export type Shatterbox_Hitbox = { CFrame: CFrame, Size: Vector3, Shape: number }
-export type Shatterbox_PartInstance = { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_Dirtied = { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_OpDirty = { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } }
+export type Shatterbox_PartInstance = { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_Dirtied = { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_OpDirty = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } }
 export type Shatterbox_ImaginaryDestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }
 export type Shatterbox_DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }
 export type Shatterbox_PuppetState = { GUID: string, CFrame: CFrame }
@@ -185,14 +186,14 @@ local function Shatterbox_WriteEVENT_SignalReset(Value: nil): ()
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 2)
 end
 
-local function Shatterbox_WriteEVENT_CreatePuppets(Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+local function Shatterbox_WriteEVENT_CreatePuppets(Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 3)
 	-- START ARRAY
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, #Value)
-		-- Allocate BLOCK: 53 bytes
-	local ARRAY_START_1 = Allocate(53 * #Value)
+		-- Allocate BLOCK: 52 bytes
+	local ARRAY_START_1 = Allocate(52 * #Value)
 	for Index = 1, #Value do
 		local Item_1 = Value[Index]
 		local Length = #Item_1.GUID
@@ -254,35 +255,45 @@ local function Shatterbox_WriteEVENT_CreatePuppets(Value: { { GUID: string, CFra
 		local OPERATION_OFFSET_12 = ARRAY_START_1
 		ARRAY_START_1 += 1
 		buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Color.B * 255)
-		-- Allocate 2
+		-- Allocate 1
 		local OPERATION_OFFSET_13 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Item_1.Material)
-		-- Allocate 2
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_1.Material ~= nil and 1 or 0)
+		if Item_1.Material ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Item_1.Material)
+		end
+		-- Allocate 1
 		local OPERATION_OFFSET_14 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		if Item_1.Transparency > 65504 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b0_11111_0000000000)
-		elseif Item_1.Transparency < -65504 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b1_11111_0000000000)
-		elseif Item_1.Transparency ~= Item_1.Transparency then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b1_11111_0000000001)
-		elseif Item_1.Transparency == 0 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0)
-		else
-			local float = Item_1.Transparency
-			local Abosulte = math.abs(float)
-			local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-			local RoundedValue = (Abosulte // Interval) * Interval
-			local Fraction, Exponent = math.frexp(RoundedValue)
-			Exponent += 14
-			local Mantissa = math.round(if Exponent <= 0
-				then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-				else Fraction * 0x800) % 0x400
-			local Result = Mantissa
-				+ math.max(Exponent, 0) * 0x400
-				+ if float < 0 then 0x8000 else 0
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, Result)
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_1.Transparency ~= nil and 1 or 0)
+		if Item_1.Transparency ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Item_1.Transparency > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Item_1.Transparency < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Item_1.Transparency ~= Item_1.Transparency then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Item_1.Transparency == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Item_1.Transparency
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
 		end
 		-- Allocate 1
 		local OPERATION_OFFSET_15 = ARRAY_START_1
@@ -327,15 +338,84 @@ local function Shatterbox_WriteEVENT_CreatePuppets(Value: { { GUID: string, CFra
 			Allocate(Length)
 			buffer.writestring(SendBuffer, SendOffset, Item_1.MaterialVariant, Length)
 		end
-		local Length = #Item_1.CollisionGroup
-		-- Allocate 2
+		-- Allocate 1
 		local OPERATION_OFFSET_17 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Item_1.CollisionGroup, Length)
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_1.CollisionGroup ~= nil and 1 or 0)
+		if Item_1.CollisionGroup ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Item_1.CollisionGroup
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Item_1.CollisionGroup, Length)
+		end
+		-- START ARRAY
 		-- Allocate 2
 		local OPERATION_OFFSET_18 = ARRAY_START_1
+		ARRAY_START_1 += 2
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, #Item_1.Textures)
+			-- Allocate BLOCK: 29 bytes
+		local ARRAY_START_2 = Allocate(29 * #Item_1.Textures)
+		for Index = 1, #Item_1.Textures do
+			local Item_2 = Item_1.Textures[Index]
+			local Color = Item_2.Color3
+			-- Allocate 1
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Color.R * 255)
+			-- Allocate 1
+			local OPERATION_OFFSET_1 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Color.G * 255)
+			-- Allocate 1
+			local OPERATION_OFFSET_2 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Color.B * 255)
+			-- Allocate 4
+			local OPERATION_OFFSET_3 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Item_2.OffsetStudsU)
+			-- Allocate 4
+			local OPERATION_OFFSET_4 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_4, Item_2.OffsetStudsV)
+			-- Allocate 4
+			local OPERATION_OFFSET_5 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_5, Item_2.StudsPerTileU)
+			-- Allocate 4
+			local OPERATION_OFFSET_6 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_6, Item_2.StudsPerTileV)
+			-- Allocate 1
+			local OPERATION_OFFSET_7 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_2.Texture ~= nil and 1 or 0)
+			if Item_2.Texture ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				local Length = #Item_2.Texture
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_2.Texture, Length)
+			end
+			-- Allocate 4
+			local OPERATION_OFFSET_8 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Item_2.Transparency)
+			-- Allocate 4
+			local OPERATION_OFFSET_9 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writeu32(SendBuffer, OPERATION_OFFSET_9, Item_2.ZIndex)
+			-- Allocate 1
+			local OPERATION_OFFSET_10 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_2.Face)
+		end
+		-- END ARRAY
+		-- Allocate 2
+		local OPERATION_OFFSET_19 = ARRAY_START_1
 		ARRAY_START_1 += 2
 		local Elements_2 = 0
 		for Key_2, Element_2 in Item_1.Attributes do
@@ -347,12 +427,12 @@ local function Shatterbox_WriteEVENT_CreatePuppets(Value: { { GUID: string, CFra
 			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
 			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
 		end
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, Elements_2)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, Elements_2)
 		-- START ARRAY
 		-- Allocate 2
-		local OPERATION_OFFSET_19 = ARRAY_START_1
+		local OPERATION_OFFSET_20 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, #Item_1.Tags)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_20, #Item_1.Tags)
 			-- Allocate BLOCK: 2 bytes
 		local ARRAY_START_2 = Allocate(2 * #Item_1.Tags)
 		for Index = 1, #Item_1.Tags do
@@ -427,14 +507,14 @@ local function Shatterbox_WriteEVENT_DestroyPuppet(Value: string): ()
 	buffer.writestring(SendBuffer, SendOffset, Value, Length)
 end
 
-local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 	-- Allocate BLOCK: 5 bytes
 	local BLOCK_START = Allocate(5)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
 	-- START ARRAY
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, #Value1)
-		-- Allocate BLOCK: 4 bytes
-	local ARRAY_START_1 = Allocate(4 * #Value1)
+		-- Allocate BLOCK: 41 bytes
+	local ARRAY_START_1 = Allocate(41 * #Value1)
 	for Index = 1, #Value1 do
 		local Item_1 = Value1[Index]
 		local Length = #Item_1.ID
@@ -444,13 +524,56 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 		buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
 		Allocate(Length)
 		buffer.writestring(SendBuffer, SendOffset, Item_1.ID, Length)
+		local Vector = Item_1.CuttingPart.CFrame.Position
+		-- Allocate 4
+		local OPERATION_OFFSET_1 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_1, Vector.X)
+		-- Allocate 4
+		local OPERATION_OFFSET_2 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_2, Vector.Y)
+		-- Allocate 4
+		local OPERATION_OFFSET_3 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Vector.Z)
+		local rX, rY, rZ = Item_1.CuttingPart.CFrame:ToOrientation()
+		-- Allocate 4
+		local OPERATION_OFFSET_4 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_4, rX)
+		-- Allocate 4
+		local OPERATION_OFFSET_5 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_5, rY)
+		-- Allocate 4
+		local OPERATION_OFFSET_6 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_6, rZ)
+		local Vector = Item_1.CuttingPart.Size
+		-- Allocate 4
+		local OPERATION_OFFSET_7 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_7, Vector.X)
+		-- Allocate 4
+		local OPERATION_OFFSET_8 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Y)
+		-- Allocate 4
+		local OPERATION_OFFSET_9 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_9, Vector.Z)
+		-- Allocate 1
+		local OPERATION_OFFSET_10 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_1.CuttingPart.Shape)
 		-- START ARRAY
 		-- Allocate 2
-		local OPERATION_OFFSET_1 = ARRAY_START_1
+		local OPERATION_OFFSET_11 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_1, #Item_1.Dirties)
-			-- Allocate BLOCK: 53 bytes
-		local ARRAY_START_2 = Allocate(53 * #Item_1.Dirties)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_11, #Item_1.Dirties)
+			-- Allocate BLOCK: 52 bytes
+		local ARRAY_START_2 = Allocate(52 * #Item_1.Dirties)
 		for Index = 1, #Item_1.Dirties do
 			local Item_2 = Item_1.Dirties[Index]
 			local Vector = Item_2.OriginalPart.CFrame.Position
@@ -555,35 +678,45 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 			local OPERATION_OFFSET_12 = ARRAY_START_2
 			ARRAY_START_2 += 1
 			buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Color.B * 255)
-			-- Allocate 2
+			-- Allocate 1
 			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Item_2.Material)
-			-- Allocate 2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_2.Material ~= nil and 1 or 0)
+			if Item_2.Material ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Item_2.Material)
+			end
+			-- Allocate 1
 			local OPERATION_OFFSET_14 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			if Item_2.Transparency > 65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b0_11111_0000000000)
-			elseif Item_2.Transparency < -65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b1_11111_0000000000)
-			elseif Item_2.Transparency ~= Item_2.Transparency then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b1_11111_0000000001)
-			elseif Item_2.Transparency == 0 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0)
-			else
-				local float = Item_2.Transparency
-				local Abosulte = math.abs(float)
-				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-				local RoundedValue = (Abosulte // Interval) * Interval
-				local Fraction, Exponent = math.frexp(RoundedValue)
-				Exponent += 14
-				local Mantissa = math.round(if Exponent <= 0
-					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-					else Fraction * 0x800) % 0x400
-				local Result = Mantissa
-					+ math.max(Exponent, 0) * 0x400
-					+ if float < 0 then 0x8000 else 0
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, Result)
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_2.Transparency ~= nil and 1 or 0)
+			if Item_2.Transparency ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				if Item_2.Transparency > 65504 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+				elseif Item_2.Transparency < -65504 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+				elseif Item_2.Transparency ~= Item_2.Transparency then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+				elseif Item_2.Transparency == 0 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+				else
+					local float = Item_2.Transparency
+					local Abosulte = math.abs(float)
+					local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+					local RoundedValue = (Abosulte // Interval) * Interval
+					local Fraction, Exponent = math.frexp(RoundedValue)
+					Exponent += 14
+					local Mantissa = math.round(if Exponent <= 0
+						then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+						else Fraction * 0x800) % 0x400
+					local Result = Mantissa
+						+ math.max(Exponent, 0) * 0x400
+						+ if float < 0 then 0x8000 else 0
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+				end
 			end
 			-- Allocate 1
 			local OPERATION_OFFSET_15 = ARRAY_START_2
@@ -628,15 +761,84 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 				Allocate(Length)
 				buffer.writestring(SendBuffer, SendOffset, Item_2.MaterialVariant, Length)
 			end
-			local Length = #Item_2.CollisionGroup
-			-- Allocate 2
+			-- Allocate 1
 			local OPERATION_OFFSET_17 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_2.CollisionGroup ~= nil and 1 or 0)
+			if Item_2.CollisionGroup ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				local Length = #Item_2.CollisionGroup
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
+			end
+			-- START ARRAY
 			-- Allocate 2
 			local OPERATION_OFFSET_18 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, #Item_2.Textures)
+				-- Allocate BLOCK: 29 bytes
+			local ARRAY_START_3 = Allocate(29 * #Item_2.Textures)
+			for Index = 1, #Item_2.Textures do
+				local Item_3 = Item_2.Textures[Index]
+				local Color = Item_3.Color3
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Color.R * 255)
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Color.G * 255)
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Color.B * 255)
+				-- Allocate 4
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Item_3.OffsetStudsU)
+				-- Allocate 4
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_4, Item_3.OffsetStudsV)
+				-- Allocate 4
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_5, Item_3.StudsPerTileU)
+				-- Allocate 4
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_6, Item_3.StudsPerTileV)
+				-- Allocate 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_3.Texture ~= nil and 1 or 0)
+				if Item_3.Texture ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.Texture
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.Texture, Length)
+				end
+				-- Allocate 4
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Item_3.Transparency)
+				-- Allocate 4
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writeu32(SendBuffer, OPERATION_OFFSET_9, Item_3.ZIndex)
+				-- Allocate 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_3.Face)
+			end
+			-- END ARRAY
+			-- Allocate 2
+			local OPERATION_OFFSET_19 = ARRAY_START_2
 			ARRAY_START_2 += 2
 			local Elements_3 = 0
 			for Key_3, Element_3 in Item_2.Attributes do
@@ -648,12 +850,12 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 				buffer.writestring(SendBuffer, SendOffset, Key_3, Length)
 				table.insert(SendInstances, if Element_3 == nil then Null else Element_3)
 			end
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, Elements_3)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, Elements_3)
 			-- START ARRAY
 			-- Allocate 2
-			local OPERATION_OFFSET_19 = ARRAY_START_2
+			local OPERATION_OFFSET_20 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, #Item_2.Tags)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_20, #Item_2.Tags)
 				-- Allocate BLOCK: 2 bytes
 			local ARRAY_START_3 = Allocate(2 * #Item_2.Tags)
 			for Index = 1, #Item_2.Tags do
@@ -673,8 +875,8 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 	-- END ARRAY
 	-- START ARRAY
 	buffer.writeu16(SendBuffer, BLOCK_START + 3, #Value2)
-		-- Allocate BLOCK: 51 bytes
-	local ARRAY_START_1 = Allocate(51 * #Value2)
+		-- Allocate BLOCK: 50 bytes
+	local ARRAY_START_1 = Allocate(50 * #Value2)
 	for Index = 1, #Value2 do
 		local Item_1 = Value2[Index]
 		local Vector = Item_1.CFrame.Position
@@ -729,35 +931,45 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 		local OPERATION_OFFSET_11 = ARRAY_START_1
 		ARRAY_START_1 += 1
 		buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Color.B * 255)
-		-- Allocate 2
+		-- Allocate 1
 		local OPERATION_OFFSET_12 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_12, Item_1.Material)
-		-- Allocate 2
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Item_1.Material ~= nil and 1 or 0)
+		if Item_1.Material ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Item_1.Material)
+		end
+		-- Allocate 1
 		local OPERATION_OFFSET_13 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		if Item_1.Transparency > 65504 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b0_11111_0000000000)
-		elseif Item_1.Transparency < -65504 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000000)
-		elseif Item_1.Transparency ~= Item_1.Transparency then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000001)
-		elseif Item_1.Transparency == 0 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0)
-		else
-			local float = Item_1.Transparency
-			local Abosulte = math.abs(float)
-			local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-			local RoundedValue = (Abosulte // Interval) * Interval
-			local Fraction, Exponent = math.frexp(RoundedValue)
-			Exponent += 14
-			local Mantissa = math.round(if Exponent <= 0
-				then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-				else Fraction * 0x800) % 0x400
-			local Result = Mantissa
-				+ math.max(Exponent, 0) * 0x400
-				+ if float < 0 then 0x8000 else 0
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Result)
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_1.Transparency ~= nil and 1 or 0)
+		if Item_1.Transparency ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Item_1.Transparency > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Item_1.Transparency < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Item_1.Transparency ~= Item_1.Transparency then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Item_1.Transparency == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Item_1.Transparency
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
 		end
 		-- Allocate 1
 		local OPERATION_OFFSET_14 = ARRAY_START_1
@@ -802,15 +1014,84 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 			Allocate(Length)
 			buffer.writestring(SendBuffer, SendOffset, Item_1.MaterialVariant, Length)
 		end
-		local Length = #Item_1.CollisionGroup
-		-- Allocate 2
+		-- Allocate 1
 		local OPERATION_OFFSET_16 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_16, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Item_1.CollisionGroup, Length)
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_1.CollisionGroup ~= nil and 1 or 0)
+		if Item_1.CollisionGroup ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Item_1.CollisionGroup
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Item_1.CollisionGroup, Length)
+		end
+		-- START ARRAY
 		-- Allocate 2
 		local OPERATION_OFFSET_17 = ARRAY_START_1
+		ARRAY_START_1 += 2
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, #Item_1.Textures)
+			-- Allocate BLOCK: 29 bytes
+		local ARRAY_START_2 = Allocate(29 * #Item_1.Textures)
+		for Index = 1, #Item_1.Textures do
+			local Item_2 = Item_1.Textures[Index]
+			local Color = Item_2.Color3
+			-- Allocate 1
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Color.R * 255)
+			-- Allocate 1
+			local OPERATION_OFFSET_1 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Color.G * 255)
+			-- Allocate 1
+			local OPERATION_OFFSET_2 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Color.B * 255)
+			-- Allocate 4
+			local OPERATION_OFFSET_3 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Item_2.OffsetStudsU)
+			-- Allocate 4
+			local OPERATION_OFFSET_4 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_4, Item_2.OffsetStudsV)
+			-- Allocate 4
+			local OPERATION_OFFSET_5 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_5, Item_2.StudsPerTileU)
+			-- Allocate 4
+			local OPERATION_OFFSET_6 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_6, Item_2.StudsPerTileV)
+			-- Allocate 1
+			local OPERATION_OFFSET_7 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_2.Texture ~= nil and 1 or 0)
+			if Item_2.Texture ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				local Length = #Item_2.Texture
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_2.Texture, Length)
+			end
+			-- Allocate 4
+			local OPERATION_OFFSET_8 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Item_2.Transparency)
+			-- Allocate 4
+			local OPERATION_OFFSET_9 = ARRAY_START_2
+			ARRAY_START_2 += 4
+			buffer.writeu32(SendBuffer, OPERATION_OFFSET_9, Item_2.ZIndex)
+			-- Allocate 1
+			local OPERATION_OFFSET_10 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_2.Face)
+		end
+		-- END ARRAY
+		-- Allocate 2
+		local OPERATION_OFFSET_18 = ARRAY_START_1
 		ARRAY_START_1 += 2
 		local Elements_2 = 0
 		for Key_2, Element_2 in Item_1.Attributes do
@@ -822,12 +1103,12 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
 			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
 		end
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Elements_2)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, Elements_2)
 		-- START ARRAY
 		-- Allocate 2
-		local OPERATION_OFFSET_18 = ARRAY_START_1
+		local OPERATION_OFFSET_19 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, #Item_1.Tags)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, #Item_1.Tags)
 			-- Allocate BLOCK: 2 bytes
 		local ARRAY_START_2 = Allocate(2 * #Item_1.Tags)
 		for Index = 1, #Item_1.Tags do
@@ -845,7 +1126,7 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 	-- END ARRAY
 end
 
-local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 	-- Allocate BLOCK: 48 bytes
 	local BLOCK_START = Allocate(48)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
@@ -926,8 +1207,8 @@ local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: { ID: string, 
 		local BLOCK_START = Allocate(2)
 		-- START ARRAY
 		buffer.writeu16(SendBuffer, BLOCK_START + 0, #Value2)
-			-- Allocate BLOCK: 51 bytes
-		local ARRAY_START_2 = Allocate(51 * #Value2)
+			-- Allocate BLOCK: 50 bytes
+		local ARRAY_START_2 = Allocate(50 * #Value2)
 		for Index = 1, #Value2 do
 			local Item_2 = Value2[Index]
 			local Vector = Item_2.CFrame.Position
@@ -982,35 +1263,45 @@ local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: { ID: string, 
 			local OPERATION_OFFSET_11 = ARRAY_START_2
 			ARRAY_START_2 += 1
 			buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Color.B * 255)
-			-- Allocate 2
+			-- Allocate 1
 			local OPERATION_OFFSET_12 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_12, Item_2.Material)
-			-- Allocate 2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Item_2.Material ~= nil and 1 or 0)
+			if Item_2.Material ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Item_2.Material)
+			end
+			-- Allocate 1
 			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			if Item_2.Transparency > 65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b0_11111_0000000000)
-			elseif Item_2.Transparency < -65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000000)
-			elseif Item_2.Transparency ~= Item_2.Transparency then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000001)
-			elseif Item_2.Transparency == 0 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0)
-			else
-				local float = Item_2.Transparency
-				local Abosulte = math.abs(float)
-				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-				local RoundedValue = (Abosulte // Interval) * Interval
-				local Fraction, Exponent = math.frexp(RoundedValue)
-				Exponent += 14
-				local Mantissa = math.round(if Exponent <= 0
-					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-					else Fraction * 0x800) % 0x400
-				local Result = Mantissa
-					+ math.max(Exponent, 0) * 0x400
-					+ if float < 0 then 0x8000 else 0
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Result)
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_2.Transparency ~= nil and 1 or 0)
+			if Item_2.Transparency ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				if Item_2.Transparency > 65504 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+				elseif Item_2.Transparency < -65504 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+				elseif Item_2.Transparency ~= Item_2.Transparency then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+				elseif Item_2.Transparency == 0 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+				else
+					local float = Item_2.Transparency
+					local Abosulte = math.abs(float)
+					local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+					local RoundedValue = (Abosulte // Interval) * Interval
+					local Fraction, Exponent = math.frexp(RoundedValue)
+					Exponent += 14
+					local Mantissa = math.round(if Exponent <= 0
+						then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+						else Fraction * 0x800) % 0x400
+					local Result = Mantissa
+						+ math.max(Exponent, 0) * 0x400
+						+ if float < 0 then 0x8000 else 0
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+				end
 			end
 			-- Allocate 1
 			local OPERATION_OFFSET_14 = ARRAY_START_2
@@ -1055,15 +1346,84 @@ local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: { ID: string, 
 				Allocate(Length)
 				buffer.writestring(SendBuffer, SendOffset, Item_2.MaterialVariant, Length)
 			end
-			local Length = #Item_2.CollisionGroup
-			-- Allocate 2
+			-- Allocate 1
 			local OPERATION_OFFSET_16 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_16, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_2.CollisionGroup ~= nil and 1 or 0)
+			if Item_2.CollisionGroup ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				local Length = #Item_2.CollisionGroup
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
+			end
+			-- START ARRAY
 			-- Allocate 2
 			local OPERATION_OFFSET_17 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, #Item_2.Textures)
+				-- Allocate BLOCK: 29 bytes
+			local ARRAY_START_3 = Allocate(29 * #Item_2.Textures)
+			for Index = 1, #Item_2.Textures do
+				local Item_3 = Item_2.Textures[Index]
+				local Color = Item_3.Color3
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Color.R * 255)
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Color.G * 255)
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Color.B * 255)
+				-- Allocate 4
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Item_3.OffsetStudsU)
+				-- Allocate 4
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_4, Item_3.OffsetStudsV)
+				-- Allocate 4
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_5, Item_3.StudsPerTileU)
+				-- Allocate 4
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_6, Item_3.StudsPerTileV)
+				-- Allocate 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_3.Texture ~= nil and 1 or 0)
+				if Item_3.Texture ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.Texture
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.Texture, Length)
+				end
+				-- Allocate 4
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Item_3.Transparency)
+				-- Allocate 4
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writeu32(SendBuffer, OPERATION_OFFSET_9, Item_3.ZIndex)
+				-- Allocate 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_3.Face)
+			end
+			-- END ARRAY
+			-- Allocate 2
+			local OPERATION_OFFSET_18 = ARRAY_START_2
 			ARRAY_START_2 += 2
 			local Elements_3 = 0
 			for Key_3, Element_3 in Item_2.Attributes do
@@ -1075,12 +1435,12 @@ local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: { ID: string, 
 				buffer.writestring(SendBuffer, SendOffset, Key_3, Length)
 				table.insert(SendInstances, if Element_3 == nil then Null else Element_3)
 			end
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Elements_3)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, Elements_3)
 			-- START ARRAY
 			-- Allocate 2
-			local OPERATION_OFFSET_18 = ARRAY_START_2
+			local OPERATION_OFFSET_19 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, #Item_2.Tags)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, #Item_2.Tags)
 				-- Allocate BLOCK: 2 bytes
 			local ARRAY_START_3 = Allocate(2 * #Item_2.Tags)
 			for Index = 1, #Item_2.Tags do
@@ -1099,7 +1459,7 @@ local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: { ID: string, 
 	end
 end
 
-local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 	-- Allocate BLOCK: 44 bytes
 	local BLOCK_START = Allocate(44)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 8)
@@ -1158,8 +1518,8 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 		local BLOCK_START = Allocate(2)
 		-- START ARRAY
 		buffer.writeu16(SendBuffer, BLOCK_START + 0, #Value2)
-			-- Allocate BLOCK: 51 bytes
-		local ARRAY_START_2 = Allocate(51 * #Value2)
+			-- Allocate BLOCK: 50 bytes
+		local ARRAY_START_2 = Allocate(50 * #Value2)
 		for Index = 1, #Value2 do
 			local Item_2 = Value2[Index]
 			local Vector = Item_2.CFrame.Position
@@ -1214,35 +1574,45 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 			local OPERATION_OFFSET_11 = ARRAY_START_2
 			ARRAY_START_2 += 1
 			buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Color.B * 255)
-			-- Allocate 2
+			-- Allocate 1
 			local OPERATION_OFFSET_12 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_12, Item_2.Material)
-			-- Allocate 2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Item_2.Material ~= nil and 1 or 0)
+			if Item_2.Material ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Item_2.Material)
+			end
+			-- Allocate 1
 			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			if Item_2.Transparency > 65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b0_11111_0000000000)
-			elseif Item_2.Transparency < -65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000000)
-			elseif Item_2.Transparency ~= Item_2.Transparency then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000001)
-			elseif Item_2.Transparency == 0 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0)
-			else
-				local float = Item_2.Transparency
-				local Abosulte = math.abs(float)
-				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-				local RoundedValue = (Abosulte // Interval) * Interval
-				local Fraction, Exponent = math.frexp(RoundedValue)
-				Exponent += 14
-				local Mantissa = math.round(if Exponent <= 0
-					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-					else Fraction * 0x800) % 0x400
-				local Result = Mantissa
-					+ math.max(Exponent, 0) * 0x400
-					+ if float < 0 then 0x8000 else 0
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Result)
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_2.Transparency ~= nil and 1 or 0)
+			if Item_2.Transparency ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				if Item_2.Transparency > 65504 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+				elseif Item_2.Transparency < -65504 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+				elseif Item_2.Transparency ~= Item_2.Transparency then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+				elseif Item_2.Transparency == 0 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+				else
+					local float = Item_2.Transparency
+					local Abosulte = math.abs(float)
+					local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+					local RoundedValue = (Abosulte // Interval) * Interval
+					local Fraction, Exponent = math.frexp(RoundedValue)
+					Exponent += 14
+					local Mantissa = math.round(if Exponent <= 0
+						then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+						else Fraction * 0x800) % 0x400
+					local Result = Mantissa
+						+ math.max(Exponent, 0) * 0x400
+						+ if float < 0 then 0x8000 else 0
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+				end
 			end
 			-- Allocate 1
 			local OPERATION_OFFSET_14 = ARRAY_START_2
@@ -1287,15 +1657,84 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 				Allocate(Length)
 				buffer.writestring(SendBuffer, SendOffset, Item_2.MaterialVariant, Length)
 			end
-			local Length = #Item_2.CollisionGroup
-			-- Allocate 2
+			-- Allocate 1
 			local OPERATION_OFFSET_16 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_16, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_2.CollisionGroup ~= nil and 1 or 0)
+			if Item_2.CollisionGroup ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				local Length = #Item_2.CollisionGroup
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
+			end
+			-- START ARRAY
 			-- Allocate 2
 			local OPERATION_OFFSET_17 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, #Item_2.Textures)
+				-- Allocate BLOCK: 29 bytes
+			local ARRAY_START_3 = Allocate(29 * #Item_2.Textures)
+			for Index = 1, #Item_2.Textures do
+				local Item_3 = Item_2.Textures[Index]
+				local Color = Item_3.Color3
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Color.R * 255)
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Color.G * 255)
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Color.B * 255)
+				-- Allocate 4
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Item_3.OffsetStudsU)
+				-- Allocate 4
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_4, Item_3.OffsetStudsV)
+				-- Allocate 4
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_5, Item_3.StudsPerTileU)
+				-- Allocate 4
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_6, Item_3.StudsPerTileV)
+				-- Allocate 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_3.Texture ~= nil and 1 or 0)
+				if Item_3.Texture ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.Texture
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.Texture, Length)
+				end
+				-- Allocate 4
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Item_3.Transparency)
+				-- Allocate 4
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 4
+				buffer.writeu32(SendBuffer, OPERATION_OFFSET_9, Item_3.ZIndex)
+				-- Allocate 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_3.Face)
+			end
+			-- END ARRAY
+			-- Allocate 2
+			local OPERATION_OFFSET_18 = ARRAY_START_2
 			ARRAY_START_2 += 2
 			local Elements_3 = 0
 			for Key_3, Element_3 in Item_2.Attributes do
@@ -1307,12 +1746,12 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 				buffer.writestring(SendBuffer, SendOffset, Key_3, Length)
 				table.insert(SendInstances, if Element_3 == nil then Null else Element_3)
 			end
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Elements_3)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, Elements_3)
 			-- START ARRAY
 			-- Allocate 2
-			local OPERATION_OFFSET_18 = ARRAY_START_2
+			local OPERATION_OFFSET_19 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, #Item_2.Tags)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, #Item_2.Tags)
 				-- Allocate BLOCK: 2 bytes
 			local ARRAY_START_3 = Allocate(2 * #Item_2.Tags)
 			for Index = 1, #Item_2.Tags do
@@ -1333,6 +1772,12 @@ end
 
 local function Shatterbox_ReadEVENT_ClientInitComplete(): (nil)
 	return nil
+end
+
+local function Shatterbox_WriteEVENT_SignalPrintState(Value: nil): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 10)
 end
 
 if not RunService:IsRunning() then
@@ -1395,6 +1840,12 @@ if not RunService:IsRunning() then
 		},
 		ClientInitComplete = {
 			On = NOOP
+		},
+		SignalPrintState = {
+			Fire = NOOP,
+			FireAll = NOOP,
+			FireList = NOOP,
+			FireExcept = NOOP
 		},
 	},
 	})
@@ -1624,12 +2075,12 @@ local Returns = table.freeze({
 			end,
 		},
 		CreatePuppets = {
-			Fire = function(Player: Player, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			Fire = function(Player: Player, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load(PlayersMap[Player])
 				Shatterbox_WriteEVENT_CreatePuppets(Value)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireAll = function(Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_CreatePuppets(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1641,7 +2092,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireList = function(List: {Player}, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_CreatePuppets(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1653,7 +2104,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireExcept = function(Except: Player, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_CreatePuppets(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1762,12 +2213,12 @@ local Returns = table.freeze({
 			end,
 		},
 		ReplicateMap = {
-			Fire = function(Player: Player, Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			Fire = function(Player: Player, Value1: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load(PlayersMap[Player])
 				Shatterbox_WriteEVENT_ReplicateMap(Value1, Value2)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireAll = function(Value1: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateMap(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1779,7 +2230,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireList = function(List: {Player}, Value1: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateMap(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1791,7 +2242,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireExcept = function(Except: Player, Value1: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateMap(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1808,12 +2259,12 @@ local Returns = table.freeze({
 			end,
 		},
 		ReplicateDestruction = {
-			Fire = function(Player: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			Fire = function(Player: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 				Load(PlayersMap[Player])
 				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireAll = function(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1825,7 +2276,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireList = function(List: {Player}, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1837,7 +2288,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireExcept = function(Except: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1854,12 +2305,12 @@ local Returns = table.freeze({
 			end,
 		},
 		ReplicateImaginary = {
-			Fire = function(Player: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			Fire = function(Player: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 				Load(PlayersMap[Player])
 				Shatterbox_WriteEVENT_ReplicateImaginary(Value1, Value2)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireAll = function(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateImaginary(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1871,7 +2322,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireList = function(List: {Player}, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateImaginary(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1883,7 +2334,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireExcept = function(Except: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, Textures: { { Color3: Color3, OffsetStudsU: number, OffsetStudsV: number, StudsPerTileU: number, StudsPerTileV: number, Texture: string?, Transparency: number, ZIndex: number, Face: number } }, Attributes: {[string]: any}, Tags: { string } } }?): ()
 				Load()
 				Shatterbox_WriteEVENT_ReplicateImaginary(Value1, Value2)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1912,6 +2363,52 @@ local Returns = table.freeze({
 					end
 				end
 			end
+		},
+		SignalPrintState = {
+			Fire = function(Player: Player, Value: nil): ()
+				Load(PlayersMap[Player])
+				Shatterbox_WriteEVENT_SignalPrintState(Value)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value: nil): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalPrintState(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value: nil): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalPrintState(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value: nil): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalPrintState(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
 		},
 	},
 })

@@ -1,12 +1,30 @@
 map AttributesMap = { [string]: unknown }
 
+struct Texture {
+	Color3 : Color3,
+
+	OffsetStudsU : f32,
+	OffsetStudsV : f32,
+	StudsPerTileU : f32,
+	StudsPerTileV : f32,
+
+	Texture : string?,
+
+	Transparency : f32,
+	ZIndex : u32,
+
+	Face : u8(0..5)
+}
+
 struct PartProperties {
 	Color : Color3,
-	Material : u16(256..2311),
-	Transparency : f16,
+	Material : u16(256..2311)?,
+	Transparency : f16?,
 	Reflectance : f16?,
 	MaterialVariant : string?,
-	CollisionGroup : string,
+	CollisionGroup : string?,
+
+	Textures : Texture[],
 
 	Attributes : AttributesMap,
 	Tags : string[]
@@ -46,6 +64,7 @@ struct Dirtied {
 
 struct OpDirty {
 	ID : string,
+	CuttingPart : Hitbox,
 	Dirties : Dirtied[]
 }
 
@@ -148,4 +167,11 @@ event ClientInitComplete {
 	From: Client,
 	Type: Reliable,
 	Call: SingleAsync
+}
+
+
+event SignalPrintState {
+	From: Server,
+	Type: Reliable,
+	Call: ManyAsync
 }

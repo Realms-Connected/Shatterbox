@@ -1,17 +1,17 @@
-export type Hitbox = {
+export type WorldInfo = {
 	CFrame : CFrame,
 	Size : Vector3,
+}
+
+export type Hitbox = WorldInfo & {
 	Shape : Enum.PartType
 }
 
 export type OnDestructCompleted = () -> ()
 
-export type OnVoxelDestruct = (voxel : Part, dirtyParent : Model, cuttingPart : Hitbox, isEdge : boolean, any...) -> ()
+export type OnVoxelDestruct = (voxel : Part, dirtyParent : Model, cuttingPart : Hitbox, isEdge : boolean, isAlreadyDebris : boolean, any...) -> ()
 
-export type ImaginaryBox = {
-
-	CFrame : CFrame, -- the CFrame of the box
-	Size : Vector3, -- the Size of the box
+export type ImaginaryBox = WorldInfo & {
 
 	Original : Part, -- the original part before this iteration of Imaginary touched it
 
