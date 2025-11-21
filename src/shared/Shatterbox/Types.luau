@@ -7,15 +7,13 @@ export type Hitbox = WorldInfo & {
 	Shape : Enum.PartType
 }
 
-export type OnDestructCompleted = () -> ()
+export type OnDestructCompleted = (DestroyedVoxelCount : number, AffectedDirtyGroupIDs : { [string] : boolean }) -> ()
 
-export type OnVoxelDestruct = (voxel : Part, dirtyParent : Model, cuttingPart : Hitbox, isEdge : boolean, isAlreadyDebris : boolean, any...) -> ()
+export type OnVoxelDestruct = (voxel : Part, DirtyGroupID : string, cuttingPart : Hitbox, isEdge : boolean, isAlreadyDebris : boolean, any...) -> ()
 
 export type ImaginaryBox = WorldInfo & {
 
-	Original : Part, -- the original part before this iteration of Imaginary touched it
-
-	DirtyParent : Model, -- the target of smooth cleanup for this box
+	DirtyGroupID : string, -- the dirty group ID for this box
 	GridSize : number -- the GridSize that was applied to this box
 }
 

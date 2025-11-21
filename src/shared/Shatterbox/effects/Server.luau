@@ -1,7 +1,6 @@
 --#selene: allow(unused_variable)
 --#selene: allow(multiple_statements)
 
-local TaggingService = require(script.Parent.Parent.lib.TaggingService)
 local Shatterbox
 local Types = require(script.Parent.Parent:WaitForChild("Types"))
 
@@ -36,6 +35,16 @@ ServerEffects.Default = function(voxel) voxel:Destroy() end
 
 
 
+ServerEffects.FlyingDebris = function(voxel, DirtyGroupID, cuttingPart, isEdge, isAlreadyDebris)
+    voxel.Anchored = false
+    voxel.CanCollide = false
+    voxel.AssemblyLinearVelocity = (Vector3.new(math.random(), math.random(), math.random()) - Vector3.one * 0.5) * 80
+    voxel.AssemblyAngularVelocity = (Vector3.new(math.random(), math.random(), math.random()) - Vector3.one * 0.5) * 20
+
+    game.Debris:AddItem(voxel, 3)
+end
+
+
 
 
 
@@ -43,47 +52,35 @@ ServerEffects.Default = function(voxel) voxel:Destroy() end
 -- Debris is tweened by clients, having the CFrames replicateed from the server.
 -- Only non-floors turn into debris (a floor has a vertical normal when casting toward it from the cuttingPart).
 -- Floors have a separate effect that makes them appear "broken".
-ServerEffects.BumpyFloorBreakWalls = function(voxel, dirtyParent, cuttingPart, isEdge, isAlreadyDebris, normal)
 
-    -- retrieves a clone of the untouched original part, to check if the voxel should be considered a floor
-    local castTo = Shatterbox.GetOriginalPart(dirtyParent)
-    castTo.Parent = workspace
+-- Pre-allocated RaycastParams instance
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Include
+ServerEffects.BumpyFloorBreakWalls = function(voxel, DirtyGroupID, cuttingPart, isEdge, isAlreadyDebris)
+    local O = cuttingPart.CFrame.Position
+    -- retrieves the untouched original part, to check if the voxel should be considered a floor
+    local castTo = Shatterbox.GetOriginalPart(DirtyGroupID)
 
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Include
     raycastParams.FilterDescendantsInstances = { castTo }
 
-    local O = cuttingPart.CFrame.Position
+    castTo.Parent = workspace
     local hitResult = workspace:Raycast(O, voxel.Position - O, raycastParams)
-
-    castTo.Parent = nil -- the return value of GetOriginalPart is cached and automatically deleted after 5 seconds
+    castTo.Parent = nil
 
     if isAlreadyDebris then
 
         voxel.AssemblyLinearVelocity = -hitResult.Normal * (math.random() * 25 + 50)
 
-        voxel.Parent = dirtyParent
+    elseif hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then -- if the normal is facing up, it is a floor
 
-    elseif hitResult and hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then -- if the normal is facing up, it is a floor
+        voxel.Position += Vector3.yAxis * (math.random() - 0.5) -- add some random vertical offset to floor voxels
 
-        local randomYoffset = math.random() - 0.5
-
-        voxel.Position += hitResult.Normal * randomYoffset
-
-        dirtyParent.Destroying:Once(function() -- the server-side dirtyParent does not replicate to clients, so we can't just parent the voxel (it wouldn't replicate)
-            voxel:Destroy()
-        end)
-
-    else
+    else -- everything else becomes a falling voxel using puppeteer
         voxel.Anchored = false
 
         Shatterbox.Puppeteer(voxel) -- start controlled replication of "voxel" to clients (tween between replication of CFrames)
 
-        if hitResult then
-            voxel.AssemblyLinearVelocity = -hitResult.Normal * (math.random() * 25 + 50)
-        end
-
-        voxel.Parent = dirtyParent -- makes debris work with smooth cleanup and makes debris destructible again (the server side debris isn't replicated for clients when puppeteering)
+        voxel.AssemblyLinearVelocity = -hitResult.Normal * (math.random() * 25 + 50)
     end
 end
 

@@ -1,5 +1,4 @@
 local RunService = game:GetService("RunService")
-local TaggingService = require(script.Parent.TaggingService)
 --!strict
 --!native
 local FAR_AWAY_CFRAME = CFrame.new(2^24, 2^24, 2^24)
@@ -64,17 +63,16 @@ end
 function Cache:GetPart(PartCFrame: CFrame?): BasePart
 	local Part = table.remove(self._FreeObjects) or self:_GetNew(self._ExpandAmount, true)
 
-	--[[
+
 	for _, tag in ipairs(Part:GetTags()) do -- I added these two loops, not sure if it's the best placement
 		Part:RemoveTag(tag)
 	end
-	--]]
-	TaggingService.ClearTags(Part)
-	TaggingService.AddTag(Part, "ObjectCache")
+	Part:AddTag("ObjectCache")
 
 	for att in pairs(Part:GetAttributes()) do
 		Part:SetAttribute(att)
 	end
+
 
 	self._Objects[Part] = nil
 	if PartCFrame then
@@ -94,7 +92,7 @@ function Cache:ReturnPart(Part: BasePart)
 		return
 	end
 
-	TaggingService.RemoveTag(Part, "ObjectCache")
+	Part:RemoveTag("ObjectCache")
 
 	Part.Parent = self.CacheHolder
 	Part.Anchored = true

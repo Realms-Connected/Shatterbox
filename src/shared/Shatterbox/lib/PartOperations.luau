@@ -1,9 +1,9 @@
 --#selene: allow(incorrect_standard_library_use)
+--#selene: allow(multiple_statements)
+
 -- PartOperations contains functions that perform operations on an individual part (subdivide, voxelize, etc.)
 
 local Settings = require(script.Parent.Parent:WaitForChild("Settings"))
-
-local TaggingService = require(script.Parent:WaitForChild("TaggingService"))
 
 
 type PartType = {CFrame : CFrame, Size : Vector3}
@@ -12,89 +12,66 @@ type PartType = {CFrame : CFrame, Size : Vector3}
 local localAxisVectors = { X = "RightVector", Y = "UpVector", Z = "ZVector" }
 
 
-local _Anchored, _CFrame, _Size, _Transparency, _Reflectance, _Color, _Material, _CollisionGroup, _MaterialVariant = 0, 0, 0, 0, 0, 0, 0, 0, 0
-
 --[[
     Creates a new part using the supplied `template`, which is either a Part instance or a serialized Part instance
 
     A CFrame can be supplied which is where the part will be placed.
 ]]
 local function PartFromTemplate(template, cframe, provider)
-
 	local part
+
+	--debug.profilebegin("create part")
 
 	if provider and #provider._FreeObjects > 0 then
 		part = provider:GetPart(cframe)
 	else
 		--if provider then warn("cache length exceeded : " .. #provider._FreeObjects) end
-
 		part = Instance.new("Part")
-
 		if cframe then
 			part.CFrame = cframe
 		end
 	end
 
-	if not part.Anchored then
-		part.Anchored = true
-	end
-
-	part.Size = template.Size
-	--
-	part.Color = template.Color
-	--part.Color = Color3.fromHSV(math.random(), 1, 1)
-
+	-- Set properties if they are not their defaults
 	local prop
 
+	prop = template.Anchored
+    if prop ~= part.Anchored then part.Anchored = prop end
+
+	prop = template.Size
+    if prop ~= part.Size then part.Size = prop end
+
+	--part.Color = Color3.fromHSV(math.random(), 1, 1)
+	prop = template.Color
+    if prop ~= part.Color then part.Color = prop end
+
 	prop = template.Transparency
-    if prop ~= part.Transparency then
-		part.Transparency = prop
-	end
+    if prop ~= part.Transparency then part.Transparency = prop end
 
 	prop = template.Reflectance
-    if prop ~= part.Reflectance then
-		part.Reflectance = prop
-	end
+    if prop ~= part.Reflectance then part.Reflectance = prop end
 
 	prop = template.Material
-    if prop ~= part.Material then
-		part.Material = prop
-	end
+    if prop ~= part.Material then part.Material = prop end
 
 	prop = template.MaterialVariant
-    if prop ~= part.MaterialVariant then
-		part.MaterialVariant = prop
-	end
+    if prop ~= part.MaterialVariant then part.MaterialVariant = prop end
 
 	prop = template.CollisionGroup
-    if prop ~= part.CollisionGroup then
-		part.CollisionGroup = prop
-	end
-
-	--]]
+    if prop ~= part.CollisionGroup then part.CollisionGroup = prop end
 
 	-- copy tags
-	--[[
-	for _, tag in ipairs(TaggingService.GetTags(template)) do
-		--part:AddTag(tag)
-		TaggingService.AddTag(part, tag)
-	end
-	--]]
-	TaggingService.CloneTags(template, part)
+	for _, tag in ipairs(template:GetTags()) do part:AddTag(tag) end
 
 	-- copy attributes
-	for k, v in pairs(template:GetAttributes()) do
-		part:SetAttribute(k, v)
-	end
+	for k, v in pairs(template:GetAttributes()) do part:SetAttribute(k, v) end
 
-	-- TaggingService.CloneAttributes(template, part)
 	-- copy textures
 	for _, child in ipairs(template:GetChildren()) do
-		if child:IsA("Texture") then
-			local clonedTexture = child:Clone()
-			clonedTexture.Parent = part
-		end
+		if child:IsA("Texture") then child:Clone().Parent = part end
 	end
+
+	--debug.profileend()
 
 	return part
 end
@@ -113,73 +90,44 @@ local function DeserializedPartInstance(p, provider)
 		part = provider:GetPart(p.CFrame)
 	else
 		--if provider then warn("cache length exceeded : " .. #provider._FreeObjects) end
-
 		part = Instance.new("Part")
-
 		if p.CFrame then
 			part.CFrame = p.CFrame
 		end
 	end
 
-	if not part.Anchored then
-		part.Anchored = true
-	end
+	if p.Anchored then part.Anchored = true end
 
+	-- Set properties if they are not their defaults
 	local prop
 
 	prop = p.Size
-	if prop then
-		part.Size = prop
-	end
+	if prop then part.Size = prop end
 
-	--
-
-	prop = p.Color
-    if prop then
-		part.Color = prop
-	end
 	--part.Color = Color3.fromHSV(math.random(), 1, 1)
+	prop = p.Color
+    if prop then part.Color = prop end
 
 	prop = p.Transparency
-    if prop then
-		part.Transparency = prop
-	end
+    if prop then part.Transparency = prop end
 
 	prop = p.Reflectance
-    if prop then
-		part.Reflectance = prop
-	end
+    if prop then part.Reflectance = prop end
 
 	prop = p.Material
-    if prop then
-		part.Material = Enum.Material:FromValue(prop)
-	end
+    if prop then part.Material = Enum.Material:FromValue(prop) end
 
 	prop = p.MaterialVariant
-    if prop then
-		part.MaterialVariant = prop
-	end
+    if prop then part.MaterialVariant = prop end
 
 	prop = p.CollisionGroup
-    if prop then
-		part.CollisionGroup = prop
-	end
-
-	--]]
+    if prop then part.CollisionGroup = prop end
 
 	-- deserialize tags
-	for _, tag in ipairs(p.Tags) do
-		--part:AddTag(tag)
-		TaggingService.AddTag(part, tag)
-	end
+	for _, tag in ipairs(p.Tags) do part:AddTag(tag) end
 
 	-- deserialize attributes
-	--
-	for k, v in pairs(p.Attributes) do
-		part:SetAttribute(k, v)
-	end
-	--]]
-	--TaggingService.SetAttributes(part, template.Attributes)
+	for k, v in pairs(p.Attributes) do part:SetAttribute(k, v) end
 
 	-- deserialize textures
 	for _, serialTexture in ipairs(p.Textures) do
@@ -209,42 +157,32 @@ local function SerializedPartInstance(p, ignoreWorldState)
 	local serial = {
 		Color = p.Color,
 
-		--Tags = p:GetTags(),
-		Attributes = p:GetAttributes(),
-		Tags = TaggingService.GetTags(p),
-		--Attributes = TaggingService.GetAttributes(p)
+		Tags = p:GetTags(),
+		Attributes = p:GetAttributes()
 	}
 
+	-- serialize properties if they are not their defaults
 	local prop
 
+	serial.Anchored = p.Anchored
+
 	prop = p.Transparency
-    if prop ~= 0 then
-		serial.Transparency = prop
-	end
+    if prop ~= 0 then serial.Transparency = prop end
 
 	prop = p.Reflectance
-    if prop ~= 0 then
-		serial.Reflectance = prop
-	end
+    if prop ~= 0 then serial.Reflectance = prop end
 
 	prop = p.Material
-    if prop ~= Enum.Material.Plastic then
-		serial.Material = prop.Value
-	end
+    if prop ~= Enum.Material.Plastic then serial.Material = prop.Value end
 
 	prop = p.MaterialVariant
-    if #prop > 0 then
-		serial.MaterialVariant = prop
-	end
+    if #prop > 0 then serial.MaterialVariant = prop end
 
 	prop = p.CollisionGroup
-    if prop ~= "Default" then
-		serial.CollisionGroup = prop
-	end
+    if prop ~= "Default" then serial.CollisionGroup = prop end
 
-
+	-- serialize textures
 	local textures = {}
-
 	for _, child in ipairs(p:GetChildren()) do
 		if child:IsA("Texture") then
 			local serialTexture = {}
@@ -257,10 +195,10 @@ local function SerializedPartInstance(p, ignoreWorldState)
 			serialTexture.Transparency = child.Transparency
 			serialTexture.ZIndex = child.ZIndex
 			serialTexture.Face = child.Face.Value
+
 			table.insert(textures, serialTexture)
 		end
 	end
-
 	serial.Textures = textures
 
 	if not ignoreWorldState then
