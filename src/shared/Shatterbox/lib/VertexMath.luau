@@ -1,7 +1,7 @@
 --!native
 --!optimize 2
 
-
+--#selene: allow(unused_variable)
 
 local EPSILON = 1e-3
 local UNEPS = 1 - EPSILON

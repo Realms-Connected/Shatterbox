@@ -7,9 +7,20 @@ export type Hitbox = WorldInfo & {
 	Shape : Enum.PartType
 }
 
+export type DestroyedVoxelInfo = {
+	DirtyGroupID : string,
+
+	CuttingPart : Hitbox,
+
+	IsEdge : boolean,
+	IsAlreadyDebris : boolean,
+
+	UserData : {any}
+}
+
 export type OnDestructCompleted = (DestroyedVoxelCount : number, AffectedDirtyGroupIDs : { [string] : boolean }) -> ()
 
-export type OnVoxelDestruct = (voxel : Part, DirtyGroupID : string, cuttingPart : Hitbox, isEdge : boolean, isAlreadyDebris : boolean, any...) -> ()
+export type OnVoxelDestruct = (voxel : Part, info : DestroyedVoxelInfo) -> ()
 
 export type ImaginaryBox = WorldInfo & {
 

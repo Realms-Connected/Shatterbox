@@ -40,7 +40,7 @@ end
 
 
 -- The default client behavior (for when an OnVoxelDestruct callback does not exist)
-ClientEffects.Default = function(voxel) voxel:Destroy() end
+-- ClientEffects.Default = function(voxel) voxel:Destroy() end
 
 
 
@@ -49,17 +49,16 @@ ClientEffects.Default = function(voxel) voxel:Destroy() end
 
 
 -- An example effect that leaves rough edges around the destruction that are cleaned on smooth cleanup
-ClientEffects.Rough = function(voxel, DirtyGroupID, cuttingPart, isEdge, isAlreadyDebris)
+ClientEffects.Rough = function(voxel, info : Types.DestroyedVoxelInfo)
 
-    if isAlreadyDebris then -- the voxel is already debris
-        if Shatterbox.PartEncapsulatesBlockPart(cuttingPart, voxel) then voxel:Destroy() end -- fully contained debris is destroyed
+    if info.IsAlreadyDebris then -- the voxel is already debris
+        if not info.IsEdge then voxel:Destroy() end -- fully contained debris is destroyed
         return
     end
 
-
     local roll = math.random()
 
-    if isEdge and roll < 0.8 then -- 80% of edge voxels become "edge debris"
+    if info.IsEdge and roll < 0.8 then -- 80% of edge voxels become "edge debris"
         voxel.CFrame *= CFrame.Angles(math.random() * 2 * math.pi, math.random() * 2 * math.pi, math.random() * 2 * math.pi)
         voxel.Size *= math.random() + 1
         return

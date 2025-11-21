@@ -28,7 +28,7 @@ Settings.UseSmoothCleanup = true -- If false, the CleanupDelay will be ignored a
 
 -- Part division settings
 
-Settings.MaxDivisionsPerFrame = 500 -- Limits the count of part subdivisions per frame using `Destroy` (1 division = up to 8 new parts before greedy meshing)
+Settings.MaxDivisionsPerFrame = 200 -- Limits the count of part subdivisions per frame using `Destroy` (1 division = up to 8 new parts before greedy meshing)
 
 Settings.DefaultGridSize = 1
 

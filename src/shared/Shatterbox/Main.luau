@@ -109,7 +109,7 @@ local EPSILON = 1e-3
 local Shatterbox = {}
 
 local OnVoxelDestructRegistry = setmetatable({}, {
-	__index = function(tbl, k) return (k and rawget(tbl, k:lower())) or rawget(tbl, "default") end
+	__index = function(tbl, k) return (k and rawget(tbl, k:lower())) end -- or rawget(tbl, "default") end
 }) :: { [string] : Types.OnVoxelDestruct }
 
 local ClientEvents, ServerEvents, mapContainer
@@ -125,13 +125,11 @@ if isServer then
 elseif isClient then
 	ClientEvents = require(PathToClient).Shatterbox
 
-	if USE_CLIENT_SERVER then
-		mapContainer = workspace:FindFirstChild("ClientMap")
-		if not mapContainer then
-			mapContainer = Instance.new("Folder")
-			mapContainer.Parent = workspace
-			mapContainer.Name = "ClientMap"
-		end
+	mapContainer = workspace:FindFirstChild("ClientMap")
+	if not mapContainer then
+		mapContainer = Instance.new("Folder")
+		mapContainer.Parent = workspace
+		mapContainer.Name = "ClientMap"
 	end
 
 	local clientEffects = require(src:WaitForChild("effects"):WaitForChild("Client"))
@@ -200,6 +198,8 @@ local ShatterQueue = {} :: { Types.DestructionParams }
 local CountOperationsProcessing = {} :: { [string] : { [string] : boolean } }
 -- Dirty groups affected by an ongoing operation map [DestructionID] : { [DirtyGroupID] : boolean }
 local OperationAffectedDirtyGroups = {} :: { [string] : { [string] : boolean } }
+-- Voxels blacklisted by an ongoing operation (one destruction cannot re-destroy a voxel that it created)
+local OperationBlacklistedVoxels = {} :: { [Part] : boolean }
 
 -- Dirty groups waiting to be greedy meshed [DirtyGroupID] : GridSize
 local GreedyMeshingQueue = {} :: { [string] : number }
@@ -660,13 +660,13 @@ end
 
 
 -- What happens when a model is passed in as the `CuttingPart`
-local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, ...)
+local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData)
 	local cuttingPart = if typeof(intersectingPart) == "table" then intersectingPart.CuttingPart else intersectingPart
 	local ret = {}
 	if cuttingPart and typeof(cuttingPart) == "Instance" and cuttingPart:IsA("Model") then
 		for _, desc in ipairs(cuttingPart:GetDescendants()) do
 			if not desc:IsA("Part") then continue end
-			local r = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, ...)
+			local r = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData)
 			if typeof(r) == "table" then
 				table.move(r, 1, #r, #ret + 1, ret)
 			end
@@ -677,7 +677,7 @@ local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, Cle
 end
 
 -- Validates destruction parameters
-local function ValidateDestructionParams(intersectingPart : Part | Model | Types.Hitbox | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, ... : any)
+local function ValidateDestructionParams(intersectingPart : Part | Model | Types.Hitbox | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any})
 
 	local CuttingPart = {} :: Types.Hitbox
 	local params = {} :: Types.InternalDestructionParams | Types.InternalImaginaryParams
@@ -724,16 +724,14 @@ local function ValidateDestructionParams(intersectingPart : Part | Model | Types
 				  params.GridSize = tbl.GridSize 			   or GridSize
 	params.SkipEncapsulatedVoxels = tbl.SkipEncapsulatedVoxels or SkipEncapsulatedVoxels
 	   params.OnDestructCompleted = tbl.OnDestructCompleted    or OnDestructCompleted
-		params.DestructParameters = tbl.DestructParameters     or { ... }
-		       params.finalOpTick = tbl.finalOpTick
-		                params.ID = tbl.ID or HttpService:GenerateGUID(false)
+				  params.UserData = tbl.UserData    		   or UserData or {}
+		                params.ID = tbl.ID 					   or HttpService:GenerateGUID(false)
 
 	assert(not params.CleanupDelay or typeof(params.CleanupDelay) == "number", "CleanupDelay must be a number if it is set.")
 	assert(not params.OnVoxelDestruct or typeof(params.OnVoxelDestruct) == "string", "OnVoxelDestruct must be a string indicating the name of the OnVoxelDestruct callback.")
 	assert(not params.GridSize or typeof(params.GridSize) == "number", "GridSize must be a number.")
 	assert(not params.SkipEncapsulatedVoxels or typeof(params.SkipEncapsulatedVoxels) == "boolean", "SkipEncapsulatedVoxels must be a boolean.")
 	assert(not params.OnDestructCompleted or typeof(params.OnDestructCompleted) == "function", "OnDestructCompleted must be a function.")
-	assert(typeof(params.DestructParameters) == "table", "DestructParameters must be an ARRAY (ordered by increasing number index).")
 
 	return params :: (Types.InternalImaginaryParams | Types.InternalDestructionParams)
 end
@@ -1121,6 +1119,7 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 				created.GridSize = gridSize
 				created.DirtyGroupID = DirtyGroupID
 				created.DestructionID = destructionID
+				created.isEdge = true
 				table.insert(dividing, created)
 			end
 		else
@@ -1180,21 +1179,14 @@ end
 --]]
 
 
--- Does the behavior for turning a voxel into debris and calling a particular effect
-local function VoxelDebrisThread(callbackName : string?, voxel : Part, DirtyGroupID : string, intersectingPart : BasePart, isEdge : boolean, ... : any)
-	local isAlreadyDebris = voxel:HasTag(DebrisTag)
+-- Uses the given callback from the OnVoxelDestruct registry to destroy the given voxel
+local function HandleVoxelDestruction(callbackName : string?, voxel : Part, info : Types.DestroyedVoxelInfo)
 
-	local s, e = pcall(OnVoxelDestructRegistry[callbackName], voxel, DirtyGroupID, intersectingPart, isEdge, isAlreadyDebris, ...)
+	local s, e = pcall(OnVoxelDestructRegistry[callbackName], voxel, info)
 
 	if not s then warn("Voxel destruction failed: " .. e) end
 
-	--voxel:AddTag(DebrisTag)
-	if not isAlreadyDebris then voxel:AddTag(DebrisTag) end
-end
-
--- Uses the given callback from the OnVoxelDestruct registry to destroy the given voxel
-local function HandleVoxelDestruction(callbackName : string?, voxel : Part, DirtyGroupID : string, intersectingPart : BasePart, isEdge : boolean, ... : any)
-	coroutine.wrap(VoxelDebrisThread)(callbackName, voxel, DirtyGroupID, intersectingPart, isEdge, ...)
+	if not info.IsAlreadyDebris then voxel:AddTag(DebrisTag) end
 end
 
 -- pops an element from the ShatterQueue, removing the completed operations that it might find before finding one to complete.
@@ -1203,15 +1195,25 @@ local function PopShatterQueue()
 	local v = table.remove(ShatterQueue)
 
 	while v and not popped do
-		local AffectedDirtyGroupIDs = OperationAffectedDirtyGroups[v.ID]
+		local DestructionID = v.ID
+		local AffectedDirtyGroupIDs = OperationAffectedDirtyGroups[DestructionID]
+		local BlacklistedVoxels = OperationBlacklistedVoxels[DestructionID]
 
 		shatterPart, partsInPart = v.CuttingPart, {}
 
 		for _, part in ipairs( GetDestructibleParts(v) ) do
 
-			--if part:HasTag(DebrisTag) then
 			if part:HasTag(DebrisTag) then
-				HandleVoxelDestruction(v.OnVoxelDestruct, part, part:GetAttribute(DirtyGroupIDAttribute), shatterPart, not PartEncapsulatesBlockPart(shatterPart, part.CFrame, part.Size), unpack(v.DestructParameters))
+				if not BlacklistedVoxels[part] then
+					BlacklistedVoxels[part] = true
+					HandleVoxelDestruction(v.OnVoxelDestruct, part, {
+						DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute),
+						CuttingPart = shatterPart,
+						IsEdge = not PartEncapsulatesBlockPart(shatterPart, part.CFrame, part.Size),
+						IsAlreadyDebris = true,
+						UserData = v.UserData
+					})
+				end
 				continue
 			end
 
@@ -1228,12 +1230,12 @@ local function PopShatterQueue()
 		if #partsInPart == 0 then
 			if v.OnDestructCompleted then v.OnDestructCompleted(v.DestroyedVoxels, AffectedDirtyGroupIDs) end
 
-			local DestructionID = v.ID
 			for DirtyGroupID in pairs(AffectedDirtyGroupIDs) do
 				local count = CountOperationsProcessing[DirtyGroupID] - 1
 				CountOperationsProcessing[DirtyGroupID] = count > 0 and count or nil
 			end
 			OperationAffectedDirtyGroups[DestructionID] = nil
+			OperationBlacklistedVoxels[DestructionID] = nil
 
 			v = table.remove(ShatterQueue)
 		else
@@ -1251,12 +1253,27 @@ local function ShatterWorker()
 	local popped, partsInPart = PopShatterQueue()
 	if not popped then return false end
 
+	local blacklistedVoxels = OperationBlacklistedVoxels[popped.ID]
+
 	local ivoxels = ImaginaryVoxels(popped, true, partsInPart)
 	popped.DestroyedVoxels += #ivoxels -- count voxel contributions
 
-	local OnVoxelDestruct, CuttingPart, DestructParameters = popped.OnVoxelDestruct, popped.CuttingPart, popped.DestructParameters
-	for _, ivoxel in ipairs(ivoxels) do
-		HandleVoxelDestruction(OnVoxelDestruct, Shatterbox.InstantiateImaginaryVoxel(ivoxel), ivoxel.DirtyGroupID, CuttingPart, ivoxel.isEdge, unpack(DestructParameters))
+	local OnVoxelDestruct = popped.OnVoxelDestruct
+	if OnVoxelDestructRegistry[OnVoxelDestruct] then
+		local CuttingPart, UserData = popped.CuttingPart, popped.UserData
+		for _, ivoxel in ipairs(ivoxels) do
+			local voxel = Shatterbox.InstantiateImaginaryVoxel(ivoxel, true)
+
+			blacklistedVoxels[voxel] = true
+
+			HandleVoxelDestruction(OnVoxelDestruct, voxel, {
+				DirtyGroupID = ivoxel.DirtyGroupID,
+				CuttingPart = CuttingPart,
+				IsEdge = ivoxel.isEdge,
+				IsAlreadyDebris = false,
+				UserData = UserData
+			})
+		end
 	end
 
 	return true
@@ -1306,6 +1323,7 @@ local function ReplicateDestructionFromServer(destructionType, serialParams, ser
 		for DirtyGroupID in pairs(affectedDirtyGroupIDs) do
 			CountOperationsProcessing[DirtyGroupID] = (CountOperationsProcessing[DirtyGroupID] or 0) + 1
 		end
+		OperationBlacklistedVoxels[DestructionID] = {}
 
 		destructionParams.DestroyedVoxels = 0
 		table.insert(ShatterQueue, destructionParams)
@@ -1657,15 +1675,13 @@ end
 -- Performs voxel destruction around the 'intersectingPart' according to the FilterTagged supplied.
 --
 -- if no FilterTagged is given, everything except IndestructibleTag tagged Block parts are considered for destruction.
-function Shatterbox.Destroy(intersectingPart : Part | Model | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, ... : any)
-	local args = { ... }
-
+function Shatterbox.Destroy(intersectingPart : Part | Model | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any})
 	coroutine.wrap(function()
-		if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, unpack(args)) then
+		if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData) then
 			return
 		end
 
-		local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, unpack(args))
+		local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData)
 
 		params.DestroyedVoxels = 0
 
@@ -1683,6 +1699,7 @@ function Shatterbox.Destroy(intersectingPart : Part | Model | Types.DestructionP
 			CountOperationsProcessing[DirtyGroupID] = (CountOperationsProcessing[DirtyGroupID] or 0) + 1
 		end
 		OperationAffectedDirtyGroups[params.ID] = AffectedDirtyGroups
+		OperationBlacklistedVoxels[params.ID] = {}
 
 		if USE_CLIENT_SERVER and isServer then
 			ReplicateDestructionToClients(NORMAL, params, createdDirtyGroups)
@@ -1724,12 +1741,12 @@ function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.Imag
 end
 
 -- Will return a created voxel using the supplied ImaginaryVoxel, will automatically parent the voxel to the ShatterboxTemporary folder and give it the DebrisTag tag
-function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVoxel)
+function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVoxel, doNotGiveDebrisTag : boolean?)
 	local DirtyGroupID = ImaginaryVoxel.DirtyGroupID
 
 	local voxel = InstantiatePart(DirtyGroupID, ImaginaryVoxel.CFrame, ImaginaryVoxel.Size)
 
-	voxel:AddTag(DebrisTag)
+	if not doNotGiveDebrisTag then voxel:AddTag(DebrisTag) end
 
 	voxel.Destroying:Once(function()
 		local members = DirtyGroupMembers[DirtyGroupID]
@@ -1860,8 +1877,10 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?
 		for DirtyGroupID in pairs(DirtyGroupData) do UndoDirtyGroup(DirtyGroupID) end
 	else
 		for DirtyGroupID, groupData in pairs(DirtyGroupData) do
-			if not replicated then
-				local OriginalPart = groupData.OriginalPart
+			local OriginalPart = groupData.OriginalPart
+			if replicated then
+				OriginalPart:Destroy()
+			else
 				-- clear the dirty group information
 				OriginalPart:SetAttribute(DirtyGroupIDAttribute)
 				-- put the original part back where it was before Shatterbox touched it
@@ -1881,6 +1900,7 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?
 	ActiveGMWorkerCount = 0
 	ActiveGMWorkerGridSize = {}
 
+	for _, puppet in pairs(Puppets) do puppet:Destroy() end
 	Puppets = {}
 	CreatePuppetQueue = {}
 end
@@ -1907,7 +1927,7 @@ function Shatterbox.CreateHitbox()
 	hitbox.FilterTagged = nil :: (string | {string})?
 
 	hitbox.OnVoxelDestruct = nil :: string?
-	hitbox.DestructParameters = {} :: {any}
+	hitbox.UserData = {} :: {any}
 
 	hitbox.OnDestructCompleted = nil :: (() -> ())?
 
