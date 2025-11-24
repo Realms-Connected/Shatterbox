@@ -224,6 +224,8 @@ local IntersectingPart = Instance.new("Part")
 local puppetTimeAccumulation = 0
 local frameDivs = 0
 
+local clientInitComplete = false -- flag used to pause replicating events until the server has replicated it's state
+
 
 local ci, cd = 0, 0
 
@@ -1311,6 +1313,8 @@ local function ReplicateDestructionFromServer(destructionType, serialParams, ser
 		DirtyGroupMembers[DirtyGroupID] = {}
 	end
 
+	while not clientInitComplete do RunService.Heartbeat:Wait() end
+
 	if destructionType == IMAGINARY then
 		destructionParams.SkipEncapsulatedVoxels = true
 		RunService.Heartbeat:Wait()
@@ -1475,6 +1479,8 @@ local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMe
 	end
 
 	CreatePuppets(serialPuppets)
+
+	clientInitComplete = true
 end
 
 
@@ -1938,7 +1944,11 @@ function Shatterbox.CreateHitbox()
 	hitbox.DestructionType = "DEFAULT" :: ("DEFAULT"|"IMAGINARY")
 	hitbox.ImaginaryCallback = nil :: ( (imaginaryVoxels : {Types.ImaginaryVoxel}) -> () )?
 
-	hitbox.PollingEvent = RunService.Heartbeat -- the event that polls with a deltaTime parameter
+	hitbox.StartConnectionEvent = RunService.Heartbeat -- the event that the hitbox connects to when using Start(), needs to have a deltaTime parameter
+	hitbox.WeldConnectionEvent = RunService.PostSimulation -- the event that the hitbox connects to when using WeldTo()
+
+	hitbox.VelocityPrediction = false :: boolean
+	hitbox.VelocityBias = 1 :: number?
 
 	-- Performs voxel destruction around the hitbox
 	function hitbox:Destroy() Shatterbox.Destroy(hitbox) end
@@ -1958,8 +1968,14 @@ function Shatterbox.CreateHitbox()
 		if wcon then wcon:Disconnect() end
 		if dcon then dcon:Disconnect() end
 		hitbox.CFrame = Part.CFrame
-		wcon = RunService.PostSimulation:Connect(function() hitbox.CFrame = Part.CFrame end)
-		dcon = Part.Destroying:Connect(hitbox.Destroy)
+		wcon = hitbox.WeldConnectionEvent:Connect(function(deltaTime)
+			if hitbox.VelocityPrediction then
+				hitbox.CFrame = Part.CFrame + Part.AssemblyLinearVelocity * hitbox.VelocityBias * deltaTime
+			else
+				hitbox.CFrame = Part.CFrame
+			end
+		end)
+		dcon = Part.Destroying:Once(hitbox.DestroyHitbox)
 	end
 
 	-- will "unweld" the hitbox
@@ -1972,7 +1988,7 @@ function Shatterbox.CreateHitbox()
 	local ccon : RBXScriptConnection?
 	local lastCut : number
 
-	local function DestroyConnection()
+	local function DestructionStartConnection()
 		local t = time()
 		if lastCut and t - lastCut < (hitbox.DestructDelay or 0.1) then return end
 		lastCut = t
@@ -1990,7 +2006,7 @@ function Shatterbox.CreateHitbox()
 	-- will continuously cut around the hitbox every hitbox.DestructDelay seconds, which defaults to 0.1
 	function hitbox:Start()
 		if ccon then return end
-		ccon = hitbox.PollingEvent:Connect(DestroyConnection)
+		ccon = hitbox.StartConnectionEvent:Connect(DestructionStartConnection)
 	end
 
 	-- will stop continuous destruction

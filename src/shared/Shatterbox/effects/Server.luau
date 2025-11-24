@@ -34,9 +34,9 @@ end
 
 
 
---[[
-ServerEffects.FlyingDebris = function(voxel, DirtyGroupID, cuttingPart, isEdge, isAlreadyDebris)
-    if isAlreadyDebris then return end
+--
+ServerEffects.FlyingDebris = function(voxel, info :  Types.DestroyedVoxelInfo)
+    if info.IsAlreadyDebris then return end
 
     Shatterbox.Puppeteer(voxel)
     --voxel.Anchored = false
