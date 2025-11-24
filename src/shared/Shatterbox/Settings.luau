@@ -24,11 +24,12 @@ end
 
 Settings.UseSmoothCleanup = true -- If false, the CleanupDelay will be ignored and no smooth cleanups will happen at all.
 
+Settings.DefaultSmoothCleanupDelay = 60 -- the default smooth cleanup delay if none is provided. Setting the CleanupDelay to 0 or a negative number disables smooth cleanup for that destruction.
 
 
 -- Part division settings
 
-Settings.MaxDivisionsPerFrame = 200 -- Limits the count of part subdivisions per frame using `Destroy` (1 division = up to 8 new parts before greedy meshing)
+Settings.MaxDivisionsPerFrame = 1000 -- Limits the count of part subdivisions per frame using `Destroy` (1 division = up to 8 new parts before greedy meshing)
 
 Settings.DefaultGridSize = 1
 
@@ -47,7 +48,7 @@ Settings.GMTraversalsPerFrame = 500 -- How many times greedy meshing can iterate
 
 Settings.GMPartCreationsPerFrame = 5 -- How many parts greedy meshing should try to make every frame once the worker is finished traversing. This is a soft-limit, not a hard-limit, for smooth visual display
 
-Settings.GMWorkerCount = 5 -- How many greedy meshing workers there are. Each worker performs calculations for a single `dirtyParent` model
+Settings.GMWorkerCount = 10 -- How many greedy meshing workers there are. Each worker performs calculations for a single `dirtyParent` model
 
 
 

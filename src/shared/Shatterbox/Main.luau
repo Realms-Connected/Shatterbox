@@ -545,8 +545,13 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 		end
 
 		local startIndex
-		for i in ipairs(meshed) do
+		for i, meshedInfo in ipairs(meshed) do
 			if InstancedMeshIDs[i] then continue end
+			if #meshedInfo.Contributed == 1 then -- do not re-create parts that didn't change
+				InstancedMeshIDs[i] = true
+				numInstanced += 1
+				continue
+			end
 			startIndex = i
 			break
 		end
@@ -721,7 +726,7 @@ local function ValidateDestructionParams(intersectingPart : Part | Model | Types
 
 			   params.CuttingPart = CuttingPart
 			  params.FilterTagged = filterTagged
-			  params.CleanupDelay = tbl.CleanupDelay		   or CleanupDelay
+			  params.CleanupDelay = tbl.CleanupDelay		   or CleanupDelay or Settings.DefaultSmoothCleanupDelay
 		   params.OnVoxelDestruct = tbl.OnVoxelDestruct 	   or OnVoxelDestruct
 				  params.GridSize = tbl.GridSize 			   or GridSize
 	params.SkipEncapsulatedVoxels = tbl.SkipEncapsulatedVoxels or SkipEncapsulatedVoxels
@@ -912,7 +917,7 @@ local function MarkDirty(Part : Part, destructionParams : Types.InternalImaginar
 
 	-- Take the maximum value of this cleanup delay and the previous ones if it exists
 	local CleanupDelay = destructionParams.CleanupDelay
-	if Settings.UseSmoothCleanup and CleanupDelay then
+	if Settings.UseSmoothCleanup and CleanupDelay > 0 then
 		local prev = SmoothCleanupQueue[DirtyGroupID]
 		SmoothCleanupQueue[DirtyGroupID] = prev and math.max(prev, CleanupDelay) or CleanupDelay
 	end
@@ -1538,7 +1543,10 @@ local function GreedyMeshingBehavior()
 		local toRemove = {}
 		for DirtyGroupID, GridSize in pairs(GreedyMeshingQueue) do
 			if CountOperationsProcessing[DirtyGroupID] or GreedyWorkers[DirtyGroupID] then continue end
-
+			if not next(DirtyGroupMembers[DirtyGroupID]) then -- groups that have no members should not be greedy meshed
+				toRemove[DirtyGroupID] = true
+				continue
+			end
 			local thr = coroutine.create(GreedyMeshWorker)
 
 			toRemove[DirtyGroupID] = true
@@ -1691,8 +1699,6 @@ function Shatterbox.Destroy(intersectingPart : Part | Model | Types.DestructionP
 
 		params.DestroyedVoxels = 0
 
-		if params.CleanupDelay and params.CleanupDelay <= 0 then return end
-
 		local destructibleParts, createdDirtyGroups = GetDestructibleParts(params)
 		if #destructibleParts == 0 then return end
 
@@ -1729,8 +1735,6 @@ function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.Imag
 	end
 
 	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels)
-
-	if params.CleanupDelay and params.CleanupDelay < 0 then return {} end
 
 	voxels = voxels :: {Types.ImaginaryVoxel}
 

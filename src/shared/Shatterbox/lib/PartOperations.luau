@@ -41,9 +41,9 @@ local function PartFromTemplate(template, cframe, provider)
 	prop = template.Size
     if prop ~= part.Size then part.Size = prop end
 
-	--part.Color = Color3.fromHSV(math.random(), 1, 1)
-	prop = template.Color
-    if prop ~= part.Color then part.Color = prop end
+	part.Color = Color3.fromHSV(math.random(), 1, 1)
+	--prop = template.Color
+    --if prop ~= part.Color then part.Color = prop end
 
 	prop = template.Transparency
     if prop ~= part.Transparency then part.Transparency = prop end
