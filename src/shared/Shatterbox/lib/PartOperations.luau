@@ -18,6 +18,13 @@ local localAxisVectors = { X = "RightVector", Y = "UpVector", Z = "ZVector" }
     A CFrame can be supplied which is where the part will be placed.
 ]]
 local function PartFromTemplate(template, cframe, provider)
+
+	if not template:IsA("Part") or template.Shape ~= Enum.PartType.Block then
+		local cloned = template:Clone()
+		if cframe then cloned.CFrame = cframe end
+		return cloned
+	end
+
 	local part
 
 	--debug.profilebegin("create part")
@@ -35,15 +42,14 @@ local function PartFromTemplate(template, cframe, provider)
 	-- Set properties if they are not their defaults
 	local prop
 
-	prop = template.Anchored
-    if prop ~= part.Anchored then part.Anchored = prop end
+    if not part.Anchored then part.Anchored = true end
 
 	prop = template.Size
     if prop ~= part.Size then part.Size = prop end
 
-	part.Color = Color3.fromHSV(math.random(), 1, 1)
-	--prop = template.Color
-    --if prop ~= part.Color then part.Color = prop end
+	--part.Color = Color3.fromHSV(math.random(), 1, 1)
+	prop = template.Color
+    if prop ~= part.Color then part.Color = prop end
 
 	prop = template.Transparency
     if prop ~= part.Transparency then part.Transparency = prop end

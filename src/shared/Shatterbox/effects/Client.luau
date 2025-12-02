@@ -21,7 +21,7 @@ function ClientEffects:SetReference(shatterbox) Shatterbox = shatterbox end
 -- define your client side effects here. Defining the same effect name on both sides causes the effect to do different things on server and client sides.
 --[[
 
-ClientEffects.EffectName = function(voxel, dirtyParent, cuttingPart, isEdge)
+ClientEffects.EffectName = function(voxel, info)
 
 
 end

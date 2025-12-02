@@ -11,10 +11,11 @@
 --#selene: allow(shadowing)
 
 local IndestructibleTag = "Indestructible"
-local DynamicWeldTag = "Falling"
+local FallingGroupTag = "FallingGroup"
 
 local DebrisTag = "ShatterboxDebris"
 local DirtyGroupIDAttribute = "DirtyGroupID"
+local FallingGroupIDAttribute = "FallingGroupID"
 
 
 local src = script.Parent
@@ -83,7 +84,7 @@ local function ShouldSkipInstance(i : Instance)
 	-- skip anything that passed the SkipInstanceCheck
 	if Settings.SkipInstanceCheck(i) then return true end
 	-- skip anything that isnt a block part
-	if not i:IsA("Part") or i.Shape ~= Enum.PartType.Block then return true end
+	-- if not i:IsA("Part") or i.Shape ~= Enum.PartType.Block then return true end
 	-- skip anything with the "Indestructible" tag
 	if i:HasTag(IndestructibleTag) then return true end
 	-- skip anything which has a Humanoid child, or if any of its ancestors have a Humanoid child.
@@ -200,20 +201,22 @@ local CountOperationsProcessing = {} :: { [string] : { [string] : boolean } }
 local OperationAffectedDirtyGroups = {} :: { [string] : { [string] : boolean } }
 -- Voxels blacklisted by an ongoing operation (one destruction cannot re-destroy a voxel that it created)
 local OperationBlacklistedVoxels = {} :: { [Part] : boolean }
+-- Falling groups being processed by an ongoing operation [DestructionID] : { [FallingGroupID] : boolean }
+local OperationAffectedFallingGroups = {} :: { [string] : { [string] : boolean }}
 
 -- Dirty groups waiting to be greedy meshed [DirtyGroupID] : GridSize
 local GreedyMeshingQueue = {} :: { [string] : number }
 local GreedyWorkers = {} :: { [string] : thread }
-local GreedyWorkersTerminationFlags = {} :: { [Model] : boolean }
+local GreedyWorkersTerminationFlags = {} :: { [string] : boolean }
 local ActiveGMWorkerCount = 0
 local ActiveGMWorkerGridSize = {} :: { [string] : number }
 
 local Puppets = {} :: { [string] : Part }
 local CreatePuppetQueue = {}
 
-local DynamicWeldGroups = {} :: {
-	{Model}
-}
+-- Falling groups [FallingGroupID] : { [DirtyGroupID] : boolean }
+local FallingGroupMembers = {} :: { [string] : { [string] : boolean } }
+local FallingGroupSectionAnchors = {} :: { [string] : { Part }}
 
 -- Pre-allocated OverlapParams used when FilterTagged is supplied
 local overlapParams = OverlapParams.new()
@@ -604,10 +607,14 @@ end
 
 -- Returns the first occurance of an ancestor that is a Folder or a Model
 local function FindFirstAncestorGroup(i : Instance) : (Folder|Model)?
-	return i:FindFirstAncestorWhichIsA("Folder") or i:FindFirstAncestorWhichIsA("Model")
+	local Ancestor = i.Parent
+
+	while Ancestor and not (Ancestor:IsA("Folder") or Ancestor:IsA("Model")) do Ancestor = Ancestor.Parent end
+
+	return Ancestor
 end
 
--- Returns all of the tags of every group-type (folder/model) ancestor as an array
+-- Returns all of the tags of every ancestor group instance (folder/model) as an array
 local function AncestorGroupTags(i : Instance) : {string}
 	local tags = {}
 
@@ -615,7 +622,7 @@ local function AncestorGroupTags(i : Instance) : {string}
 	while Ancestor do
 		local t = Ancestor:GetTags()
 
-		local found = table.find(t, DynamicWeldTag)
+		local found = table.find(t, FallingGroupTag)
 		if found then table.remove(t, found) end
 
 		if #t > 0 then
@@ -627,11 +634,11 @@ local function AncestorGroupTags(i : Instance) : {string}
 	return tags
 end
 
--- Finds the first occurance of an ancestor with a given tag, starting from the first ancestor
-local function FindFirstAncestorWithTag(i : Instance, tag : string) : Instance?
-	local Ancestor = i.Parent
+-- Finds the first occurance of an ancestor group instance (folder/model) with a given tag
+local function FindFirstAncestorGroupWithTag(i : Instance, tag : string) : Instance?
+	local Ancestor = FindFirstAncestorGroup(i)
 
-	while Ancestor and not Ancestor:HasTag(tag) do Ancestor = Ancestor.Parent end
+	while Ancestor and not Ancestor:HasTag(tag) do Ancestor = FindFirstAncestorGroup(Ancestor) end
 
 	return Ancestor
 end
@@ -757,34 +764,33 @@ local function DeserializedDestructionParams(serialDestructionParams)
 end
 
 
+
 local DFSWeldSearchXSizeOffset = Vector3.new(1 + EPSILON, 1 - EPSILON, 1 - EPSILON)
 local DFSWeldSearchYSizeOffset = Vector3.new(1 - EPSILON, 1 + EPSILON, 1 - EPSILON)
 local DFSWeldSearchZSizeOffset = Vector3.new(1 - EPSILON, 1 - EPSILON, 1 + EPSILON)
---[[ DFSWeld algorithm:
 
-	Starting with some part, a state graph is created with the following properties:
-	* each node represents a Part bounded by this greedy welding (all connected parts until non-destructibles are reached)
-	* each node has a link to all other destructibles that are touching the faces of it, or are inside of it
---]]
--- Starting with some part, DFS all "connected" parts, until we reach some part that is non-destructible.
-local function DFSWeld(dirtyParents)
+local function DFSWeld(FallingGroupID)
 
-	if not dirtyParents then return end
+	-- destroy original welds if they exist, instantiate the section anchors array
+	local sectionAnchors = FallingGroupSectionAnchors[FallingGroupID] or {}
+	for _, part in ipairs(sectionAnchors) do
+		part:Destroy()
+	end
 
+	-- add all of the falling group members to a processing queue
 	local toProcess = {}
-
-	for _, dirtyParent in ipairs(dirtyParents) do
-		for _, child in ipairs(dirtyParent:GetChildren()) do
-			if ShouldSkipInstance(child) then continue end
-
-			table.insert(toProcess, child)
+	for DirtyGroupID in pairs(FallingGroupMembers[FallingGroupID]) do
+		for Part in pairs(DirtyGroupMembers[DirtyGroupID]) do
+			table.insert(toProcess, Part)
 		end
 	end
 
+	-- Perform DFS starting at the first member of the processing queue, while there are still elements in the processing queue.
+	--  * contiguous members of the processing queue are considered a "section", with each section having a "section anchor" part that holds all of the welds for the section
 	while #toProcess > 0 do
 		local StartingPart = table.remove(toProcess)
 
-		local welds = {} :: { [Instance] : { [Instance] : boolean } }
+		local SectionMembers = {}
 
 		local visited, pathStack = { [StartingPart] = true }, {StartingPart}
 
@@ -792,71 +798,87 @@ local function DFSWeld(dirtyParents)
 			local currentPart = table.remove(pathStack)
 			local c, s = currentPart.CFrame, currentPart.Size
 
+			table.insert(SectionMembers, currentPart)
+
 			local nodeVisited = {}
-			local connections = welds[currentPart] or {}
 
-			for _, inAxis in ipairs(workspace:GetPartBoundsInBox(c, s + DFSWeldSearchXSizeOffset)) do -- gather touching parts on X axis
-				if inAxis == currentPart then continue end
-
-				if not welds[inAxis] or not welds[inAxis][currentPart] then connections[inAxis] = true end
-
-				if visited[inAxis] or ShouldSkipInstance(inAxis) then continue end
-
-				table.insert(pathStack, inAxis)
+			-- gather touching parts on X axis
+			for _, inAxis in ipairs(workspace:GetPartBoundsInBox(c, s + DFSWeldSearchXSizeOffset)) do
+				local inAxisFallingGroup = inAxis:GetAttribute(FallingGroupIDAttribute)
+				if (inAxisFallingGroup and inAxisFallingGroup ~= FallingGroupID) or visited[inAxis] or inAxis == currentPart or FindHumanoidAsAncestorChild(inAxis) then continue end
 				visited[inAxis] = true
+				table.insert(SectionMembers, inAxis)
 				nodeVisited[inAxis] = true
+
+				if not inAxisFallingGroup or ShouldSkipInstance(inAxis) then continue end
+				table.insert(pathStack, inAxis)
 			end
 
-			for _, inAxis in ipairs(workspace:GetPartBoundsInBox(c, s + DFSWeldSearchYSizeOffset)) do -- gather touching parts on Y axis
-				if nodeVisited[inAxis] or inAxis == currentPart then continue end
-
-				if not welds[inAxis] or not welds[inAxis][currentPart] then connections[inAxis] = true end
-
-				if visited[inAxis] or ShouldSkipInstance(inAxis) then continue end
-
-				table.insert(pathStack, inAxis)
+			-- gather touching parts on Y axis
+			for _, inAxis in ipairs(workspace:GetPartBoundsInBox(c, s + DFSWeldSearchYSizeOffset)) do
+				local inAxisFallingGroup = inAxis:GetAttribute(FallingGroupIDAttribute)
+				if (inAxisFallingGroup and inAxisFallingGroup ~= FallingGroupID) or visited[inAxis] or nodeVisited[inAxis] or inAxis == currentPart or FindHumanoidAsAncestorChild(inAxis) then continue end
 				visited[inAxis] = true
+				table.insert(SectionMembers, inAxis)
 				nodeVisited[inAxis] = true
-			end
 
-			for _, inAxis in ipairs(workspace:GetPartBoundsInBox(c, s + DFSWeldSearchZSizeOffset)) do -- gather touching parts on Z axis
-				if nodeVisited[inAxis] or inAxis == currentPart then continue end
-
-				if not welds[inAxis] or not welds[inAxis][currentPart] then connections[inAxis] = true end
-
-				if visited[inAxis] or ShouldSkipInstance(inAxis) then continue end
-
+				if not inAxisFallingGroup or ShouldSkipInstance(inAxis) then continue end
 				table.insert(pathStack, inAxis)
-				visited[inAxis] = true
 			end
 
-			welds[currentPart] = connections
+			-- gather touching parts on Z axis
+			for _, inAxis in ipairs(workspace:GetPartBoundsInBox(c, s + DFSWeldSearchZSizeOffset)) do
+				local inAxisFallingGroup = inAxis:GetAttribute(FallingGroupIDAttribute)
+				if (inAxisFallingGroup and inAxisFallingGroup ~= FallingGroupID) or visited[inAxis] or nodeVisited[inAxis] or inAxis == currentPart or FindHumanoidAsAncestorChild(inAxis) then continue end
+				visited[inAxis] = true
+				table.insert(SectionMembers, inAxis)
+
+				if not inAxisFallingGroup or ShouldSkipInstance(inAxis) then continue end
+				table.insert(pathStack, inAxis)
+			end
+
 		end
 
-		for partA, connections in pairs(welds) do
+		-- Create section anchor and weld section members to it, unanchoring them in the process
+		local SectionAnchor = Instance.new("Part")
+		SectionAnchor.Size = Vector3.one
+		SectionAnchor.Transparency = 1
+		SectionAnchor.CanCollide = false
+		SectionAnchor.CanQuery = false
+		SectionAnchor.Parent = workspace
 
-			if not ShouldSkipInstance(partA) then partA.Anchored = false end
+		-- Calculate average position and remove section members from toProcess queue
+		local avgPos = Vector3.zero
+		for _, Part in ipairs(SectionMembers) do
+			avgPos += Part.Position
 
-			local found = table.find(toProcess, partA)
+			local found = table.find(toProcess, Part)
 			if found then table.remove(toProcess, found) end
+		end
+		avgPos /= #SectionMembers
 
-			for partB in pairs(connections) do
+		SectionAnchor.CFrame = CFrame.new(avgPos)
+		local InverseSectionAnchorCF = SectionAnchor.CFrame:Inverse()
 
-				if not ShouldSkipInstance(partB) then partB.Anchored = false end
-
-				found = table.find(toProcess, partB)
-				if found then table.remove(toProcess, found) end
-
-				local weld = Instance.new("WeldConstraint")
-				weld.Part0 = partA
-				weld.Part1 = partB
-				weld.Parent = partA
-
-				weld:AddTag("ShatterboxWeld")
-			end
+		-- Weld all of the section members to the section anchor
+		for _, Part in ipairs(SectionMembers) do
+			local weld = Instance.new("Weld")
+			weld.C0 = InverseSectionAnchorCF
+			weld.C1 = Part.CFrame:Inverse()
+			weld.Part0 = SectionAnchor
+			weld.Part1 = Part
+			weld.Parent = SectionAnchor
 		end
 
+		-- Unanchor all of the section members
+		for _, Part in ipairs(SectionMembers) do
+			if Part:GetAttribute(FallingGroupIDAttribute) then Part.Anchored = false end
+		end
+
+		table.insert(sectionAnchors, SectionAnchor)
 	end
+
+	FallingGroupSectionAnchors[FallingGroupID] = sectionAnchors
 end
 
 
@@ -879,6 +901,27 @@ local function UndoDirtyGroup(DirtyGroupID : string)
 end
 
 
+local function PopulateDirtyGroup(Part : Part)
+	-- populate the initial dirty group information if there is no group associated with this part
+	local DirtyGroupID = HttpService:GenerateGUID(false)
+	Part:SetAttribute(DirtyGroupIDAttribute, DirtyGroupID)
+	DirtyGroupData[DirtyGroupID] = {
+		OriginalPart = Part,
+		OriginalParent = Part.Parent,
+		GridSize = Part:GetAttribute("GridSize")
+	}
+	DirtyGroupMembers[DirtyGroupID] = {}
+
+	if USE_CLIENT_SERVER and Part:IsA("Part") and Part.Shape == Enum.PartType.Block then
+		-- Inheritance of ancestor tags (hierarchy only changes with client server enabled)
+		for _, tag in ipairs(AncestorGroupTags(Part)) do Part:AddTag(tag) end
+		-- Put the part into the mapContainer (client side is "ClientMap" folder, server side is `workspace.CurrentCamera`)
+		Part.Parent = mapContainer
+	end
+
+	return DirtyGroupID
+end
+
 --[[ Does 2 things:
 
 	* If `Part` does not have an associated dirty group, one is created for it.
@@ -888,50 +931,73 @@ end
 ]]
 local function MarkDirty(Part : Part, destructionParams : Types.InternalImaginaryParams | Types.InternalDestructionParams)
 
-	if Part:HasTag(DebrisTag) then return false end
+	local CreatedDirtyGroups = {}
 
-	local wasDirtyGroupCreated = false
+	if Part:HasTag(DebrisTag) then return CreatedDirtyGroups end
+
+	local VisitedDirtyGroups = {}
 
 	local GridSize = Part:GetAttribute("GridSize")
 
-	local DirtyGroupID = Part:GetAttribute(DirtyGroupIDAttribute)
-	if not DirtyGroupID then
-		wasDirtyGroupCreated = true
-		-- populate the initial dirty group information if there is no group associated with this part
-		DirtyGroupID = HttpService:GenerateGUID(false)
-		Part:SetAttribute(DirtyGroupIDAttribute, DirtyGroupID)
-		DirtyGroupData[DirtyGroupID] = {
-			OriginalPart = Part,
-			OriginalParent = Part.Parent,
-			GridSize = GridSize
-		}
-		DirtyGroupMembers[DirtyGroupID] = {}
+	local PartDirtyGroupID = Part:GetAttribute(DirtyGroupIDAttribute)
 
-		if USE_CLIENT_SERVER then
-			-- Inheritance of ancestor tags (hierarchy only changes with client server enabled)
-			for _, tag in ipairs(AncestorGroupTags(Part)) do Part:AddTag(tag) end
-			-- Put the part into the mapContainer (client side is "ClientMap" folder, server side is `workspace.CurrentCamera`)
-			Part.Parent = mapContainer
+	local CreatedFallingGroupID
+	local fallingGroupContainer = FindFirstAncestorGroupWithTag(Part, FallingGroupTag)
+
+	if not Part:GetAttribute(FallingGroupIDAttribute) and fallingGroupContainer then
+
+		CreatedFallingGroupID = HttpService:GenerateGUID(false)
+		local fallingGroupMembers = {}
+
+		for _, part in ipairs(fallingGroupContainer:GetDescendants()) do
+			if not part:IsA("BasePart") then continue end
+
+			part:SetAttribute(FallingGroupIDAttribute, CreatedFallingGroupID)
+			local DirtyGroupID = PopulateDirtyGroup(part)
+			VisitedDirtyGroups[DirtyGroupID] = true
+
+			if part:IsA("Part") and part.Shape == Enum.PartType.Block then
+				CreatedDirtyGroups[DirtyGroupID] = true
+			end
+
+			part.Parent = nil
+			InstantiatePart(DirtyGroupID, part.CFrame, part.Size)
+
+			fallingGroupMembers[DirtyGroupID] = true
+		end
+		FallingGroupMembers[CreatedFallingGroupID] = fallingGroupMembers
+
+	elseif not PartDirtyGroupID then
+
+		PartDirtyGroupID = PopulateDirtyGroup(Part)
+
+		if Part:IsA("Part") and Part.Shape == Enum.PartType.Block then
+			CreatedDirtyGroups[PartDirtyGroupID] = true
+		end
+	end
+
+	if PartDirtyGroupID then
+		VisitedDirtyGroups[PartDirtyGroupID] = true
+		if Settings.UseGreedyMeshing and not Part:GetAttribute(FallingGroupIDAttribute) and Part:IsA("Part") and Part.Shape == Enum.PartType.Block then
+			QueueGreedyMeshing(PartDirtyGroupID, GridSize or destructionParams.GridSize or Settings.DefaultGridSize)
+		end
+		if not Part:IsA("Part") or Part.Shape ~= Enum.PartType.Block and not next(DirtyGroupMembers[PartDirtyGroupID]) then
+			Part.Parent = nil
+			local cloned = InstantiatePart(PartDirtyGroupID, Part.CFrame, Part.Size)
+			cloned.Anchored = false
 		end
 	end
 
 	-- Take the maximum value of this cleanup delay and the previous ones if it exists
 	local CleanupDelay = destructionParams.CleanupDelay
 	if Settings.UseSmoothCleanup and CleanupDelay > 0 then
-		local prev = SmoothCleanupQueue[DirtyGroupID]
-		SmoothCleanupQueue[DirtyGroupID] = prev and math.max(prev, CleanupDelay) or CleanupDelay
+		for DirtyGroupID in pairs(VisitedDirtyGroups) do
+			local prev = SmoothCleanupQueue[DirtyGroupID]
+			SmoothCleanupQueue[DirtyGroupID] = prev and math.max(prev, CleanupDelay) or CleanupDelay
+		end
 	end
 
-	--[[
-	local AncestorWithDynamicWeldTag = FindFirstAncestorWithTag(Part, DynamicWeldTag)
-	if AncestorWithDynamicWeldTag then
-
-	end
-	--]]
-
-	if Settings.UseGreedyMeshing then QueueGreedyMeshing(DirtyGroupID, GridSize or destructionParams.GridSize or Settings.DefaultGridSize) end
-
-	return wasDirtyGroupCreated and DirtyGroupID
+	return CreatedDirtyGroups, CreatedFallingGroupID
 end
 
 
@@ -939,23 +1005,40 @@ end
 local function GetDestructibleParts(destructionParams : Types.InternalImaginaryParams | Types.InternalDestructionParams)
 	local cuttingPart, replicated = destructionParams.CuttingPart, destructionParams.replicated
 
-	local partsInPart, createdDirtyGroups = {}, {}
+	local partsInPart, createdDirtyGroups, createdFallingGroups = {}, {}, {}
 
 	IntersectingPart.CFrame = cuttingPart.CFrame
 	IntersectingPart.Size = cuttingPart.Size
 	IntersectingPart.Shape = cuttingPart.Shape
 
+	local AffectedFallingGroups = OperationAffectedFallingGroups[destructionParams.ID] or {}
+
 	for _, part in ipairs( workspace:GetPartsInPart(IntersectingPart, destructionParams.FilterTagged and OverlapParamsOfTagged(destructionParams.FilterTagged)) ) do
 
 		if (replicated and not part:IsDescendantOf(mapContainer)) or ShouldSkipInstance(part) then continue end
 
-		local CreatedDirtyGroupID = MarkDirty(part, destructionParams)
-		if CreatedDirtyGroupID then createdDirtyGroups[CreatedDirtyGroupID] = true end
+		local dirtyGroups, fallingGroupID = MarkDirty(part, destructionParams)
+		for DirtyGroupID in pairs(dirtyGroups) do
+			createdDirtyGroups[DirtyGroupID] = true
+		end
+
+		if fallingGroupID then createdFallingGroups[fallingGroupID] = true end
+
+		fallingGroupID = part:GetAttribute(FallingGroupIDAttribute)
+		if fallingGroupID then
+			AffectedFallingGroups[fallingGroupID] = true
+		end
+
+		if not part:IsA("Part") or part.Shape ~= Enum.PartType.Block then
+			continue
+		end
 
 		table.insert(partsInPart, part)
 	end
 
-	return partsInPart, createdDirtyGroups
+	OperationAffectedFallingGroups[destructionParams.ID] = AffectedFallingGroups
+
+	return partsInPart, createdDirtyGroups, createdFallingGroups
 end
 
 
@@ -1177,7 +1260,10 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 	end
 	--]]
 
-	--DFSWeld(opDirties[params.ID])
+	for FallingGroupID in pairs(OperationAffectedFallingGroups[params.ID]) do
+		DFSWeld(FallingGroupID)
+	end
+	OperationAffectedFallingGroups[params.ID] = {}
 
 	--debug.profileend()
 
@@ -1242,6 +1328,7 @@ local function PopShatterQueue()
 				CountOperationsProcessing[DirtyGroupID] = count > 0 and count or nil
 			end
 			OperationAffectedDirtyGroups[DestructionID] = nil
+			OperationAffectedFallingGroups[DestructionID] = nil
 			OperationBlacklistedVoxels[DestructionID] = nil
 
 			v = table.remove(ShatterQueue)
@@ -1619,11 +1706,7 @@ end
 
 local function HeartbeatWorker(deltaTime)
 
-	--Smooth cleanup behavior
 	if Settings.UseSmoothCleanup then coroutine.wrap(SmoothCleanupBehavior)(deltaTime) end
-
-	--Greedy meshing coroutine behavior
-	if Settings.UseGreedyMeshing then GreedyMeshingBehavior() end
 
 	frameDivs = 0
 	local ops = 0
@@ -1632,6 +1715,8 @@ local function HeartbeatWorker(deltaTime)
 		ShatterWorker()
 		ops += 1
 	end
+
+	if Settings.UseGreedyMeshing then GreedyMeshingBehavior() end
 
 	if isServer then PuppeteerBehavior(deltaTime) end
 end
@@ -1699,19 +1784,20 @@ function Shatterbox.Destroy(intersectingPart : Part | Model | Types.DestructionP
 
 		params.DestroyedVoxels = 0
 
-		local destructibleParts, createdDirtyGroups = GetDestructibleParts(params)
+		local destructibleParts, createdDirtyGroups, createdFallingGroups = GetDestructibleParts(params)
 		if #destructibleParts == 0 then return end
+
+		local DestructionID = params.ID
 
 		local AffectedDirtyGroups = {}
 		for _, part in ipairs(destructibleParts) do
 			local DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute)
 			if AffectedDirtyGroups[DirtyGroupID] then continue end
 			AffectedDirtyGroups[DirtyGroupID] = true
-
 			CountOperationsProcessing[DirtyGroupID] = (CountOperationsProcessing[DirtyGroupID] or 0) + 1
 		end
-		OperationAffectedDirtyGroups[params.ID] = AffectedDirtyGroups
-		OperationBlacklistedVoxels[params.ID] = {}
+		OperationAffectedDirtyGroups[DestructionID] = AffectedDirtyGroups
+		OperationBlacklistedVoxels[DestructionID] = {}
 
 		if USE_CLIENT_SERVER and isServer then
 			ReplicateDestructionToClients(NORMAL, params, createdDirtyGroups)
@@ -1738,7 +1824,7 @@ function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.Imag
 
 	voxels = voxels :: {Types.ImaginaryVoxel}
 
-	local destructibleParts, createdDirtyGroups = GetDestructibleParts(params)
+	local destructibleParts, createdDirtyGroups, createdFallingGroups = GetDestructibleParts(params)
 	if #destructibleParts == 0 then return voxels end
 
 	if USE_CLIENT_SERVER and isServer then
@@ -1747,7 +1833,11 @@ function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.Imag
 
 	RunService.Heartbeat:Wait()
 
-	return ImaginaryVoxels(params)
+	voxels = ImaginaryVoxels(params)
+
+	OperationAffectedFallingGroups[params.ID] = nil
+
+	return voxels
 end
 
 -- Will return a created voxel using the supplied ImaginaryVoxel, will automatically parent the voxel to the ShatterboxTemporary folder and give it the DebrisTag tag

@@ -15,7 +15,7 @@ function ServerEffects:SetReference(shatterbox) Shatterbox = shatterbox end
 -- define your server side effects here. Defining the same effect name on both sides causes the effect to do different things on server and client sides.
 --[[
 
-ServerEffects.EffectName = function(voxel, dirtyParent, cuttingPart, isEdge)
+ServerEffects.EffectName = function(voxel, info)
 
 
 end
@@ -31,23 +31,6 @@ end
 
 -- The default client behavior (for when an OnVoxelDestruct callback does not exist)
 -- ServerEffects.Default = function(voxel) voxel:Destroy() end
-
-
-
---
-ServerEffects.FlyingDebris = function(voxel, info :  Types.DestroyedVoxelInfo)
-    if info.IsAlreadyDebris then return end
-
-    Shatterbox.Puppeteer(voxel)
-    --voxel.Anchored = false
-
-    voxel.CanCollide = false
-    voxel.AssemblyLinearVelocity = (Vector3.new(math.random(), math.random(), math.random()) - Vector3.one * 0.5) * 80
-    voxel.AssemblyAngularVelocity = (Vector3.new(math.random(), math.random(), math.random()) - Vector3.one * 0.5) * 20
-
-    game.Debris:AddItem(voxel, 3)
-end
---]]
 
 
 

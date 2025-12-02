@@ -111,7 +111,7 @@ event CreatePuppets {
 
 event ReplicatePuppetStates {
 	From: Server,
-	Type: Reliable,
+	Type: Unreliable,
 	Call: ManyAsync,
 	Data: PuppetState[]
 }
