@@ -1,30 +1,67 @@
+type Vec2 = f32[2]
+
+struct Decal {
+	Color3 : Color3?,
+
+	ColorMap : string?,
+	MetalnessMap : string?,
+	NormalMap : string?,
+	RoughnessMap : string?,
+	TexturePack : string?,
+
+	Transparency : f32?,
+
+	UVOffset : Vec2?,
+	UVScale : Vec2?,
+
+	ZIndex : u32?,
+
+	Face : u8(0..5)?
+}
+
 struct Texture {
-	Color3 : Color3,
+	..Decal,
 
-	OffsetStudsU : f32,
-	OffsetStudsV : f32,
-	StudsPerTileU : f32,
-	StudsPerTileV : f32,
+	OffsetStudsU : f32?,
+	OffsetStudsV : f32?,
+	StudsPerTileU : f32?,
+	StudsPerTileV : f32?,
+}
 
-	Texture : string?,
+struct Light {
+	ClassName : string,
 
-	Transparency : f32,
-	ZIndex : u32,
+	Brightness : f32?,
+	Color : Color3?,
+	Shadows : boolean?,
+	Range : f32?,
 
-	Face : u8(0..5)
+	Angle : f32?,
+	Face : u8(0..5)?
 }
 
 struct PartProperties {
 	Anchored : boolean,
 
-	Color : Color3,
+	Color : Color3?,
 	Material : u16(256..2311)?,
 	Transparency : f16?,
 	Reflectance : f16?,
 	MaterialVariant : string?,
 	CollisionGroup : string?,
 
-	Textures : Texture[],
+	LeftSurface : u8(0..10)?,
+	RightSurface : u8(0..10)?,
+	FrontSurface : u8(0..10)?,
+	BackSurface : u8(0..10)?,
+	TopSurface : u8(0..10)?,
+	BottomSurface : u8(0..10)?,
+
+	Textures : Texture[]?,
+
+	Lights : Light[]?,
+
+	Decals : Decal[]?,
 
 	Attributes : map{ [string]: unknown },
 	Tags : string[]
@@ -65,7 +102,7 @@ struct DestructionParamsType {
 	SkipEncapsulatedVoxels : boolean?,
 
 	OnVoxelDestruct : string?,
-	DestructParameters : unknown[]?
+	UserData : unknown?
 }
 
 struct PuppetState {
@@ -132,10 +169,13 @@ event ReplicateState {
 	Data: (
 			map{ [string]: PartInstance },
 			map{ [string]: PartInstance[] },
+			map{ [string]: boolean },
 
 			DestructionParamsType[],
 			map{ [string]: u32 },
 			map{ [string]: map{ [string]: boolean } },
+
+			map{ [string]: f32 },
 
 			map{ [string]: f32 },
 			map{ [string]: f32 },

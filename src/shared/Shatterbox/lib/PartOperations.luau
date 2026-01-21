@@ -11,6 +11,82 @@ type PartType = {CFrame : CFrame, Size : Vector3}
 
 local localAxisVectors = { X = "RightVector", Y = "UpVector", Z = "ZVector" }
 
+local WHITE = Color3.new(1, 1, 1)
+local MEDIUMSTONEGREY = Color3.fromRGB(163, 162, 165)
+
+
+-- Serializes the given decal instance
+local function SerializedDecalInstance(decal : Decal)
+	local serialDecal = {}
+
+	local prop = decal.Color3
+	if prop ~= WHITE then serialDecal.Color3 = prop end
+
+	prop = #decal.ColorMap > 0 and decal.ColorMap or decal.Texture
+	if #prop > 0 then serialDecal.ColorMap = prop end
+	prop = decal.MetalnessMap
+	if #prop > 0 then serialDecal.MetalnessMap = prop end
+	prop = decal.NormalMap
+	if #prop > 0 then serialDecal.NormalMap = prop end
+	prop = decal.RoughnessMap
+	if #prop > 0 then serialDecal.RoughnessMap = prop end
+	prop = decal.TexturePack
+	if #prop > 0 then serialDecal.TexturePack = prop end
+
+	prop = decal.Transparency
+	if prop ~= 0 then serialDecal.Transparency = prop end
+
+	prop = decal.UVOffset
+	if prop ~= Vector2.zero then serialDecal.UVOffset = prop end
+	prop = decal.UVScale
+	if prop ~= Vector2.one then serialDecal.UVScale = prop end
+
+	prop = decal.ZIndex
+	if prop ~= 1 then serialDecal.ZIndex = prop end
+
+	prop = decal.Face.Value
+	if prop ~= 5 then serialDecal.Face = prop end
+
+	return serialDecal
+end
+
+local function DeserializedDecalInstance(serialDecal, ClassName)
+
+	local decal = Instance.new(ClassName)
+
+	local prop = serialDecal.Color3
+	if prop ~= WHITE then decal.Color3 = prop end
+
+	prop = serialDecal.ColorMap
+	if prop then decal.ColorMap = prop end
+	prop = serialDecal.MetalnessMap
+	if prop then decal.MetalnessMap = prop end
+	prop = serialDecal.NormalMap
+	if prop then decal.NormalMap = prop end
+	prop = serialDecal.RoughnessMap
+	if prop then decal.RoughnessMap = prop end
+	prop = serialDecal.TexturePack
+	if prop then decal.TexturePack = prop end
+
+	prop = serialDecal.Transparency
+	if prop then decal.Transparency = prop end
+
+	prop = serialDecal.UVOffset
+	if prop then decal.UVOffset = prop end
+	prop = serialDecal.UVScale
+	if prop then decal.UVScale = prop end
+
+	prop = serialDecal.ZIndex
+	if prop then decal.ZIndex = prop end
+
+	prop = serialDecal.Face.Value
+	if prop then decal.Face = prop end
+
+	return decal
+end
+
+
+
 
 --[[
     Creates a new part using the supplied `template`, which is either a Part instance or a serialized Part instance
@@ -50,21 +126,32 @@ local function PartFromTemplate(template, cframe, provider)
 	--part.Color = Color3.fromHSV(math.random(), 1, 1)
 	prop = template.Color
     if prop ~= part.Color then part.Color = prop end
-
 	prop = template.Transparency
     if prop ~= part.Transparency then part.Transparency = prop end
-
 	prop = template.Reflectance
     if prop ~= part.Reflectance then part.Reflectance = prop end
 
 	prop = template.Material
     if prop ~= part.Material then part.Material = prop end
-
 	prop = template.MaterialVariant
     if prop ~= part.MaterialVariant then part.MaterialVariant = prop end
 
 	prop = template.CollisionGroup
     if prop ~= part.CollisionGroup then part.CollisionGroup = prop end
+
+	-- copy surface property values
+	prop = template.RightSurface
+    if prop ~= part.RightSurface then part.RightSurface = prop end
+	prop = template.LeftSurface
+    if prop ~= part.LeftSurface then part.LeftSurface = prop end
+	prop = template.FrontSurface
+    if prop ~= part.FrontSurface then part.FrontSurface = prop end
+	prop = template.BackSurface
+    if prop ~= part.BackSurface then part.BackSurface = prop end
+	prop = template.TopSurface
+    if prop ~= part.TopSurface then part.TopSurface = prop end
+	prop = template.BottomSurface
+    if prop ~= part.BottomSurface then part.BottomSurface = prop end
 
 	-- copy tags
 	for _, tag in ipairs(template:GetTags()) do part:AddTag(tag) end
@@ -104,30 +191,38 @@ local function DeserializedPartInstance(p, provider)
 
 	if p.Anchored then part.Anchored = true end
 
-	-- Set properties if they are not their defaults
+	-- deserialize properties
 	local prop
 
 	prop = p.Size
 	if prop then part.Size = prop end
-
 	--part.Color = Color3.fromHSV(math.random(), 1, 1)
 	prop = p.Color
     if prop then part.Color = prop end
-
 	prop = p.Transparency
     if prop then part.Transparency = prop end
-
 	prop = p.Reflectance
     if prop then part.Reflectance = prop end
-
 	prop = p.Material
     if prop then part.Material = Enum.Material:FromValue(prop) end
-
 	prop = p.MaterialVariant
     if prop then part.MaterialVariant = prop end
-
 	prop = p.CollisionGroup
     if prop then part.CollisionGroup = prop end
+
+	-- deserialize surface property values
+	prop = p.RightSurface
+    if prop then part.RightSurface = Enum.SurfaceType:FromValue(prop) end
+	prop = p.LeftSurface
+    if prop then part.LeftSurface = Enum.SurfaceType:FromValue(prop) end
+	prop = p.FrontSurface
+    if prop then part.FrontSurface = Enum.SurfaceType:FromValue(prop) end
+	prop = p.BackSurface
+    if prop then part.BackSurface = Enum.SurfaceType:FromValue(prop) end
+	prop = p.TopSurface
+    if prop then part.TopSurface = Enum.SurfaceType:FromValue(prop) end
+	prop = p.BottomSurface
+    if prop then part.BottomSurface = Enum.SurfaceType:FromValue(prop) end
 
 	-- deserialize tags
 	for _, tag in ipairs(p.Tags) do part:AddTag(tag) end
@@ -136,23 +231,48 @@ local function DeserializedPartInstance(p, provider)
 	for k, v in pairs(p.Attributes) do part:SetAttribute(k, v) end
 
 	-- deserialize textures
-	for _, serialTexture in ipairs(p.Textures) do
-		local instancedTexture = Instance.new("Texture")
-		instancedTexture.Color3 = serialTexture.Color3
-		instancedTexture.OffsetStudsU = serialTexture.OffsetStudsU
-		instancedTexture.OffsetStudsV = serialTexture.OffsetStudsV
-		instancedTexture.StudsPerTileU = serialTexture.StudsPerTileU
-		instancedTexture.StudsPerTileV = serialTexture.StudsPerTileV
-		instancedTexture.Texture = serialTexture.Texture
-		instancedTexture.Transparency = serialTexture.Transparency
-		instancedTexture.ZIndex = serialTexture.ZIndex
-		instancedTexture.Face = Enum.NormalId:FromValue(serialTexture.Face)
-		instancedTexture.Parent = part
+	if p.Textures then
+		for _, serialTexture in ipairs(p.Textures) do
+			local instancedTexture = DeserializedDecalInstance(serialTexture, "Texture")
+			prop = serialTexture.OffsetStudsU
+			if prop then instancedTexture.OffsetStudsU = prop end
+			prop = serialTexture.OffsetStudsV
+			if prop then instancedTexture.OffsetStudsV = prop end
+			prop = serialTexture.StudsPerTileU
+			if prop then instancedTexture.StudsPerTileU = prop end
+			prop = serialTexture.StudsPerTileV
+			if prop then instancedTexture.StudsPerTileV = prop end
+
+			instancedTexture.Parent = part
+		end
+	end
+
+	-- deserialize lights
+	if p.Lights then
+		for _, serialLight in ipairs(p.Lights) do
+			local light = Instance.new(serialLight.ClassName)
+
+			if serialLight.Shadows then light.Shadows = true end
+			prop = serialLight.Brightness
+			if prop then light.Brightness = prop end
+			prop = serialLight.Color
+			if prop then light.Color = prop end
+			prop = serialLight.Range
+			if prop then light.Range = prop end
+
+			if serialLight.ClassName ~= "PointLight" then
+				prop = serialLight.Angle
+				if prop then light.Angle = prop end
+				prop = serialLight.Face
+				if prop then light.Face = Enum.NormalId:FromValue(prop) end
+			end
+
+			light.Parent = part
+		end
 	end
 
 	return part
 end
-
 
 
 
@@ -161,8 +281,6 @@ end
 ]]
 local function SerializedPartInstance(p, ignoreWorldState)
 	local serial = {
-		Color = p.Color,
-
 		Tags = p:GetTags(),
 		Attributes = p:GetAttributes()
 	}
@@ -172,45 +290,79 @@ local function SerializedPartInstance(p, ignoreWorldState)
 
 	serial.Anchored = p.Anchored
 
+	prop = p.Color
+	if prop ~= MEDIUMSTONEGREY then serial.Color = prop end
 	prop = p.Transparency
     if prop ~= 0 then serial.Transparency = prop end
-
 	prop = p.Reflectance
     if prop ~= 0 then serial.Reflectance = prop end
-
 	prop = p.Material
     if prop ~= Enum.Material.Plastic then serial.Material = prop.Value end
-
 	prop = p.MaterialVariant
     if #prop > 0 then serial.MaterialVariant = prop end
-
 	prop = p.CollisionGroup
     if prop ~= "Default" then serial.CollisionGroup = prop end
 
-	-- serialize textures
-	local textures = {}
+	-- serialize surface property values if they are not their defaults
+	prop = p.RightSurface.Value
+    if prop ~= 0 then serial.RightSurface = prop end
+	prop = p.LeftSurface.Value
+    if prop ~= 0 then serial.LeftSurface = prop end
+	prop = p.FrontSurface.Value
+    if prop ~= 0 then serial.FrontSurface = prop end
+	prop = p.BackSurface.Value
+    if prop ~= 0 then serial.BackSurface = prop end
+	prop = p.TopSurface.Value
+    if prop ~= 3 then serial.TopSurface = prop end
+	prop = p.BottomSurface.Value
+    if prop ~= 4 then serial.BottomSurface = prop end
+
+	-- serialize textures and lights
+	local textures, lights = {}, {}
 	for _, child in ipairs(p:GetChildren()) do
 		if child:IsA("Texture") then
-			local serialTexture = {}
-			serialTexture.Color3 = child.Color3
-			serialTexture.OffsetStudsU = child.OffsetStudsU
-			serialTexture.OffsetStudsV = child.OffsetStudsV
-			serialTexture.StudsPerTileU = child.StudsPerTileU
-			serialTexture.StudsPerTileV = child.StudsPerTileV
-			serialTexture.Texture = child.Texture
-			serialTexture.Transparency = child.Transparency
-			serialTexture.ZIndex = child.ZIndex
-			serialTexture.Face = child.Face.Value
+			local serialTexture = SerializedDecalInstance(child)
+			prop = child.OffsetStudsU
+			if prop ~= 0 then serialTexture.OffsetStudsU = prop end
+			prop = child.OffsetStudsV
+			if prop ~= 0 then serialTexture.OffsetStudsV = prop end
+			prop = child.StudsPerTileU
+			if prop ~= 2 then serialTexture.StudsPerTileU = prop end
+			prop = child.StudsPerTileV
+			if prop ~= 2 then serialTexture.StudsPerTileV = prop end
 
 			table.insert(textures, serialTexture)
+		elseif child:IsA("Light") then
+			local className = child.ClassName
+			local isAPointLight = className == "PointLight"
+
+			local serialLight = { ClassName = className }
+
+			if child.Shadows then serialLight.Shadows = true end
+			prop = child.Brightness
+			if prop ~= 1 then serialLight.Brightness = prop end
+			prop = child.Color
+			if prop ~= WHITE then serialLight.Color = prop end
+			prop = child.Range
+			if (isAPointLight and prop ~= 8) or (not isAPointLight and prop ~= 16) then serialLight.Range = prop end
+
+			if not isAPointLight then
+				prop = child.Angle
+				if prop ~= 90 then serialLight.Angle = prop end
+				prop = child.Face.Value
+				if prop ~= 5 then serialLight.Face = prop end
+			end
+
+			table.insert(lights, serialLight)
 		end
 	end
-	serial.Textures = textures
+	if #textures > 0 then serial.Textures = textures end
+	if #lights > 0 then serial.Lights = lights end
 
-	if not ignoreWorldState then
-		serial.CFrame = p.CFrame
-		serial.Size = p.Size
-	end
+	if ignoreWorldState then return serial end
+
+	serial.CFrame = p.CFrame
+	serial.Size = p.Size
 
 	return serial
 end

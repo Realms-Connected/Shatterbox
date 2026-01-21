@@ -239,7 +239,12 @@ local function InstantiatePart(DirtyGroupID, cframe, size)
 
 	local part = PartFromTemplate(dirtyGroupData.OriginalPart, cframe, CachedParts)
 	part.Size = size
-	part.Parent = USE_CLIENT_SERVER and mapContainer or dirtyGroupData.OriginalParent
+
+	if not USE_CLIENT_SERVER or not part:IsA("Part") or part.Shape ~= Enum.PartType.Block then
+		part.Parent = dirtyGroupData.OriginalParent
+	else
+		part.Parent = mapContainer
+	end
 
 	dirtyGroupMembers[part] = true
 
@@ -894,7 +899,12 @@ local function UndoDirtyGroup(DirtyGroupID : string)
 		repeat RunService.Heartbeat:Wait() until not GreedyWorkers[DirtyGroupID]
 	end
 
-	groupData.OriginalPart.Parent = USE_CLIENT_SERVER and mapContainer or groupData.OriginalParent
+	local OriginalPart = groupData.OriginalPart
+	if not USE_CLIENT_SERVER or not OriginalPart:IsA("Part") or OriginalPart.Shape ~= Enum.PartType.Block then
+		OriginalPart.Parent = groupData.OriginalParent
+	else
+		OriginalPart.Parent = mapContainer
+	end
 
 	for member in pairs(groupMembers) do DestroyPart(member) end
 	DirtyGroupMembers[DirtyGroupID] = {}
@@ -1433,6 +1443,8 @@ local function CreatePuppets(puppets)
 	for _, puppet in ipairs(puppets) do
 		local Part = DeserializedPartInstance(puppet, CachedParts)
 
+		Part.Anchored = true
+
 		--Part:AddTag(IndestructibleTag)
 		Part:AddTag(IndestructibleTag)
 
@@ -1445,6 +1457,7 @@ end
 local function ReplicatePuppetStates(puppetStates)
 	local numPuppets = 0
 	for _ in pairs(Puppets) do numPuppets += 1 end
+
     for _, state in ipairs(puppetStates) do
         local voxel = Puppets[state.GUID]
 		if not voxel then continue end
@@ -1483,22 +1496,29 @@ local function ReplicateStateToPlayer(plr)
 		serialDirtyGroupData[DirtyGroupID] = SerializedPartInstance(groupData.OriginalPart)
 	end
 
-	local serialDirtyGroupMembers = {}
+	local serialDirtyGroupMembers, destroyedDirtyGroups = {}, {}
 	for DirtyGroupID, groupMembers in pairs(DirtyGroupMembers) do
+		local OriginalPart = DirtyGroupData[DirtyGroupID].OriginalPart
+
 		local serialMembers = {}
-		for member in pairs(groupMembers) do
-			if member:HasTag(DebrisTag) then
-				local found = false
-				for _, puppet in pairs(Puppets) do
-					if puppet ~= member then continue end
-					found = true
-					break
-				end
-				if found then continue end
-			end
-			table.insert(serialMembers, SerializedPartInstance(member))
-		end
 		serialDirtyGroupMembers[DirtyGroupID] = serialMembers
+
+		if next(groupMembers) then
+			for member in pairs(groupMembers) do
+				if member:HasTag(DebrisTag) then
+					local found = false
+					for _, puppet in pairs(Puppets) do
+						if puppet ~= member then continue end
+						found = true
+						break
+					end
+					if found then continue end
+				end
+				table.insert(serialMembers, SerializedPartInstance(member))
+			end
+		elseif not OriginalPart.Parent then
+			destroyedDirtyGroups[DirtyGroupID] = true
+		end
 	end
 
 	local serialShatterQueue = {}
@@ -1516,10 +1536,13 @@ local function ReplicateStateToPlayer(plr)
 	ServerEvents.ReplicateState.Fire(plr,
 		serialDirtyGroupData,
 		serialDirtyGroupMembers,
+		destroyedDirtyGroups,
 
 		serialShatterQueue,
 		CountOperationsProcessing,
 		OperationAffectedDirtyGroups,
+
+		SmoothCleanupQueue,
 
 		GreedyMeshingQueue,
 		ActiveGMWorkerGridSize,
@@ -1528,7 +1551,7 @@ local function ReplicateStateToPlayer(plr)
 	)
 end
 
-local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMembers, serialShatterQueue, serverCountOperationsProcessing, serverOperationAffectedDirtyGroups, serverGreedyMeshingQueue, serverActiveGMWorkerGridSize, serialPuppets)
+local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMembers, destroyedDirtyGroups, serialShatterQueue, serverCountOperationsProcessing, serverOperationAffectedDirtyGroups, serverSmoothCleanupQueue, serverGreedyMeshingQueue, serverActiveGMWorkerGridSize, serialPuppets)
 
 	for DirtyGroupID, serializedPart in pairs(serialDirtyGroupData) do
 		DirtyGroupData[DirtyGroupID] = {
@@ -1539,18 +1562,21 @@ local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMe
 	end
 
 	for DirtyGroupID, serialGroupMembers in pairs(serialDirtyGroupMembers) do
+		local groupMembers = {}
+		DirtyGroupMembers[DirtyGroupID] = groupMembers
+
+		if destroyedDirtyGroups[DirtyGroupID] then continue end
+
 		if #serialGroupMembers == 0 then
 			DirtyGroupData[DirtyGroupID].OriginalPart.Parent = mapContainer
-			DirtyGroupMembers[DirtyGroupID] = {}
 			continue
 		end
-		local groupMembers = {}
+
 		for _, serialMember in ipairs(serialGroupMembers) do
 			local part = DeserializedPartInstance(serialMember, CachedParts)
 			if not part.Parent then part.Parent = mapContainer end
 			groupMembers[part] = true
 		end
-		DirtyGroupMembers[DirtyGroupID] = groupMembers
 	end
 
 	for _, serialDestructionParams in ipairs(serialShatterQueue) do
@@ -1558,6 +1584,8 @@ local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMe
 	end
 	CountOperationsProcessing = serverCountOperationsProcessing
 	OperationAffectedDirtyGroups = serverOperationAffectedDirtyGroups
+
+	SmoothCleanupQueue = serverSmoothCleanupQueue
 
 	GreedyMeshingQueue = serverGreedyMeshingQueue
 	for DirtyGroupID, GridSize in pairs(serverActiveGMWorkerGridSize) do

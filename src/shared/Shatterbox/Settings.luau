@@ -20,6 +20,10 @@ end
 
 
 
+Settings.NonDestructibleInteraction = "FALL" :: "FALL"|"DESTROY"|"NONE" -- What happens to destructible parts that cannot be divided by Shatterbox
+
+
+
 -- Smooth cleanup settings
 
 Settings.UseSmoothCleanup = true -- If false, the CleanupDelay will be ignored and no smooth cleanups will happen at all.
