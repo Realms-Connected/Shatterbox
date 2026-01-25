@@ -4,10 +4,6 @@ struct Decal {
 	Color3 : Color3?,
 
 	ColorMap : string?,
-	MetalnessMap : string?,
-	NormalMap : string?,
-	RoughnessMap : string?,
-	TexturePack : string?,
 
 	Transparency : f32?,
 
@@ -143,21 +139,21 @@ event CreatePuppets {
 	From: Server,
 	Type: Reliable,
 	Call: ManyAsync,
-	Data: Puppet[]
+	Data: PartInstance[]
 }
 
 event ReplicatePuppetStates {
 	From: Server,
 	Type: Unreliable,
 	Call: ManyAsync,
-	Data: PuppetState[]
+	Data: buffer(15..990)
 }
 
 event DestroyPuppet {
 	From: Server,
 	Type: Reliable,
 	Call: ManyAsync,
-	Data: string
+	Data: u16
 }
 
 
@@ -180,7 +176,7 @@ event ReplicateState {
 			map{ [string]: f32 },
 			map{ [string]: f32 },
 
-			Puppet[]
+			PartInstance[]
 		)
 }
 

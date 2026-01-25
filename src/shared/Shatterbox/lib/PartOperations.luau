@@ -24,14 +24,6 @@ local function SerializedDecalInstance(decal : Decal)
 
 	prop = #decal.ColorMap > 0 and decal.ColorMap or decal.Texture
 	if #prop > 0 then serialDecal.ColorMap = prop end
-	prop = decal.MetalnessMap
-	if #prop > 0 then serialDecal.MetalnessMap = prop end
-	prop = decal.NormalMap
-	if #prop > 0 then serialDecal.NormalMap = prop end
-	prop = decal.RoughnessMap
-	if #prop > 0 then serialDecal.RoughnessMap = prop end
-	prop = decal.TexturePack
-	if #prop > 0 then serialDecal.TexturePack = prop end
 
 	prop = decal.Transparency
 	if prop ~= 0 then serialDecal.Transparency = prop end
@@ -55,18 +47,10 @@ local function DeserializedDecalInstance(serialDecal, ClassName)
 	local decal = Instance.new(ClassName)
 
 	local prop = serialDecal.Color3
-	if prop ~= WHITE then decal.Color3 = prop end
+	if prop then decal.Color3 = prop end
 
 	prop = serialDecal.ColorMap
 	if prop then decal.ColorMap = prop end
-	prop = serialDecal.MetalnessMap
-	if prop then decal.MetalnessMap = prop end
-	prop = serialDecal.NormalMap
-	if prop then decal.NormalMap = prop end
-	prop = serialDecal.RoughnessMap
-	if prop then decal.RoughnessMap = prop end
-	prop = serialDecal.TexturePack
-	if prop then decal.TexturePack = prop end
 
 	prop = serialDecal.Transparency
 	if prop then decal.Transparency = prop end
@@ -79,8 +63,8 @@ local function DeserializedDecalInstance(serialDecal, ClassName)
 	prop = serialDecal.ZIndex
 	if prop then decal.ZIndex = prop end
 
-	prop = serialDecal.Face.Value
-	if prop then decal.Face = prop end
+	prop = serialDecal.Face
+	if prop then decal.Face = Enum.NormalId:FromValue(prop) end
 
 	return decal
 end
@@ -230,6 +214,14 @@ local function DeserializedPartInstance(p, provider)
 	-- deserialize attributes
 	for k, v in pairs(p.Attributes) do part:SetAttribute(k, v) end
 
+	-- deserialize decals
+	if p.Decals then
+		for _, serialDecal in ipairs(p.Decals) do
+			local instancedDecal = DeserializedDecalInstance(serialDecal, "Decal")
+			instancedDecal.Parent = part
+		end
+	end
+
 	-- deserialize textures
 	if p.Textures then
 		for _, serialTexture in ipairs(p.Textures) do
@@ -317,8 +309,8 @@ local function SerializedPartInstance(p, ignoreWorldState)
 	prop = p.BottomSurface.Value
     if prop ~= 4 then serial.BottomSurface = prop end
 
-	-- serialize textures and lights
-	local textures, lights = {}, {}
+	-- serialize decals, textures, and lights
+	local decals, textures, lights = {}, {}, {}
 	for _, child in ipairs(p:GetChildren()) do
 		if child:IsA("Texture") then
 			local serialTexture = SerializedDecalInstance(child)
@@ -332,6 +324,8 @@ local function SerializedPartInstance(p, ignoreWorldState)
 			if prop ~= 2 then serialTexture.StudsPerTileV = prop end
 
 			table.insert(textures, serialTexture)
+		elseif child:IsA("Decal") then
+			table.insert(decals, SerializedDecalInstance(child))
 		elseif child:IsA("Light") then
 			local className = child.ClassName
 			local isAPointLight = className == "PointLight"
@@ -356,6 +350,7 @@ local function SerializedPartInstance(p, ignoreWorldState)
 			table.insert(lights, serialLight)
 		end
 	end
+	if #decals > 0 then serial.Decals = decals end
 	if #textures > 0 then serial.Textures = textures end
 	if #lights > 0 then serial.Lights = lights end
 

@@ -20,7 +20,7 @@ end
 
 
 
-Settings.NonDestructibleInteraction = "FALL" :: "FALL"|"DESTROY"|"NONE" -- What happens to destructible parts that cannot be divided by Shatterbox
+Settings.NonDivisibleInteraction = "FALL" :: "FALL"|"DESTROY"|"NONE" -- What happens to destructible parts that cannot be divided by Shatterbox
 
 
 
@@ -58,13 +58,17 @@ Settings.GMWorkerCount = 5 -- How many greedy meshing workers there are. Each wo
 
 -- Puppet voxel settings
 
-Settings.PuppetSleepVelocity = 0.1 -- How slow a puppet has to be moving to not get replicated
+Settings.PuppetMaxCount = 1000
+
+Settings.PuppetSleepVelocity = 0.1 -- How slow a puppet has to be moving to not get replicated (and eventually become anchored)
+
+Settings.PuppetAnchorTimeout = 1 -- How long a puppet master moving slower than PuppetSleepVelocity has before becoming anchored (seconds)
 
 Settings.PuppetReplicationFrequency = 20 -- How frequently puppet CFrames are sent to each client (default 20 fps/Hz target replication frequency)
 
-Settings.PuppetReplicationFrameLimit = 10 -- How many puppets can be created and sent to clients per frame
-
 Settings.ClientTweenPuppets = true -- If true, the client will tween between puppet CFrame replications (Client-side only setting)
+
+Settings.ClientTweenDistanceLimit = 100 -- Voxels farther than 100 studs away don't get interpolated
 
 
 
