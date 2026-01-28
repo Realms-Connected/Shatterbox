@@ -146,7 +146,7 @@ event ReplicatePuppetStates {
 	From: Server,
 	Type: Unreliable,
 	Call: ManyAsync,
-	Data: buffer(15..990)
+	Data: (buffer(14..994), u16)
 }
 
 event DestroyPuppet {
@@ -154,6 +154,23 @@ event DestroyPuppet {
 	Type: Reliable,
 	Call: ManyAsync,
 	Data: u16
+}
+
+
+
+event CreateDirtyGroupsFromClient {
+	From: Client,
+	Type: Reliable,
+	Call: ManyAsync,
+	Data: map{ [string]: Instance(Part) } -- clients must mark dirty parts that also exist on the server side
+}
+
+
+event CreateDirtyGroupsFromServer {
+	From: Server,
+	Type: Reliable,
+	Call: ManyAsync,
+	Data: map{ [string]: PartInstance }
 }
 
 

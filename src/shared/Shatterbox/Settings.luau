@@ -6,8 +6,8 @@ local Settings = {}
 
 Settings.USE_CLIENT_SERVER = true -- Set this to false if you don't want to use client-server functionality (false = fully server side destructions)
 
-Settings.USE_OBJECTCACHE = false -- whether or not to use ObjectCache (not fully implemented)
-	Settings.CACHE_INITIAL_SIZE = 10000 -- The initial size of the part Caches
+--Settings.USE_OBJECTCACHE = false -- whether or not to use ObjectCache (not fully implemented)
+--	Settings.CACHE_INITIAL_SIZE = 10000 -- The initial size of the part Caches
 
 
 
@@ -52,13 +52,13 @@ Settings.GMTraversalsPerFrame = 10000 -- How many times greedy meshing can itera
 
 Settings.GMPartCreationsPerFrame = 500 -- How many parts greedy meshing should try to make every frame once the worker is finished traversing. This is a soft-limit, not a hard-limit, for smooth visual display
 
-Settings.GMWorkerCount = 5 -- How many greedy meshing workers there are. Each worker performs calculations for a single `dirtyParent` model
+Settings.GMWorkerCount = 5 -- How many greedy meshing workers there are. Each worker performs calculations for a single dirty group before displaying the meshed output
 
 
 
 -- Puppet voxel settings
 
-Settings.PuppetMaxCount = 1000
+Settings.PuppetMaxCount = 8191 -- HARD CAP 8191
 
 Settings.PuppetSleepVelocity = 0.1 -- How slow a puppet has to be moving to not get replicated (and eventually become anchored)
 
@@ -68,7 +68,7 @@ Settings.PuppetReplicationFrequency = 20 -- How frequently puppet CFrames are se
 
 Settings.ClientTweenPuppets = true -- If true, the client will tween between puppet CFrame replications (Client-side only setting)
 
-Settings.ClientTweenDistanceLimit = 100 -- Voxels farther than 100 studs away don't get interpolated
+Settings.ClientTweenDistanceLimit = 300 -- Voxels farther than 100 studs away don't get interpolated
 
 
 

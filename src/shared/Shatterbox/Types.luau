@@ -38,7 +38,8 @@ type SharedDestructionParams = {
 	FilterTagged : (string | {string})?,
 	GridSize : number?,
 	CleanupDelay : number?,
-	SkipEncapsulatedVoxels : boolean?
+	SkipEncapsulatedVoxels : boolean?,
+	ExcludePlayersReplication : {Player}?
 }
 
 type UsesOnVoxelDestruct = {

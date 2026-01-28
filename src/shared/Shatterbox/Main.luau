@@ -62,9 +62,9 @@ local PathToServer = lib:WaitForChild("Server")
 ]]
 
 local HttpService = game:GetService("HttpService")
-local TweenService = game:GetService("TweenService")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
 local isServer, isClient = RunService:IsServer(), RunService:IsClient()
 
@@ -84,7 +84,7 @@ local function ShouldSkipInstance(i : Instance)
 	-- skip anything that passed the SkipInstanceCheck
 	if Settings.SkipInstanceCheck(i) then return true end
 	-- skip anything that isnt a block part
-	-- if not i:IsA("Part") or i.Shape ~= Enum.PartType.Block then return true end
+	if isClient and (not i:IsA("Part") or i.Shape ~= Enum.PartType.Block) then return true end
 	-- skip anything with the "Indestructible" tag
 	if i:HasTag(IndestructibleTag) then return true end
 	-- skip anything which has a Humanoid child, or if any of its ancestors have a Humanoid child.
@@ -99,7 +99,7 @@ end
 
 local Types = require(src:WaitForChild("Types"))
 
-local USE_CLIENT_SERVER, USE_OBJECTCACHE, CACHE_INITIAL_SIZE = Settings.USE_CLIENT_SERVER, Settings.USE_OBJECTCACHE, Settings.CACHE_INITIAL_SIZE
+local USE_CLIENT_SERVER = Settings.USE_CLIENT_SERVER
 
 local IMAGINARY, NORMAL = "IMAGINARY", "NORMAL"
 type DestructionTypes = ("IMAGINARY"|"NORMAL")
@@ -139,8 +139,8 @@ elseif isClient then
 	for name, func in pairs(clientEffects) do OnVoxelDestructRegistry[name:lower()] = func end
 end
 
---
 local ObjectCache, CachedParts
+--[[
 if USE_OBJECTCACHE and not (USE_CLIENT_SERVER and isServer) then
 
 	local TemplatePart = Instance.new("Part")
@@ -213,7 +213,8 @@ local ActiveGMWorkerGridSize = {} :: { [string] : number }
 
 -- Elements of the Puppets array are of the form {Part, boolean} where the Part is the puppet master/slave (server side master, client side slave) and the boolean is whether or not that puppet is getting interpolated.
 local Puppets = {} :: { {} }
--- Stores the interpolation start/end for the corresponding element of the Puppets array
+local ClientPuppetStepDelta = 1 -- How many replication steps the client thinks it will take for a single puppet to recieve its next update.
+-- Stores the interpolation start/end for the corresponding element of the Puppets array. On the server side this is the state replication queue
 local PuppetsLerpData = {} :: { {CFrame} }
 -- Index that increments every time a puppet is created if the Puppets array is full, and loops back to 1 when the maximum puppet count is reached.
 -- When this happens, the oldest puppets are destroyed as new ones spawn in
@@ -240,6 +241,24 @@ local clientInitComplete = false -- flag used to pause replicating events until 
 
 local ci, cd = 0, 0
 
+local textUVMap = {
+	[0] = Vector3.new( 0,  1,  1),
+	[1] = Vector3.new( 1,  0,  1),
+	[2] = Vector3.new(-1,  1,  0),
+	[3] = Vector3.new( 0,  1, -1),
+	[4] = Vector3.new(-1,  0,  1),
+	[5] = Vector3.new( 1,  1,  0)
+}
+
+local axisUVMap = {
+	[0] = { "Z", "Y" },
+	[1] = { "X", "Z" },
+	[2] = { "X", "Y" },
+	[3] = { "Z", "Y" },
+	[4] = { "X", "Z" },
+	[5] = { "X", "Y" }
+}
+
 --Instantiates a new member of a dirty group using the group ID and a given CFrame and Size
 local function InstantiatePart(DirtyGroupID, cframe, size)
 	--debug.profilebegin("InstantiatePart")
@@ -248,10 +267,32 @@ local function InstantiatePart(DirtyGroupID, cframe, size)
 	local part = PartFromTemplate(dirtyGroupData.OriginalPart, cframe, CachedParts)
 	part.Size = size
 
-	if not USE_CLIENT_SERVER or not part:IsA("Part") or part.Shape ~= Enum.PartType.Block then
+	local partIsDivisible = part:IsA("Part") and part.Shape == Enum.PartType.Block
+
+	if not USE_CLIENT_SERVER or not partIsDivisible then
 		part.Parent = dirtyGroupData.OriginalParent
 	else
 		part.Parent = mapContainer
+	end
+
+	if partIsDivisible and part:FindFirstChildWhichIsA("Texture") then
+		local OriginalPart = dirtyGroupData.OriginalPart
+		local HalfSizeOriginal = OriginalPart.Size * 0.5
+		local HalfSizePart = part.Size * 0.5
+
+		for _, texture in ipairs(part:GetChildren()) do
+			if not texture:IsA("Texture") then continue end
+			local Face = texture.Face.Value
+			local TowardOrigin = textUVMap[Face]
+
+			local GroupOrigin = OriginalPart.CFrame + OriginalPart.CFrame:VectorToWorldSpace(TowardOrigin * HalfSizeOriginal)
+			local partOrigin = part.CFrame + part.CFrame:VectorToWorldSpace(TowardOrigin * HalfSizePart)
+
+			local Offset = partOrigin:VectorToObjectSpace(GroupOrigin.Position - partOrigin.Position):Abs()
+
+			texture.OffsetStudsU += Offset[axisUVMap[Face][1]]
+			texture.OffsetStudsV += Offset[axisUVMap[Face][2]]
+		end
 	end
 
 	dirtyGroupMembers[part] = true
@@ -687,13 +728,13 @@ end
 
 
 -- What happens when a model is passed in as the `CuttingPart`
-local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData)
+local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
 	local cuttingPart = if typeof(intersectingPart) == "table" then intersectingPart.CuttingPart else intersectingPart
 	local ret = {}
 	if cuttingPart and typeof(cuttingPart) == "Instance" and cuttingPart:IsA("Model") then
 		for _, desc in ipairs(cuttingPart:GetDescendants()) do
 			if not desc:IsA("Part") then continue end
-			local r = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData)
+			local r = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
 			if typeof(r) == "table" then
 				table.move(r, 1, #r, #ret + 1, ret)
 			end
@@ -704,7 +745,7 @@ local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, Cle
 end
 
 -- Validates destruction parameters
-local function ValidateDestructionParams(intersectingPart : Part | Model | Types.Hitbox | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any})
+local function ValidateDestructionParams(intersectingPart : Part | Model | Types.Hitbox | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : (Player | {Player})?)
 
 	local CuttingPart = {} :: Types.Hitbox
 	local params = {} :: Types.InternalDestructionParams | Types.InternalImaginaryParams
@@ -744,15 +785,28 @@ local function ValidateDestructionParams(intersectingPart : Part | Model | Types
 		end
 	end
 
-			   params.CuttingPart = CuttingPart
-			  params.FilterTagged = filterTagged
-			  params.CleanupDelay = tbl.CleanupDelay		   or CleanupDelay or Settings.DefaultSmoothCleanupDelay
-		   params.OnVoxelDestruct = tbl.OnVoxelDestruct 	   or OnVoxelDestruct
-				  params.GridSize = tbl.GridSize 			   or GridSize
-	params.SkipEncapsulatedVoxels = tbl.SkipEncapsulatedVoxels or SkipEncapsulatedVoxels
-	   params.OnDestructCompleted = tbl.OnDestructCompleted    or OnDestructCompleted
-				  params.UserData = tbl.UserData    		   or UserData or {}
-		                params.ID = tbl.ID 					   or HttpService:GenerateGUID(false)
+	local playerExclusions = tbl.ExcludePlayersReplication or ExcludePlayersReplication
+	if playerExclusions then
+		if typeof(playerExclusions) == "table" then
+			for _, plr in ipairs(playerExclusions) do
+				assert(typeof(plr) == "Instance" and plr:IsA("Player"), "If ExcludePlayersReplication is an array, it must only contain Players.")
+			end
+		else
+			assert(typeof(playerExclusions) == "Instance" and playerExclusions:IsA("Player"), "If ExcludePlayersReplication is not an array, it must be a Player.")
+			playerExclusions = { playerExclusions }
+		end
+	end
+
+				  params.CuttingPart = CuttingPart
+				 params.FilterTagged = filterTagged
+				 params.CleanupDelay = tbl.CleanupDelay		         or CleanupDelay or Settings.DefaultSmoothCleanupDelay
+			  params.OnVoxelDestruct = tbl.OnVoxelDestruct 	         or OnVoxelDestruct
+					 params.GridSize = tbl.GridSize 			     or GridSize
+	   params.SkipEncapsulatedVoxels = tbl.SkipEncapsulatedVoxels    or SkipEncapsulatedVoxels
+		  params.OnDestructCompleted = tbl.OnDestructCompleted       or OnDestructCompleted
+					 params.UserData = tbl.UserData    		         or UserData or {}
+	params.ExcludePlayersReplication = playerExclusions or {}
+		                   params.ID = tbl.ID 					     or HttpService:GenerateGUID(false)
 
 	assert(not params.CleanupDelay or typeof(params.CleanupDelay) == "number", "CleanupDelay must be a number if it is set.")
 	assert(not params.OnVoxelDestruct or typeof(params.OnVoxelDestruct) == "string", "OnVoxelDestruct must be a string indicating the name of the OnVoxelDestruct callback.")
@@ -919,9 +973,9 @@ local function UndoDirtyGroup(DirtyGroupID : string)
 end
 
 
-local function PopulateDirtyGroup(Part : Part)
+local function PopulateDirtyGroup(Part : Part, DirtyGroupID : string?)
 	-- populate the initial dirty group information if there is no group associated with this part
-	local DirtyGroupID = HttpService:GenerateGUID(false)
+	DirtyGroupID = DirtyGroupID or HttpService:GenerateGUID(false)
 	Part:SetAttribute(DirtyGroupIDAttribute, DirtyGroupID)
 	DirtyGroupData[DirtyGroupID] = {
 		OriginalPart = Part,
@@ -974,7 +1028,7 @@ local function MarkDirty(Part : Part, destructionParams : Types.InternalImaginar
 			if not part:IsA("BasePart") then continue end
 
 			part:SetAttribute(FallingGroupIDAttribute, CreatedFallingGroupID)
-			local DirtyGroupID = PopulateDirtyGroup(part)
+			local DirtyGroupID = PopulateDirtyGroup(part, nil)
 			VisitedDirtyGroups[DirtyGroupID] = true
 
 			if part:IsA("Part") and part.Shape == Enum.PartType.Block then
@@ -989,7 +1043,7 @@ local function MarkDirty(Part : Part, destructionParams : Types.InternalImaginar
 		FallingGroupMembers[CreatedFallingGroupID] = fallingGroupMembers
 
 	elseif not PartDirtyGroupID and (PartIsDivisible or NonDivisibleInteraction ~= "NONE") then
-		PartDirtyGroupID = PopulateDirtyGroup(Part)
+		PartDirtyGroupID = PopulateDirtyGroup(Part, nil)
 
 		if PartIsDivisible then
 			CreatedDirtyGroups[PartDirtyGroupID] = true
@@ -1054,6 +1108,19 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 		if part:IsA("Part") and part.Shape == Enum.PartType.Block then
 			table.insert(partsInPart, part)
 		end
+	end
+
+	if USE_CLIENT_SERVER and not replicated and isClient then
+		local ToSendToServer = {}
+		for DirtyGroupID in pairs(createdDirtyGroups) do
+			local groupData = DirtyGroupData[DirtyGroupID]
+			local PartToSend = groupData.OriginalPart
+			ToSendToServer[DirtyGroupID] = PartToSend
+			PartToSend.Parent = nil
+			groupData.OriginalPart = PartFromTemplate(PartToSend, PartToSend.CFrame)
+			groupData.OriginalPart.Parent = mapContainer
+		end
+		ClientEvents.CreateDirtyGroupsFromClient.Fire(ToSendToServer)
 	end
 
 	OperationAffectedFallingGroups[destructionParams.ID] = AffectedFallingGroups
@@ -1398,22 +1465,8 @@ end
 
 -- Creates all of the original map parts associated with a destruction for the clients.
 -- This allows the clients to process their own destructions alongside the server.
-
-
-local function ReplicateDestructionToClients(destructionType : DestructionTypes, destructionParams : Types.DestructionParams, createdDirtyGroups : { [string] : boolean })
-
-	local serialNewDirtyGroups = {}
-	for DirtyGroupID in pairs(createdDirtyGroups) do
-		serialNewDirtyGroups[DirtyGroupID] = SerializedPartInstance(DirtyGroupData[DirtyGroupID].OriginalPart)
-	end
-
-	ServerEvents.ReplicateDestruction.FireAll(destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups, OperationAffectedDirtyGroups[destructionParams.ID])
-end
-
-local function ReplicateDestructionFromServer(destructionType, serialParams, serialNewDirtyGroups, affectedDirtyGroupIDs)
-	local destructionParams = DeserializedDestructionParams(serialParams)
-
-	for DirtyGroupID, serialOriginal in pairs(serialNewDirtyGroups) do
+local function CreateSerialDirtyGroups(SerialDirtyGroups)
+	for DirtyGroupID, serialOriginal in pairs(SerialDirtyGroups) do
 		local newPart = DeserializedPartInstance(serialOriginal)
 		newPart.Parent = mapContainer
 
@@ -1424,6 +1477,34 @@ local function ReplicateDestructionFromServer(destructionType, serialParams, ser
 		}
 		DirtyGroupMembers[DirtyGroupID] = {}
 	end
+end
+
+
+local function ReplicateDestructionToClients(destructionType : DestructionTypes, destructionParams : Types.DestructionParams, createdDirtyGroups : { [string] : boolean })
+
+	local serialNewDirtyGroups = {}
+	for DirtyGroupID in pairs(createdDirtyGroups) do
+		serialNewDirtyGroups[DirtyGroupID] = SerializedPartInstance(DirtyGroupData[DirtyGroupID].OriginalPart)
+	end
+
+	local exclusions = destructionParams.ExcludePlayersReplication
+	if #exclusions > 0 then
+		local PlayerList = Players:GetPlayers()
+		for _, plr in ipairs(exclusions) do
+			local found = table.find(PlayerList, plr)
+			if found then table.remove(PlayerList, found) end
+		end
+
+		ServerEvents.ReplicateDestruction.FireList(PlayerList, destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups, OperationAffectedDirtyGroups[destructionParams.ID])
+	else
+		ServerEvents.ReplicateDestruction.FireAll(destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups, OperationAffectedDirtyGroups[destructionParams.ID])
+	end
+end
+
+local function ReplicateDestructionFromServer(destructionType, serialParams, serialNewDirtyGroups, affectedDirtyGroupIDs)
+	local destructionParams = DeserializedDestructionParams(serialParams)
+
+	CreateSerialDirtyGroups(serialNewDirtyGroups)
 
 	while not clientInitComplete do RunService.Heartbeat:Wait() end
 
@@ -1447,6 +1528,42 @@ local function ReplicateDestructionFromServer(destructionType, serialParams, ser
 end
 
 
+
+
+
+local function GetActivePuppets()
+
+	local puppets = {}
+
+	for i, puppetData in pairs(Puppets) do -- every time the period is reached, push all available voxel CFrames to their state replication queue
+		local puppetVoxel = puppetData[1]
+
+		if puppetVoxel.Anchored then continue end
+
+		if puppetVoxel.AssemblyLinearVelocity.Magnitude <= Settings.PuppetSleepVelocity then continue end
+
+		table.insert(puppets, puppetVoxel)
+	end
+
+	return puppets
+end
+
+local function GetActivePuppetCount()
+
+	local puppetCount = 0
+
+	for i, puppetData in pairs(Puppets) do -- every time the period is reached, push all available voxel CFrames to their state replication queue
+		local puppetVoxel = puppetData[1]
+
+		if puppetVoxel.Anchored then continue end
+
+		if puppetVoxel.AssemblyLinearVelocity.Magnitude <= Settings.PuppetSleepVelocity then continue end
+
+		puppetCount += 1
+	end
+
+	return puppetCount
+end
 
 
 local function CreatePuppets(puppets)
@@ -1473,9 +1590,21 @@ local function CreatePuppets(puppets)
 	end
 end
 
-local function ReadRadianI10(b, bitOff)
-	local X = buffer.readbits(b, bitOff + 1, 9) * 0.01
-	return buffer.readbits(b, bitOff, 1) == 0 and X or -X
+
+local U82RAD = 0.0246399423811
+local PRECISE_45_DEGREES = {}
+PRECISE_45_DEGREES[32] = math.pi * 0.25
+PRECISE_45_DEGREES[64] = math.pi * 0.5
+PRECISE_45_DEGREES[96] = math.pi * 0.75
+PRECISE_45_DEGREES[128] = math.pi
+PRECISE_45_DEGREES[159] = -PRECISE_45_DEGREES[96]
+PRECISE_45_DEGREES[191] = -PRECISE_45_DEGREES[64]
+PRECISE_45_DEGREES[223] = -PRECISE_45_DEGREES[32]
+PRECISE_45_DEGREES[255] = 0
+
+local function ReadRadianU8(b, bitOff)
+	local X = buffer.readbits(b, bitOff, 8)
+	return PRECISE_45_DEGREES[X] or (X * U82RAD)
 end
 
 local function ReadFloatI25(b, bitOff)
@@ -1483,7 +1612,9 @@ local function ReadFloatI25(b, bitOff)
 	return buffer.readbits(b, bitOff, 1) == 0 and X or -X
 end
 
-local function ReplicatePuppetStates(puppetStatesBuffer)
+local function ReplicatePuppetStates(puppetStatesBuffer, stepDelta)
+	ClientPuppetStepDelta = stepDelta
+
 	local bitLength = buffer.len(puppetStatesBuffer)
 
 	local i = 1
@@ -1492,42 +1623,43 @@ local function ReplicatePuppetStates(puppetStatesBuffer)
 	bitLength *= 8
 	local bitOffset = 0
 
-	local plr = game:GetService("Players").LocalPlayer
-	local chr = plr.Character or plr.CharacterAdded:Wait()
-	local hrpPos = chr:WaitForChild("HumanoidRootPart").Position
+	local clientCamPos = workspace.CurrentCamera.CFrame.Position
 
 	local sqLimit = Settings.ClientTweenDistanceLimit ^ 2
 	local doNotTweenPuppets = not Settings.ClientTweenPuppets
 	while bitOffset < bitLength do
-		local cframe = CFrame.new(
-			ReadFloatI25(puppetStatesBuffer, bitOffset),
-			ReadFloatI25(puppetStatesBuffer, bitOffset + 25),
-			ReadFloatI25(puppetStatesBuffer, bitOffset + 50)
-		) * CFrame.fromEulerAngles(
-			ReadRadianI10(puppetStatesBuffer, bitOffset + 75),
-			ReadRadianI10(puppetStatesBuffer, bitOffset + 85),
-			ReadRadianI10(puppetStatesBuffer, bitOffset + 95)
-		)
+		local index = buffer.readbits(puppetStatesBuffer, bitOffset + 99, 13)
+		local puppetData = Puppets[index]
+		if puppetData then
+			local cframe = CFrame.new(
+				ReadFloatI25(puppetStatesBuffer, bitOffset),
+				ReadFloatI25(puppetStatesBuffer, bitOffset + 25),
+				ReadFloatI25(puppetStatesBuffer, bitOffset + 50)
+			) * CFrame.fromEulerAngles(
+				ReadRadianU8(puppetStatesBuffer, bitOffset + 75),
+				ReadRadianU8(puppetStatesBuffer, bitOffset + 83),
+				ReadRadianU8(puppetStatesBuffer, bitOffset + 91)
+			)
 
-		local index = buffer.readbits(puppetStatesBuffer, bitOffset + 105, 15)
-
-		local toPlr = hrpPos - cframe.Position
-		if doNotTweenPuppets or (toPlr.X^2 + toPlr.Y^2 + toPlr.Z^2 >= sqLimit) then
-			-- Puppets outside of the interpolation distance limit are moved directly to their updated position in bulk (or if the interpolation setting is disabled)
-			if PuppetsLerpData[index] then PuppetsLerpData[index] = nil end
-			updatedPuppets[i] = Puppets[index][1]
-			updatedStates[i] = cframe
-			i += 1
-		else
-			-- change the interpolation target of this Puppet index
-			PuppetsLerpData[index] = {
-				Puppets[index][1].CFrame,
-				cframe,
-				0
-			}
+			local toPlr = clientCamPos - cframe.Position
+			if doNotTweenPuppets or (toPlr.X^2 + toPlr.Y^2 + toPlr.Z^2 >= sqLimit) then
+				-- Puppets outside of the interpolation distance limit are moved directly to their updated position in bulk (or if the interpolation setting is disabled)
+				if PuppetsLerpData[index] then PuppetsLerpData[index] = nil end
+				--puppetData[1].CFrame = cframe
+				updatedPuppets[i] = puppetData[1]
+				updatedStates[i] = cframe
+				i += 1
+			else
+				-- change the interpolation target of this Puppet index
+				PuppetsLerpData[index] = {
+					puppetData[1].CFrame,
+					cframe,
+					0
+				}
+			end
 		end
 
-		bitOffset += 120
+		bitOffset += 112
 	end
 
 	if i > 1 then workspace:BulkMoveTo(updatedPuppets, updatedStates, Enum.BulkMoveMode.FireCFrameChanged) end
@@ -1536,29 +1668,47 @@ if isClient then -- Client side interpolation loop that "tweens" every puppet vo
 	RunService.PreRender:Connect(function(deltaTime)
 		if not next(PuppetsLerpData) then return end
 
-		local P = 1 / Settings.PuppetReplicationFrequency
+		local P = ClientPuppetStepDelta / Settings.PuppetReplicationFrequency
 
-		local i = 1
-		local puppets, interpolatedPositions, finishedLerps = {}, {}, {}
+		--local i = 1
+		local puppets, interpolatedPositions, finishedLerps = nil, nil, {}
 		for index, lerpData in pairs(PuppetsLerpData) do
 			local d = lerpData[3] + deltaTime
 			if d >= P then
 				table.insert(finishedLerps, index)
-				interpolatedPositions[i] = lerpData[2]
+				--interpolatedPositions[i] = lerpData[2]
+				Puppets[index][1].CFrame = lerpData[2]
 			else
-				interpolatedPositions[i] = lerpData[1]:Lerp(lerpData[2], d * Settings.PuppetReplicationFrequency)
+				--interpolatedPositions[i] = lerpData[1]:Lerp(lerpData[2], d / P)
+				Puppets[index][1].CFrame = lerpData[1]:Lerp(lerpData[2], d / P)
 				lerpData[3] = d
 			end
 
-			puppets[i] = Puppets[index][1]
-			i += 1
+			--puppets[i] = Puppets[index][1]
+			--i += 1
 		end
 
 		for _, index in ipairs(finishedLerps) do PuppetsLerpData[index] = nil end
 
-		workspace:BulkMoveTo(puppets, interpolatedPositions, Enum.BulkMoveMode.FireCFrameChanged)
+		--workspace:BulkMoveTo(puppets, interpolatedPositions, Enum.BulkMoveMode.FireCFrameChanged)
 	end)
 end
+
+--[[
+RunService.PostSimulation:Connect(function(dt)
+    local activePuppets = GetActivePuppets()
+    local puppetNum = #activePuppets
+
+	if puppetNum < 71 then return end
+
+	local ReplicationSteps = puppetNum // 71 - 1
+
+    for _, puppet in pairs(activePuppets) do
+		local a = Vector3.new(puppet.CFrame:ToEulerAngles()) + puppet.AssemblyAngularVelocity * dt * ReplicationSteps
+		puppet.CFrame = CFrame.new(puppet.Position + puppet.AssemblyLinearVelocity * dt * ReplicationSteps) * CFrame.fromEulerAngles(a.X, a.Y, a.Z)
+    end
+end)
+--]]
 
 local function DestroyPuppet(index)
 	Puppets[index][1]:Destroy()
@@ -1781,19 +1931,9 @@ local function GreedyMeshingBehavior()
 end
 
 
+
 local TAU = 2*math.pi
-local function WriteRadianI10(b, bitOff, x)
-	local S = 0
-	local X = math.round((x % TAU) * 100)
-
-	if X > 314 then
-		X = 628 - X
-		S = 1
-	end
-
-	buffer.writebits(b, bitOff, 1, S)
-	buffer.writebits(b, bitOff + 1, 9, X)
-end
+local RAD2U8 = 40.5845104884
 
 local function WriteFloatI25(b, bitOff, x)
 	local S = 0
@@ -1812,9 +1952,31 @@ local function PuppeteerBehavior(deltaTime)
 	if puppetTimeAccumulation >= P then
 		repeat puppetTimeAccumulation -= P until puppetTimeAccumulation < P
 
+		for i, puppetData in pairs(Puppets) do -- every time the period is reached, push all available voxel CFrames to their state replication queue
+			local puppetVoxel = puppetData[1]
+
+			if puppetVoxel.Anchored then continue end
+
+			if puppetVoxel.AssemblyLinearVelocity.Magnitude <= Settings.PuppetSleepVelocity then
+				local d = puppetData[4] + deltaTime
+				if d >= Settings.PuppetAnchorTimeout then
+					puppetVoxel.Anchored = true
+					table.insert(PuppetsLerpData[i], 1, puppetVoxel.CFrame) -- replicate the final resting state of this voxel
+					puppetData[4] = 0
+				else
+					puppetData[4] = d
+				end
+				continue
+			end
+
+			puppetData[4] = 0
+
+			table.insert(PuppetsLerpData[i], 1, puppetVoxel.CFrame)
+		end
+
 		local AvailablePuppets = {}
 		local StartIndex = PuppetNextReplicationIndex
-		while #AvailablePuppets < 66 do
+		while #AvailablePuppets < 71 do
 			local ReplicationIndex = PuppetNextReplicationIndex
 			PuppetNextReplicationIndex += 1
 			if PuppetNextReplicationIndex > Settings.PuppetMaxCount then
@@ -1825,55 +1987,43 @@ local function PuppeteerBehavior(deltaTime)
 			local puppetData = Puppets[ReplicationIndex]
 			if not puppetData then continue end
 
-			local puppetVoxel = puppetData[1]
+			if #PuppetsLerpData[ReplicationIndex] == 0 then continue end
 
-			if puppetVoxel.Anchored then continue end
-
-			if puppetVoxel.AssemblyLinearVelocity.Magnitude <= Settings.PuppetSleepVelocity then
-				local d = puppetData[4] + deltaTime
-				if d >= Settings.PuppetAnchorTimeout then
-					puppetVoxel.Anchored = true
-					puppetData[4] = 0
-				else
-					puppetData[4] = d
-				end
-				continue
-			end
-
-			puppetData[4] = 0
-
-			if table.find(CreatePuppetQueue, puppetVoxel) then continue end
+			if table.find(CreatePuppetQueue, puppetData[1]) then continue end
 
 			table.insert(AvailablePuppets, ReplicationIndex)
 		end
 
-		if #AvailablePuppets > 0 then
-			local countToReplicate = math.min(66, #AvailablePuppets)
-			local puppetStates = buffer.create(countToReplicate * 15)
+		local countToReplicate = #AvailablePuppets
+		if countToReplicate > 0 then
+			local puppetStates = buffer.create(countToReplicate * 14)
 
-			local countReplicated = 0
-			while countReplicated < countToReplicate do
-				local ReplicationIndex = table.remove(AvailablePuppets, 1)
-				local puppetVoxel = Puppets[ReplicationIndex][1]
+			for i, ReplicationIndex in ipairs(AvailablePuppets) do
+				--local puppetVoxel = Puppets[ReplicationIndex][1]
 
-				local bufferBitOffset = countReplicated * 120
+				local bufferBitOffset = (i - 1) * 112
 
-				local cframe = puppetVoxel.CFrame
+				local cframe = table.remove(PuppetsLerpData[ReplicationIndex])
 				WriteFloatI25(puppetStates, bufferBitOffset, cframe.X)
 				WriteFloatI25(puppetStates, bufferBitOffset + 25, cframe.Y)
 				WriteFloatI25(puppetStates, bufferBitOffset + 50, cframe.Z)
 
 				local rX, rY, rZ = cframe:ToEulerAngles()
-				WriteRadianI10(puppetStates, bufferBitOffset + 75, rX)
-				WriteRadianI10(puppetStates, bufferBitOffset + 85, rY)
-				WriteRadianI10(puppetStates, bufferBitOffset + 95, rZ)
+				buffer.writebits(puppetStates, bufferBitOffset + 75, 8, math.round((rX % TAU) * RAD2U8))
+				buffer.writebits(puppetStates, bufferBitOffset + 83, 8, math.round((rY % TAU) * RAD2U8))
+				buffer.writebits(puppetStates, bufferBitOffset + 91, 8, math.round((rZ % TAU) * RAD2U8))
 
-				buffer.writebits(puppetStates, bufferBitOffset + 105, 15, ReplicationIndex)
-
-				countReplicated += 1
+				buffer.writebits(puppetStates, bufferBitOffset + 99, 13, ReplicationIndex)
 			end
 
-			ServerEvents.ReplicatePuppetStates.FireAll(puppetStates)
+			local stepDelta = 0
+			for _, queuedCFrames in pairs(PuppetsLerpData) do
+				if #queuedCFrames == 0 then continue end
+				stepDelta += 1
+			end
+			stepDelta = stepDelta > 71 and stepDelta // 71 or 1
+
+			ServerEvents.ReplicatePuppetStates.FireAll(puppetStates, stepDelta)
 		end
 	end
 
@@ -1964,6 +2114,7 @@ function Shatterbox.Puppeteer(voxel : Part)
 			-- signal to the client that the puppet needs to be destroyed and remove it (probably will batch these in the future)
 
 			Puppets[PuppetInsertedIndex] = nil
+			PuppetsLerpData[PuppetInsertedIndex] = nil
 			ServerEvents.DestroyPuppet.FireAll(PuppetInsertedIndex)
 		end
 	}
@@ -1974,6 +2125,7 @@ function Shatterbox.Puppeteer(voxel : Part)
 
 
 	Puppets[PuppetInsertedIndex] = PuppetData
+	PuppetsLerpData[PuppetInsertedIndex] = {}
 	PuppetNextIndex += 1
 	if PuppetNextIndex > Settings.PuppetMaxCount then
 		PuppetNextIndex = 1
@@ -1985,13 +2137,13 @@ end
 -- Performs voxel destruction around the 'intersectingPart' according to the FilterTagged supplied.
 --
 -- if no FilterTagged is given, everything except IndestructibleTag tagged Block parts are considered for destruction.
-function Shatterbox.Destroy(intersectingPart : Part | Model | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any})
+function Shatterbox.Destroy(intersectingPart : Part | Model | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : {Player}?)
 	coroutine.wrap(function()
-		if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData) then
+		if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication) then
 			return
 		end
 
-		local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData)
+		local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
 
 		params.DestroyedVoxels = 0
 
@@ -2024,16 +2176,12 @@ end
 --Performs voxel destruction around 'intersectingPart', skipping as many intermediate parts as possible. <br>
 --
 -- Returns an array of imaginary voxels for you to optionally create as debris.
-function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, GridSize : number?, SkipEncapsulatedVoxels : boolean?) : {Types.ImaginaryVoxel}
+function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, ExcludePlayersReplication : {Player}?) : {Types.ImaginaryVoxel}
 
-	local did, voxels = ModelQueueBehavior(Shatterbox.ImaginaryVoxels, intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil)
-	if did then
-		return voxels
-	end
+	local did, voxels = ModelQueueBehavior(Shatterbox.ImaginaryVoxels, intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication)
+	if did then return voxels end
 
-	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels)
-
-	voxels = voxels :: {Types.ImaginaryVoxel}
+	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication)
 
 	local destructibleParts, createdDirtyGroups, createdFallingGroups = GetDestructibleParts(params)
 	if #destructibleParts == 0 then return voxels end
@@ -2229,6 +2377,7 @@ end
 
 
 -- Creates a "Hitbox" object which can be used in place of the destruction functions, and has additional functionality. (like VoxBreaker moveable hitbox)
+-- If you use ExcludePlayersReplication, that will be cleared after every destruction automatically, for convenience.
 function Shatterbox.CreateHitbox()
 
 	local hitbox = {}
@@ -2242,6 +2391,7 @@ function Shatterbox.CreateHitbox()
 
 	hitbox.OnVoxelDestruct = nil :: string?
 	hitbox.UserData = {} :: {any}
+	hitbox.ExcludePlayersReplication = {} :: {Player}
 
 	hitbox.OnDestructCompleted = nil :: (() -> ())?
 
@@ -2259,12 +2409,19 @@ function Shatterbox.CreateHitbox()
 	hitbox.VelocityBias = 1 :: number?
 
 	-- Performs voxel destruction around the hitbox
-	function hitbox:Destroy() Shatterbox.Destroy(hitbox) end
+	function hitbox:Destroy()
+		Shatterbox.Destroy(hitbox)
+		hitbox.ExcludePlayersReplication = {} -- QOL automatically clear the exlcusion after the destruction is performed
+	end
 
 	--*Yields until the NEXT Heartbeat to perform instant destruction.* <br>
 	--
 	-- returns the imaginary voxels bounded by the hitbox as an array, for you to optionally create
-	function hitbox:ImaginaryVoxels() return Shatterbox.ImaginaryVoxels(hitbox) :: {Types.ImaginaryVoxel} end
+	function hitbox:ImaginaryVoxels()
+		local voxels = Shatterbox.ImaginaryVoxels(hitbox) :: {Types.ImaginaryVoxel} 
+		hitbox.ExcludePlayersReplication = {} -- QOL automatically clear the exlcusion after the destruction is performed
+		return voxels
+	end
 
 
 	local wcon : RBXScriptConnection?
@@ -2470,6 +2627,17 @@ if isServer then
 
 	if USE_CLIENT_SERVER then
 		ServerEvents.ClientInitComplete.On(ReplicateStateToPlayer)
+
+		ServerEvents.CreateDirtyGroupsFromClient.On(function(plr, DirtyGroups)
+
+			local SerialDirtyGroups = {}
+			for DirtyGroupID, part in pairs(DirtyGroups) do
+				PopulateDirtyGroup(part, DirtyGroupID)
+				SerialDirtyGroups[DirtyGroupID] = SerializedPartInstance(part)
+			end
+
+			ServerEvents.CreateDirtyGroupsFromServer.FireExcept(plr, SerialDirtyGroups)
+		end)
 	end
 
 elseif isClient then
@@ -2478,6 +2646,8 @@ elseif isClient then
 		ClientEvents.ReplicateState.On(ReplicateStateFromServer)
 
 		ClientEvents.ReplicateDestruction.On(ReplicateDestructionFromServer)
+
+		ClientEvents.CreateDirtyGroupsFromServer.On(CreateSerialDirtyGroups)
 
 		ClientEvents.ClientInitComplete.Fire()
 	end
