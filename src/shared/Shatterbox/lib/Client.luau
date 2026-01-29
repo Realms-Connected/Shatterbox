@@ -770,7 +770,7 @@ local function Shatterbox_ReadEVENT_ReplicatePuppetStates(): (buffer, number)
 	local Value1 = buffer.create(Length)
 	buffer.copy(Value1, 0, RecieveBuffer, Read(Length), Length)
 	if buffer.len(Value1) < 14 then error(`Expected size of "Value1" to be larger than 14, got {buffer.len(Value1)} instead.`) end
-	if buffer.len(Value1) > 994 then error(`Expected size of "Value1" to be smaller than 994, got {buffer.len(Value1)} instead.`) end
+	if buffer.len(Value1) > 980 then error(`Expected size of "Value1" to be smaller than 980, got {buffer.len(Value1)} instead.`) end
 	local Value2 = buffer.readu16(RecieveBuffer, BLOCK_START + 2)
 	return Value1, Value2
 end
@@ -1295,9 +1295,9 @@ local function Shatterbox_ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: {
 	return Value
 end
 
-local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, {[string]: boolean}, { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, {[string]: number}, {[string]: {[string]: boolean}}, {[string]: number}, {[string]: number}, {[string]: number}, { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } })
-	-- Read BLOCK: 20 bytes
-	local BLOCK_START = Read(20)
+local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, {[string]: boolean}, { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, {[string]: number}, {[string]: {[string]: boolean}}, {[string]: number}, {[string]: number}, {[string]: number}, {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, number)
+	-- Read BLOCK: 22 bytes
+	local BLOCK_START = Read(22)
 	local Value1 = {}
 	local Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 	for _ = 1, Elements_1 do
@@ -2539,94 +2539,65 @@ local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFra
 		local Element_1 = buffer.readf32(RecieveBuffer, OFFSET_1)
 		Value9[Key_1] = Element_1
 	end
-	-- START ARRAY
-	Length = buffer.readu16(RecieveBuffer, BLOCK_START + 18)
-	if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
-	if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
-	local Value10 = table.create(Length)
-		-- Read BLOCK: 56 bytes
-	local ARRAY_START_1 = Read(56 * Length)
-	for Index = 1, Length do
-		local Item_1 = {} :: any
-		-- Read 4
-		local OPERATION_OFFSET_0 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		local X = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_0)
-		-- Read 4
-		local OPERATION_OFFSET_1 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		local Y = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_1)
-		-- Read 4
-		local OPERATION_OFFSET_2 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		local Z = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_2)
+	local Value10 = {}
+	Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 18)
+	for _ = 1, Elements_1 do
+		local OFFSET_0 = Read(2)
+		local Key_1 = buffer.readu16(RecieveBuffer, OFFSET_0)
+		local Element_1 = {} :: any
+		local OFFSET_1 = Read(4)
+		local X = buffer.readf32(RecieveBuffer, OFFSET_1)
+		local OFFSET_2 = Read(4)
+		local Y = buffer.readf32(RecieveBuffer, OFFSET_2)
+		local OFFSET_3 = Read(4)
+		local Z = buffer.readf32(RecieveBuffer, OFFSET_3)
 		local Position = Vector3.new(X, Y, Z)
-		-- Read 4
-		local OPERATION_OFFSET_3 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		local rX = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_3)
-		-- Read 4
-		local OPERATION_OFFSET_4 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		local rY = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_4)
-		-- Read 4
-		local OPERATION_OFFSET_5 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		local rZ = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_5)
-		Item_1.CFrame = CFrame.new(Position) * CFrame.fromOrientation(rX, rY, rZ)
-		-- Read 4
-		local OPERATION_OFFSET_6 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		X = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_6)
-		-- Read 4
-		local OPERATION_OFFSET_7 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		Y = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_7)
-		-- Read 4
-		local OPERATION_OFFSET_8 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		Z = buffer.readf32(RecieveBuffer, OPERATION_OFFSET_8)
-		Item_1.Size = Vector3.new(X, Y, Z)
-		-- Read 1
-		local OPERATION_OFFSET_9 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		Item_1.Anchored = (buffer.readu8(RecieveBuffer, OPERATION_OFFSET_9) == 1)
-		-- Read 1
-		local OPERATION_OFFSET_10 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_10) == 1 then
+		local OFFSET_4 = Read(4)
+		local rX = buffer.readf32(RecieveBuffer, OFFSET_4)
+		local OFFSET_5 = Read(4)
+		local rY = buffer.readf32(RecieveBuffer, OFFSET_5)
+		local OFFSET_6 = Read(4)
+		local rZ = buffer.readf32(RecieveBuffer, OFFSET_6)
+		Element_1.CFrame = CFrame.new(Position) * CFrame.fromOrientation(rX, rY, rZ)
+		local OFFSET_7 = Read(4)
+		X = buffer.readf32(RecieveBuffer, OFFSET_7)
+		local OFFSET_8 = Read(4)
+		Y = buffer.readf32(RecieveBuffer, OFFSET_8)
+		local OFFSET_9 = Read(4)
+		Z = buffer.readf32(RecieveBuffer, OFFSET_9)
+		Element_1.Size = Vector3.new(X, Y, Z)
+		local OFFSET_10 = Read(1)
+		Element_1.Anchored = (buffer.readu8(RecieveBuffer, OFFSET_10) == 1)
+		local OFFSET_11 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_11) == 1 then
 			-- Read BLOCK: 3 bytes
 			local BLOCK_START = Read(3)
-			Item_1.Color = Color3.fromRGB(buffer.readu8(RecieveBuffer, BLOCK_START + 0), buffer.readu8(RecieveBuffer, BLOCK_START + 1), buffer.readu8(RecieveBuffer, BLOCK_START + 2))
+			Element_1.Color = Color3.fromRGB(buffer.readu8(RecieveBuffer, BLOCK_START + 0), buffer.readu8(RecieveBuffer, BLOCK_START + 1), buffer.readu8(RecieveBuffer, BLOCK_START + 2))
 		end
-		-- Read 1
-		local OPERATION_OFFSET_11 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_11) == 1 then
+		local OFFSET_12 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_12) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
-			Item_1.Material = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
-			if Item_1.Material < 256 then error(`Expected "Item_1.Material" to be larger than 256, got {Item_1.Material} instead.`) end
-			if Item_1.Material > 2311 then error(`Expected "Item_1.Material" to be smaller than 2311, got {Item_1.Material} instead.`) end
+			Element_1.Material = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			if Element_1.Material < 256 then error(`Expected "Element_1.Material" to be larger than 256, got {Element_1.Material} instead.`) end
+			if Element_1.Material > 2311 then error(`Expected "Element_1.Material" to be smaller than 2311, got {Element_1.Material} instead.`) end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_12 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_12) == 1 then
+		local OFFSET_13 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_13) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			local MantissaExponent = Encoded % 0x8000
 			if MantissaExponent == 0b0_11111_0000000000  then
 				if Encoded // 0x8000 == 1 then
-					Item_1.Transparency = -math.huge
+					Element_1.Transparency = -math.huge
 				else
-					Item_1.Transparency = math.huge
+					Element_1.Transparency = math.huge
 				end
 			elseif MantissaExponent == 0b1_11111_0000000000   then
-				Item_1.Transparency = 0 / 0
+				Element_1.Transparency = 0 / 0
 			elseif MantissaExponent == 0b0_00000_0000000000   then
-				Item_1.Transparency = 0
+				Element_1.Transparency = 0
 			else
 				local Mantissa = MantissaExponent % 0x400
 				local Exponent = MantissaExponent // 0x400
@@ -2637,27 +2608,25 @@ local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFra
 					Fraction = Mantissa / 0x800 + 0.5
 				end
 				local Result = math.ldexp(Fraction, Exponent - 14)
-				Item_1.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
+				Element_1.Transparency = if Encoded // 0x8000 == 1 then -Result else Result
 			end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_13 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_13) == 1 then
+		local OFFSET_14 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_14) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			local Encoded = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			local MantissaExponent = Encoded % 0x8000
 			if MantissaExponent == 0b0_11111_0000000000  then
 				if Encoded // 0x8000 == 1 then
-					Item_1.Reflectance = -math.huge
+					Element_1.Reflectance = -math.huge
 				else
-					Item_1.Reflectance = math.huge
+					Element_1.Reflectance = math.huge
 				end
 			elseif MantissaExponent == 0b1_11111_0000000000   then
-				Item_1.Reflectance = 0 / 0
+				Element_1.Reflectance = 0 / 0
 			elseif MantissaExponent == 0b0_00000_0000000000   then
-				Item_1.Reflectance = 0
+				Element_1.Reflectance = 0
 			else
 				local Mantissa = MantissaExponent % 0x400
 				local Exponent = MantissaExponent // 0x400
@@ -2668,98 +2637,80 @@ local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFra
 					Fraction = Mantissa / 0x800 + 0.5
 				end
 				local Result = math.ldexp(Fraction, Exponent - 14)
-				Item_1.Reflectance = if Encoded // 0x8000 == 1 then -Result else Result
+				Element_1.Reflectance = if Encoded // 0x8000 == 1 then -Result else Result
 			end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_14 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_14) == 1 then
+		local OFFSET_15 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_15) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
-			Item_1.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
+			Element_1.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
 		end
-		-- Read 1
-		local OPERATION_OFFSET_15 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_15) == 1 then
+		local OFFSET_16 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_16) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
-			Item_1.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
+			Element_1.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
 		end
-		-- Read 1
-		local OPERATION_OFFSET_16 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_16) == 1 then
+		local OFFSET_17 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_17) == 1 then
 			-- Read BLOCK: 1 bytes
 			local BLOCK_START = Read(1)
-			Item_1.LeftSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
-			if Item_1.LeftSurface < 0 then error(`Expected "Item_1.LeftSurface" to be larger than 0, got {Item_1.LeftSurface} instead.`) end
-			if Item_1.LeftSurface > 10 then error(`Expected "Item_1.LeftSurface" to be smaller than 10, got {Item_1.LeftSurface} instead.`) end
+			Element_1.LeftSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+			if Element_1.LeftSurface < 0 then error(`Expected "Element_1.LeftSurface" to be larger than 0, got {Element_1.LeftSurface} instead.`) end
+			if Element_1.LeftSurface > 10 then error(`Expected "Element_1.LeftSurface" to be smaller than 10, got {Element_1.LeftSurface} instead.`) end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_17 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_17) == 1 then
+		local OFFSET_18 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_18) == 1 then
 			-- Read BLOCK: 1 bytes
 			local BLOCK_START = Read(1)
-			Item_1.RightSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
-			if Item_1.RightSurface < 0 then error(`Expected "Item_1.RightSurface" to be larger than 0, got {Item_1.RightSurface} instead.`) end
-			if Item_1.RightSurface > 10 then error(`Expected "Item_1.RightSurface" to be smaller than 10, got {Item_1.RightSurface} instead.`) end
+			Element_1.RightSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+			if Element_1.RightSurface < 0 then error(`Expected "Element_1.RightSurface" to be larger than 0, got {Element_1.RightSurface} instead.`) end
+			if Element_1.RightSurface > 10 then error(`Expected "Element_1.RightSurface" to be smaller than 10, got {Element_1.RightSurface} instead.`) end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_18 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_18) == 1 then
+		local OFFSET_19 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_19) == 1 then
 			-- Read BLOCK: 1 bytes
 			local BLOCK_START = Read(1)
-			Item_1.FrontSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
-			if Item_1.FrontSurface < 0 then error(`Expected "Item_1.FrontSurface" to be larger than 0, got {Item_1.FrontSurface} instead.`) end
-			if Item_1.FrontSurface > 10 then error(`Expected "Item_1.FrontSurface" to be smaller than 10, got {Item_1.FrontSurface} instead.`) end
+			Element_1.FrontSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+			if Element_1.FrontSurface < 0 then error(`Expected "Element_1.FrontSurface" to be larger than 0, got {Element_1.FrontSurface} instead.`) end
+			if Element_1.FrontSurface > 10 then error(`Expected "Element_1.FrontSurface" to be smaller than 10, got {Element_1.FrontSurface} instead.`) end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_19 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_19) == 1 then
+		local OFFSET_20 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_20) == 1 then
 			-- Read BLOCK: 1 bytes
 			local BLOCK_START = Read(1)
-			Item_1.BackSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
-			if Item_1.BackSurface < 0 then error(`Expected "Item_1.BackSurface" to be larger than 0, got {Item_1.BackSurface} instead.`) end
-			if Item_1.BackSurface > 10 then error(`Expected "Item_1.BackSurface" to be smaller than 10, got {Item_1.BackSurface} instead.`) end
+			Element_1.BackSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+			if Element_1.BackSurface < 0 then error(`Expected "Element_1.BackSurface" to be larger than 0, got {Element_1.BackSurface} instead.`) end
+			if Element_1.BackSurface > 10 then error(`Expected "Element_1.BackSurface" to be smaller than 10, got {Element_1.BackSurface} instead.`) end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_20 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_20) == 1 then
+		local OFFSET_21 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_21) == 1 then
 			-- Read BLOCK: 1 bytes
 			local BLOCK_START = Read(1)
-			Item_1.TopSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
-			if Item_1.TopSurface < 0 then error(`Expected "Item_1.TopSurface" to be larger than 0, got {Item_1.TopSurface} instead.`) end
-			if Item_1.TopSurface > 10 then error(`Expected "Item_1.TopSurface" to be smaller than 10, got {Item_1.TopSurface} instead.`) end
+			Element_1.TopSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+			if Element_1.TopSurface < 0 then error(`Expected "Element_1.TopSurface" to be larger than 0, got {Element_1.TopSurface} instead.`) end
+			if Element_1.TopSurface > 10 then error(`Expected "Element_1.TopSurface" to be smaller than 10, got {Element_1.TopSurface} instead.`) end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_21 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_21) == 1 then
+		local OFFSET_22 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_22) == 1 then
 			-- Read BLOCK: 1 bytes
 			local BLOCK_START = Read(1)
-			Item_1.BottomSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
-			if Item_1.BottomSurface < 0 then error(`Expected "Item_1.BottomSurface" to be larger than 0, got {Item_1.BottomSurface} instead.`) end
-			if Item_1.BottomSurface > 10 then error(`Expected "Item_1.BottomSurface" to be smaller than 10, got {Item_1.BottomSurface} instead.`) end
+			Element_1.BottomSurface = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+			if Element_1.BottomSurface < 0 then error(`Expected "Element_1.BottomSurface" to be larger than 0, got {Element_1.BottomSurface} instead.`) end
+			if Element_1.BottomSurface > 10 then error(`Expected "Element_1.BottomSurface" to be smaller than 10, got {Element_1.BottomSurface} instead.`) end
 		end
-		-- Read 1
-		local OPERATION_OFFSET_22 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_22) == 1 then
+		local OFFSET_23 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_23) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
 			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
-			Item_1.Textures = table.create(Length)
+			Element_1.Textures = table.create(Length)
 				-- Read BLOCK: 11 bytes
 			local ARRAY_START_3 = Read(11 * Length)
 			for Index = 1, Length do
@@ -2875,21 +2826,19 @@ local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFra
 					local BLOCK_START = Read(4)
 					Item_3.StudsPerTileV = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
 				end
-				table.insert(Item_1.Textures, Item_3)
+				table.insert(Element_1.Textures, Item_3)
 			end
 			-- END ARRAY
 		end
-		-- Read 1
-		local OPERATION_OFFSET_23 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_23) == 1 then
+		local OFFSET_24 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_24) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
 			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
-			Item_1.Lights = table.create(Length)
+			Element_1.Lights = table.create(Length)
 				-- Read BLOCK: 8 bytes
 			local ARRAY_START_3 = Read(8 * Length)
 			for Index = 1, Length do
@@ -2949,21 +2898,19 @@ local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFra
 					if Item_3.Face < 0 then error(`Expected "Item_3.Face" to be larger than 0, got {Item_3.Face} instead.`) end
 					if Item_3.Face > 5 then error(`Expected "Item_3.Face" to be smaller than 5, got {Item_3.Face} instead.`) end
 				end
-				table.insert(Item_1.Lights, Item_3)
+				table.insert(Element_1.Lights, Item_3)
 			end
 			-- END ARRAY
 		end
-		-- Read 1
-		local OPERATION_OFFSET_24 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		if buffer.readu8(RecieveBuffer, OPERATION_OFFSET_24) == 1 then
+		local OFFSET_25 = Read(1)
+		if buffer.readu8(RecieveBuffer, OFFSET_25) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
 			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
-			Item_1.Decals = table.create(Length)
+			Element_1.Decals = table.create(Length)
 				-- Read BLOCK: 7 bytes
 			local ARRAY_START_3 = Read(7 * Length)
 			for Index = 1, Length do
@@ -3047,31 +2994,27 @@ local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFra
 					if Item_3.Face < 0 then error(`Expected "Item_3.Face" to be larger than 0, got {Item_3.Face} instead.`) end
 					if Item_3.Face > 5 then error(`Expected "Item_3.Face" to be smaller than 5, got {Item_3.Face} instead.`) end
 				end
-				table.insert(Item_1.Decals, Item_3)
+				table.insert(Element_1.Decals, Item_3)
 			end
 			-- END ARRAY
 		end
-		Item_1.Attributes = {}
-		-- Read 2
-		local OPERATION_OFFSET_25 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		local Elements_2 = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_25)
+		Element_1.Attributes = {}
+		local OFFSET_26 = Read(2)
+		local Elements_2 = buffer.readu16(RecieveBuffer, OFFSET_26)
 		for _ = 1, Elements_2 do
 			local OFFSET_0 = Read(2)
 			Length = buffer.readu16(RecieveBuffer, OFFSET_0)
 			local Key_2 = buffer.readstring(RecieveBuffer, Read(Length), Length)
 			RecieveInstanceCursor += 1
 			local Element_2 = RecieveInstances[RecieveInstanceCursor]
-			Item_1.Attributes[Key_2] = Element_2
+			Element_1.Attributes[Key_2] = Element_2
 		end
 		-- START ARRAY
-		-- Read 2
-		local OPERATION_OFFSET_26 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_26)
+		local OFFSET_27 = Read(2)
+		Length = buffer.readu16(RecieveBuffer, OFFSET_27)
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
-		Item_1.Tags = table.create(Length)
+		Element_1.Tags = table.create(Length)
 			-- Read BLOCK: 2 bytes
 		local ARRAY_START_2 = Read(2 * Length)
 		for Index = 1, Length do
@@ -3080,13 +3023,13 @@ local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFra
 			ARRAY_START_2 += 2
 			Length = buffer.readu16(RecieveBuffer, OPERATION_OFFSET_0)
 			local Item_2 = buffer.readstring(RecieveBuffer, Read(Length), Length)
-			table.insert(Item_1.Tags, Item_2)
+			table.insert(Element_1.Tags, Item_2)
 		end
 		-- END ARRAY
-		table.insert(Value10, Item_1)
+		Value10[Key_1] = Element_1
 	end
-	-- END ARRAY
-	return Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10
+	local Value11 = buffer.readu16(RecieveBuffer, BLOCK_START + 20)
+	return Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11
 end
 
 local function Shatterbox_ReadEVENT_ReplicateDestruction(): (string, { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, {[string]: boolean}?)
@@ -3827,16 +3770,16 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[6], {Value} :: {any})
 			end
 		elseif Index == 7 then
-			local Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } } = Shatterbox_ReadEVENT_ReplicateState()
+			local Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number = Shatterbox_ReadEVENT_ReplicateState()
 			if #Events.Reliable[7] > 0 then
 				for _, Listener in Events.Reliable[7] do
-					task.spawn(Listener, Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10)
+					task.spawn(Listener, Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
 				end
 			else
 				if #Queue.Reliable[7] > 256 then
 					warn("[Blink]: Event queue of \"ReplicateState\" exceeded 256, did you forget to implement a listener?")
 				end
-				table.insert(Queue.Reliable[7], {Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10} :: {any})
+				table.insert(Queue.Reliable[7], {Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11} :: {any})
 			end
 		elseif Index == 8 then
 			local Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}? = Shatterbox_ReadEVENT_ReplicateDestruction()
@@ -3996,7 +3939,7 @@ local Returns = table.freeze({
 			end
 		},
 		ReplicateState = {
-			On = function(Listener: (Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }) -> ()): () -> ()
+			On = function(Listener: (Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number) -> ()): () -> ()
 				table.insert(Events.Reliable[7], Listener)
 				for Index, Arguments in Queue.Reliable[7] do
 					task.spawn(Listener, table.unpack(Arguments))

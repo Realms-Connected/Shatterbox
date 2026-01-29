@@ -1565,20 +1565,28 @@ local function GetActivePuppetCount()
 	return puppetCount
 end
 
+local FakePuppetOverrideIndex = 1
+
+local function DeserializedPuppet(serialPuppet)
+	local Part = DeserializedPartInstance(serialPuppet, CachedParts)
+
+	Part.Anchored = true
+
+	Part:AddTag(IndestructibleTag)
+
+	Part.Parent = mapContainer
+
+	return Part
+end
 
 local function CreatePuppets(puppets)
-	for _, puppet in ipairs(puppets) do
-		local Part = DeserializedPartInstance(puppet, CachedParts)
-
-		Part.Anchored = true
-
-		Part:AddTag(IndestructibleTag)
-
-		Part.Parent = mapContainer
+	for _, serialPuppet in ipairs(puppets) do
+		local Part = DeserializedPuppet(serialPuppet)
 
 		local OldPuppetData = Puppets[PuppetNextIndex]
 		if OldPuppetData then
 			OldPuppetData[1]:Destroy()
+			PuppetsLerpData[PuppetNextIndex] = nil
 		end
 
 		Puppets[PuppetNextIndex] = { Part }
@@ -1588,6 +1596,7 @@ local function CreatePuppets(puppets)
 			PuppetNextIndex = 1
 		end
 	end
+	FakePuppetOverrideIndex = PuppetNextIndex
 end
 
 
@@ -1721,24 +1730,19 @@ end
 
 local function ReplicateStateToPlayer(plr)
 
-	local SkipNonDivisible = {}
-
 	local serialDirtyGroupData = {}
 	for DirtyGroupID, groupData in pairs(DirtyGroupData) do
 		local OriginalPart = groupData.OriginalPart
 
-		if not OriginalPart:IsA("Part") or OriginalPart.Shape ~= "Block" then
-			SkipNonDivisible[DirtyGroupID] = true
-			continue
+		if OriginalPart:IsA("Part") and OriginalPart.Shape == Enum.PartType.Block then
+			-- only send the original part because OriginalParent doesn't matter in this case and GridSize can be derived
+			serialDirtyGroupData[DirtyGroupID] = SerializedPartInstance(OriginalPart)
 		end
-
-		-- only send the original part because OriginalParent doesn't matter in this case and GridSize can be derived
-		serialDirtyGroupData[DirtyGroupID] = SerializedPartInstance(OriginalPart)
 	end
 
 	local serialDirtyGroupMembers, destroyedDirtyGroups = {}, {}
-	for DirtyGroupID, groupMembers in pairs(DirtyGroupMembers) do
-		if SkipNonDivisible[DirtyGroupID] then continue end
+	for DirtyGroupID in pairs(serialDirtyGroupData) do
+		local groupMembers = DirtyGroupMembers[DirtyGroupID]
 
 		local OriginalPart = DirtyGroupData[DirtyGroupID].OriginalPart
 
@@ -1767,9 +1771,8 @@ local function ReplicateStateToPlayer(plr)
 	end
 
 	local serialPuppets = {}
-	for _, puppetData in pairs(Puppets) do
-		local serialPart = SerializedPartInstance(puppetData[1])
-		table.insert(serialPuppets, serialPart)
+	for puppetID, puppetData in pairs(Puppets) do
+		serialPuppets[puppetID] = SerializedPartInstance(puppetData[1])
 	end
 
 	ServerEvents.ReplicateState.Fire(plr,
@@ -1786,11 +1789,12 @@ local function ReplicateStateToPlayer(plr)
 		GreedyMeshingQueue,
 		ActiveGMWorkerGridSize,
 
-		serialPuppets
+		serialPuppets,
+		PuppetNextIndex
 	)
 end
 
-local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMembers, destroyedDirtyGroups, serialShatterQueue, serverCountOperationsProcessing, serverOperationAffectedDirtyGroups, serverSmoothCleanupQueue, serverGreedyMeshingQueue, serverActiveGMWorkerGridSize, serialPuppets)
+local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMembers, destroyedDirtyGroups, serialShatterQueue, serverCountOperationsProcessing, serverOperationAffectedDirtyGroups, serverSmoothCleanupQueue, serverGreedyMeshingQueue, serverActiveGMWorkerGridSize, serialPuppets, serverPuppetsNextIndex)
 
 	for DirtyGroupID, serializedPart in pairs(serialDirtyGroupData) do
 		DirtyGroupData[DirtyGroupID] = {
@@ -1837,7 +1841,10 @@ local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMe
 		coroutine.resume(thr, DirtyGroupID, GridSize)
 	end
 
-	if #serialPuppets > 0 then CreatePuppets(serialPuppets) end
+	PuppetNextIndex = serverPuppetsNextIndex
+	for puppetID, serialPuppet in pairs(serialPuppets) do
+		Puppets[puppetID] = { DeserializedPuppet(serialPuppet) }
+	end
 
 	clientInitComplete = true
 end
@@ -1976,7 +1983,7 @@ local function PuppeteerBehavior(deltaTime)
 
 		local AvailablePuppets = {}
 		local StartIndex = PuppetNextReplicationIndex
-		while #AvailablePuppets < 71 do
+		while #AvailablePuppets < 70 do
 			local ReplicationIndex = PuppetNextReplicationIndex
 			PuppetNextReplicationIndex += 1
 			if PuppetNextReplicationIndex > Settings.PuppetMaxCount then
@@ -2021,7 +2028,7 @@ local function PuppeteerBehavior(deltaTime)
 				if #queuedCFrames == 0 then continue end
 				stepDelta += 1
 			end
-			stepDelta = stepDelta > 71 and stepDelta // 71 or 1
+			stepDelta = stepDelta > 70 and stepDelta // 70 or 1
 
 			ServerEvents.ReplicatePuppetStates.FireAll(puppetStates, stepDelta)
 		end
@@ -2090,7 +2097,7 @@ function Shatterbox.Puppeteer(voxel : Part)
 	if OldPuppetData then
 		OldPuppetData[3]:Disconnect()
 		OldPuppetData[2](true)
-		OldPuppetData[1]:Destroy()
+		DestroyPart(OldPuppetData[1])
 	end
 
 	table.insert(CreatePuppetQueue, voxel)
@@ -2129,6 +2136,24 @@ function Shatterbox.Puppeteer(voxel : Part)
 	PuppetNextIndex += 1
 	if PuppetNextIndex > Settings.PuppetMaxCount then
 		PuppetNextIndex = 1
+	end
+end
+
+
+function Shatterbox.FakeClientPuppets(fakePuppets : { Part })
+	for _, fake in ipairs(fakePuppets) do
+		local OldPuppetData = Puppets[FakePuppetOverrideIndex]
+		if OldPuppetData then
+			OldPuppetData[1]:Destroy()
+			PuppetsLerpData[FakePuppetOverrideIndex] = nil
+		end
+
+		Puppets[FakePuppetOverrideIndex] = { fake }
+
+		FakePuppetOverrideIndex += 1
+		if FakePuppetOverrideIndex > Settings.PuppetMaxCount then
+			FakePuppetOverrideIndex = 1
+		end
 	end
 end
 
@@ -2429,6 +2454,7 @@ function Shatterbox.CreateHitbox()
 
 	-- will "weld" the hitbox to the given part, continously setting its CFrame to be equal to the parts CFrame.
 	-- If the Part is destroyed using ":Destroy()", the hitbox will be automatically stopped and disconnected.
+	-- If workspace.PlayerCharacterDestroyBehavior is not set to true, the hitbox wont be automatically stopped when that Player respawns.
 	function hitbox:WeldTo(Part : BasePart)
 		if wcon then wcon:Disconnect() end
 		if dcon then dcon:Disconnect() end
@@ -2454,9 +2480,11 @@ function Shatterbox.CreateHitbox()
 	local lastCut : number
 
 	local function DestructionStartConnection()
-		local t = time()
-		if lastCut and t - lastCut < (hitbox.DestructDelay or 0.1) then return end
-		lastCut = t
+		if hitbox.DestructDelay then
+			local t = time()
+			if lastCut and t - lastCut < hitbox.DestructDelay then return end
+			lastCut = t
+		end
 
 		if hitbox.DestructionType == "DEFAULT" then
 			hitbox:Destroy()

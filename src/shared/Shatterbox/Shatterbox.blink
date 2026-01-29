@@ -146,7 +146,7 @@ event ReplicatePuppetStates {
 	From: Server,
 	Type: Unreliable,
 	Call: ManyAsync,
-	Data: (buffer(14..994), u16)
+	Data: (buffer(14..980), u16)
 }
 
 event DestroyPuppet {
@@ -193,7 +193,8 @@ event ReplicateState {
 			map{ [string]: f32 },
 			map{ [string]: f32 },
 
-			PartInstance[]
+			map{ [u16]: PartInstance },
+			u16
 		)
 }
 
