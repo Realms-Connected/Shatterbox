@@ -2,7 +2,7 @@
 --!optimize 2
 
 
--- Shatterbox release 8 dev build
+-- Shatterbox release 8
 
 
 --#selene: allow(multiple_statements)
