@@ -730,18 +730,21 @@ end
 -- What happens when a model is passed in as the `CuttingPart`
 local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
 	local cuttingPart = if typeof(intersectingPart) == "table" then intersectingPart.CuttingPart else intersectingPart
-	local ret = {}
+	local retA, retB = {}, {}
 	if cuttingPart and typeof(cuttingPart) == "Instance" and cuttingPart:IsA("Model") then
 		for _, desc in ipairs(cuttingPart:GetDescendants()) do
 			if not desc:IsA("Part") then continue end
-			local r = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
-			if typeof(r) == "table" then
-				table.move(r, 1, #r, #ret + 1, ret)
+			local rA, rB = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
+			if rA then
+				table.move(rA, 1, #rA, #retA + 1, retA)
+			end
+			if rB then
+				table.move(rB, 1, #rB, #retB + 1, retB)
 			end
 		end
-		return true, ret
+		return true, retA, retB
 	end
-	return false, ret
+	return false, retA, retB
 end
 
 -- Validates destruction parameters
@@ -1129,9 +1132,9 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 end
 
 
---Performs voxel destruction according to the parameters, returning an array of un-created voxels
+--Performs voxel destruction according to the parameters, returning an array of un-created voxels as well as any existing debris as a second returned array.
 local function ImaginaryVoxels(params, frameLimit, toDestroy)
-	local voxels = {} :: {Types.ImaginaryVoxel}
+	local voxels, existingDebris = {} :: {Types.ImaginaryVoxel}, {} :: {BasePart}
 	local voxelCount = 0
 
 	toDestroy = toDestroy or GetDestructibleParts(params)
@@ -1139,13 +1142,18 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 	if #toDestroy == 0 then return voxels end
 
 	--debug.profilebegin("FindDestructibleParts")
-	local partsInPart = table.create(#toDestroy)
+	local partsInPart = {}
 	for i, part in ipairs(toDestroy) do
+		if part:HasTag(DebrisTag) then
+			table.insert(existingDebris, part)
+			continue
+		end
+
 		part.CanQuery = false
 
 		local DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute)
 
-		partsInPart[i] = {
+		table.insert(partsInPart, {
 			CFrame = part.CFrame,
 			Size = part.Size,
 
@@ -1153,7 +1161,7 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 
 			DirtyGroupID = DirtyGroupID,
 			GridSize = params.GridSize or DirtyGroupData[DirtyGroupID].GridSize or Settings.DefaultGridSize
-		}
+		})
 	end
 
 	--debug.profileend()
@@ -1333,6 +1341,7 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 
 	-- destroy original parts
 	for _, part in ipairs(toDestroy) do
+		if table.find(existingDebris, part) then continue end
 		DestroyPart(part)
 	end
 	--]]
@@ -1354,7 +1363,7 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 
 	--debug.profileend()
 
-	return setmetatable(voxels, { __len = function() return voxelCount end }) :: {Types.ImaginaryVoxel}
+	return setmetatable(voxels, { __len = function() return voxelCount end }) :: {Types.ImaginaryVoxel}, existingDebris :: {BasePart}
 end
 --]]
 
@@ -1397,12 +1406,6 @@ local function PopShatterQueue()
 				continue
 			end
 
-			--[[
-			local DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute)
-			if not AffectedDirtyGroupIDs[DirtyGroupID] then
-				AffectedDirtyGroupIDs[DirtyGroupID] = true
-				CountOperationsProcessing[DirtyGroupID] = (CountOperationsProcessing[DirtyGroupID] or 0) + 1
-			end--]]
 
 			table.insert(partsInPart, part)
 		end
@@ -2200,28 +2203,26 @@ end
 --
 --Performs voxel destruction around 'intersectingPart', skipping as many intermediate parts as possible. <br>
 --
--- Returns an array of imaginary voxels for you to optionally create as debris.
+-- Returns an array of imaginary voxels for you to optionally create as debris, as well as any existing debris as a second returned array.
 function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, ExcludePlayersReplication : {Player}?) : {Types.ImaginaryVoxel}
 
-	local did, voxels = ModelQueueBehavior(Shatterbox.ImaginaryVoxels, intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication)
-	if did then return voxels end
+	local did, voxels, existingDebris = ModelQueueBehavior(Shatterbox.ImaginaryVoxels, intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication)
+	if did then return voxels, existingDebris end
 
 	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication)
 
 	local destructibleParts, createdDirtyGroups, createdFallingGroups = GetDestructibleParts(params)
-	if #destructibleParts == 0 then return voxels end
+	if #destructibleParts == 0 then return voxels, existingDebris end
 
 	if USE_CLIENT_SERVER and isServer then
 		ReplicateDestructionToClients(IMAGINARY, params, createdDirtyGroups)
 	end
 
-	RunService.Heartbeat:Wait()
-
-	voxels = ImaginaryVoxels(params)
+	voxels, existingDebris = ImaginaryVoxels(params, false, destructibleParts)
 
 	OperationAffectedFallingGroups[params.ID] = nil
 
-	return voxels
+	return voxels, existingDebris
 end
 
 -- Will return a created voxel using the supplied ImaginaryVoxel, will automatically parent the voxel to the ShatterboxTemporary folder and give it the DebrisTag tag
@@ -2425,7 +2426,7 @@ function Shatterbox.CreateHitbox()
 	hitbox.SkipEncapsulatedVoxels = false :: boolean
 
 	hitbox.DestructionType = "DEFAULT" :: ("DEFAULT"|"IMAGINARY")
-	hitbox.ImaginaryCallback = nil :: ( (imaginaryVoxels : {Types.ImaginaryVoxel}) -> () )?
+	hitbox.ImaginaryCallback = nil :: ( (imaginaryVoxels : {Types.ImaginaryVoxel}, existingDebris : {BasePart}) -> () )?
 
 	hitbox.StartConnectionEvent = RunService.Heartbeat -- the event that the hitbox connects to when using Start(), needs to have a deltaTime parameter
 	hitbox.WeldConnectionEvent = RunService.PostSimulation -- the event that the hitbox connects to when using WeldTo()
@@ -2441,11 +2442,11 @@ function Shatterbox.CreateHitbox()
 
 	--*Yields until the NEXT Heartbeat to perform instant destruction.* <br>
 	--
-	-- returns the imaginary voxels bounded by the hitbox as an array, for you to optionally create
+	-- returns the imaginary voxels bounded by the hitbox as an array, for you to optionally create, as well as any existing debris as a second returned array.
 	function hitbox:ImaginaryVoxels()
-		local voxels = Shatterbox.ImaginaryVoxels(hitbox) :: {Types.ImaginaryVoxel} 
+		local voxels, existingDebris = Shatterbox.ImaginaryVoxels(hitbox)
 		hitbox.ExcludePlayersReplication = {} -- QOL automatically clear the exlcusion after the destruction is performed
-		return voxels
+		return voxels, existingDebris
 	end
 
 
@@ -2489,9 +2490,9 @@ function Shatterbox.CreateHitbox()
 		if hitbox.DestructionType == "DEFAULT" then
 			hitbox:Destroy()
 		else
-			local voxels = hitbox:ImaginaryVoxels()
+			local voxels, existingDebris = hitbox:ImaginaryVoxels()
 			if hitbox.ImaginaryCallback then
-				hitbox.ImaginaryCallback(voxels)
+				hitbox.ImaginaryCallback(voxels, existingDebris)
 			end
 		end
 	end
@@ -2526,6 +2527,20 @@ function Shatterbox.GetOriginalPart(DirtyGroupID : string)
 end
 
 
+-- Takes a point and converts it to the voxel space distance relative to "voxel".
+-- This is a vector which tells you how many voxels away the point is on each local axis, as fractional quantities.
+-- It is possible for an axis to be less than one, but never negative.
+function Shatterbox.VoxelDistanceVector(voxel, point : Vector3) : Vector3
+	return voxel.CFrame:PointToObjectSpace(point):Abs() / voxel.Size
+end
+
+
+-- Returns a vector that tells you how many voxels a box determined by "size" has on each local axis, as fractional quantities.
+-- It is not possible for an axis to be less than one, because there is always at least one voxel on every axis.
+function Shatterbox.VoxelCountVector(voxel, boxSize : Vector3) : Vector3
+	return Vector3.one:Max(boxSize / voxel.Size)
+end
+
 
 -- Will return true if "contains" is FULLY contained by "part", otherwise false
 function Shatterbox.PartEncapsulatesBlockPart(part : Part, contains : Part)
@@ -2543,18 +2558,6 @@ function Shatterbox.RegisterOnVoxelDestruct(name : string, callback : Types.OnVo
 	OnVoxelDestructRegistry[id] = callback
 end
 
-
--- Will wait for the given OnVoxelDestruct callback to be registered with a default timeout of 5 seconds
-function Shatterbox.WaitForRegistry(name : string, timeout : number?) : string
-	timeout = timeout or 5
-	local elapsed, start = 0, time()	
-	while elapsed < timeout and not rawget(OnVoxelDestructRegistry, name:lower()) do
-		RunService.Heartbeat:Wait()
-		elapsed = time() - start
-	end
-	if elapsed > timeout then warn(`Infinite yield possible on WaitForRegistry("{name}")`) end
-	return name
-end
 
 Shatterbox.Voxelize = Voxelize
 

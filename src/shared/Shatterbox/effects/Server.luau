@@ -1,5 +1,6 @@
 --#selene: allow(unused_variable)
 --#selene: allow(multiple_statements)
+--#selene: allow(incorrect_standard_library_use)
 
 local Shatterbox
 local Types = require(script.Parent.Parent:WaitForChild("Types"))
@@ -27,10 +28,48 @@ end
 
 
 
+-- Maps one numeric range onto another
+local function map(x, a_0, a_1, b_0, b_1) return b_0 + (b_1 - b_0)*(x - a_0)/(a_1 - a_0) end
 
 
--- The default client behavior (for when an OnVoxelDestruct callback does not exist)
--- ServerEffects.Default = function(voxel) voxel:Destroy() end
+-- This effect assumes a spherical hitbox (Shape "Ball").
+-- This is an example show you how to use voxel space to perform calculations that are consistent regardless of the gridsize or orientation of voxels.
+-- The inner 33% of voxels are removed.
+-- Starting at the point where voxels are no longer removed, voxels are black. There is a gradient until around the edges, where the voxels should be their original color.
+ServerEffects.MappingVoxelSpace = function(voxel, info)
+
+    if info.IsAlreadyDebris then return end
+
+    -- the radius of the spherical hitbox
+    local R = info.CuttingPart.Size * 0.5
+
+    -- from the center of the sphere, how many voxels away the edge of the sphere is on each axis (in local space)
+    local MaxVoxelDist = Shatterbox.VoxelCountVector(voxel, math.min(R.X, R.Y, R.Z)*Vector3.one)
+
+    -- from the center of the current voxel, how many voxels away the center of the sphere is on each axis (in local space)
+    local VoxelDist = Shatterbox.VoxelDistanceVector(voxel, info.CuttingPart.CFrame.Position):Min(MaxVoxelDist)
+
+    -- The magnitude of this vector is guaranteed to be in the range 0 to close to 1 because spheres hold a consistent magnitude
+    local NormalDist = (VoxelDist / MaxVoxelDist).Magnitude
+
+    -- destroy voxels close to the center (inner 33% by default)
+    local NormalDistThreshold = 0.33
+
+    if NormalDist < NormalDistThreshold then
+        voxel:Destroy()
+        return
+    end
+
+    -- map and clamp the range [NormalDistThreshold, 1] to the range [1, 0]
+    -- So where the voxels begin to appear, they start at black, and where the voxels end, they should be their original color.
+    local Shade = math.clamp(map(NormalDist, NormalDistThreshold,1, 1,0), 0, 1)
+
+    voxel.Color = voxel.Color:Lerp(Color3.new(), Shade)
+end
+
+
+
+
 
 
 
@@ -60,17 +99,12 @@ ServerEffects.BumpyFloorBreakWalls = function(voxel, info : Types.DestroyedVoxel
     local hitResult = workspace:Raycast(O - toVoxel * 0.01, toVoxel * 1.01, raycastParams)
     castTo.Parent = nil
 
-    --if isAlreadyDebris then
-
-    --    voxel.AssemblyLinearVelocity = -hitResult.Normal * (math.random() * 25 + 50)
-
     if hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then -- if the normal is facing up, it is a floor
 
         voxel.Position += Vector3.yAxis * (math.random() - 0.5) -- add some random vertical offset to floor voxels
 
     else -- everything else becomes a falling voxel using puppeteer
 
-        --voxel.Anchored = false
         Shatterbox.Puppeteer(voxel) -- start controlled replication of "voxel" to clients (tween between replication of CFrames)
 
         voxel.AssemblyLinearVelocity = -hitResult.Normal * (math.random() * 25 + 50)
