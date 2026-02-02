@@ -230,6 +230,10 @@ local FallingGroupSectionAnchors = {} :: { [string] : { Part }}
 -- Pre-allocated OverlapParams used when FilterTagged is supplied
 local overlapParams = OverlapParams.new()
 
+-- Pre-allocated RaycastParams when SkipWalls or SkipFloors is enabled
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Include
+
 -- pre-allocated part instance which is used to get the parts whenever `GetPartsInPart` is needed
 local IntersectingPart = Instance.new("Part")
 
@@ -728,13 +732,13 @@ end
 
 
 -- What happens when a model is passed in as the `CuttingPart`
-local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
+local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
 	local cuttingPart = if typeof(intersectingPart) == "table" then intersectingPart.CuttingPart else intersectingPart
 	local retA, retB = {}, {}
 	if cuttingPart and typeof(cuttingPart) == "Instance" and cuttingPart:IsA("Model") then
 		for _, desc in ipairs(cuttingPart:GetDescendants()) do
 			if not desc:IsA("Part") then continue end
-			local rA, rB = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
+			local rA, rB = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
 			if rA then
 				table.move(rA, 1, #rA, #retA + 1, retA)
 			end
@@ -748,7 +752,7 @@ local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, Cle
 end
 
 -- Validates destruction parameters
-local function ValidateDestructionParams(intersectingPart : Part | Model | Types.Hitbox | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : (Player | {Player})?)
+local function ValidateDestructionParams(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : (Player | {Player})?, SkipFloors : boolean?, SkipWalls : boolean?)
 
 	local CuttingPart = {} :: Types.Hitbox
 	local params = {} :: Types.InternalDestructionParams | Types.InternalImaginaryParams
@@ -806,6 +810,8 @@ local function ValidateDestructionParams(intersectingPart : Part | Model | Types
 			  params.OnVoxelDestruct = tbl.OnVoxelDestruct 	         or OnVoxelDestruct
 					 params.GridSize = tbl.GridSize 			     or GridSize
 	   params.SkipEncapsulatedVoxels = tbl.SkipEncapsulatedVoxels    or SkipEncapsulatedVoxels
+				   params.SkipFloors = tbl.SkipFloors 				 or SkipFloors
+				    params.SkipWalls = tbl.SkipWalls 				 or SkipWalls
 		  params.OnDestructCompleted = tbl.OnDestructCompleted       or OnDestructCompleted
 					 params.UserData = tbl.UserData    		         or UserData or {}
 	params.ExcludePlayersReplication = playerExclusions or {}
@@ -1084,6 +1090,9 @@ end
 local function GetDestructibleParts(destructionParams : Types.InternalImaginaryParams | Types.InternalDestructionParams)
 	local cuttingPart, replicated = destructionParams.CuttingPart, destructionParams.replicated
 
+	local skipFloors, skipWalls = destructionParams.SkipFloors, destructionParams.SkipWalls
+	local skipFloorsOrWalls = skipFloors or skipWalls
+
 	local partsInPart, createdDirtyGroups, createdFallingGroups = {}, {}, {}
 
 	IntersectingPart.CFrame = cuttingPart.CFrame
@@ -1095,6 +1104,15 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 	for _, part in ipairs( workspace:GetPartsInPart(IntersectingPart, destructionParams.FilterTagged and OverlapParamsOfTagged(destructionParams.FilterTagged)) ) do
 
 		if (replicated and not part:IsDescendantOf(mapContainer)) or ShouldSkipInstance(part) then continue end
+
+		if skipFloorsOrWalls then
+			raycastParams.FilterDescendantsInstances = { part }
+			local res = workspace:Raycast(cuttingPart.CFrame.Position, part.Position - cuttingPart.CFrame.Position, raycastParams)
+			if res then
+				local isFloor = res.Normal:FuzzyEq(Vector3.yAxis, 0.001)
+				if (skipFloors and isFloor) or (skipWalls and not isFloor) then continue end
+			end
+		end
 
 		local dirtyGroups, fallingGroupID = MarkDirty(part, destructionParams)
 		for DirtyGroupID in pairs(dirtyGroups) do
@@ -1369,7 +1387,8 @@ end
 
 
 -- Uses the given callback from the OnVoxelDestruct registry to destroy the given voxel
-local function HandleVoxelDestruction(callbackName : string?, voxel : Part, info : Types.DestroyedVoxelInfo)
+local function HandleVoxelDestruction(callbackName : string?, voxel : Part, info : Types.DestroyedVoxelInfo?)
+	if not info then info = {} end
 
 	local s, e = pcall(OnVoxelDestructRegistry[callbackName], voxel, info)
 
@@ -2165,13 +2184,13 @@ end
 -- Performs voxel destruction around the 'intersectingPart' according to the FilterTagged supplied.
 --
 -- if no FilterTagged is given, everything except IndestructibleTag tagged Block parts are considered for destruction.
-function Shatterbox.Destroy(intersectingPart : Part | Model | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : {Player}?)
+function Shatterbox.Destroy(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : {Player}?, SkipFloors : boolean?, SkipWalls : boolean?)
 	coroutine.wrap(function()
-		if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication) then
+		if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls) then
 			return
 		end
 
-		local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication)
+		local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
 
 		params.DestroyedVoxels = 0
 
@@ -2204,12 +2223,12 @@ end
 --Performs voxel destruction around 'intersectingPart', skipping as many intermediate parts as possible. <br>
 --
 -- Returns an array of imaginary voxels for you to optionally create as debris, as well as any existing debris as a second returned array.
-function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, ExcludePlayersReplication : {Player}?) : {Types.ImaginaryVoxel}
+function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.WorldInfo | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, ExcludePlayersReplication : {Player}?, SkipFloors : boolean?, SkipWalls : boolean?) : {Types.ImaginaryVoxel}
 
-	local did, voxels, existingDebris = ModelQueueBehavior(Shatterbox.ImaginaryVoxels, intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication)
+	local did, voxels, existingDebris = ModelQueueBehavior(Shatterbox.ImaginaryVoxels, intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication, SkipFloors, SkipWalls)
 	if did then return voxels, existingDebris end
 
-	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication)
+	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication, SkipFloors, SkipWalls)
 
 	local destructibleParts, createdDirtyGroups, createdFallingGroups = GetDestructibleParts(params)
 	if #destructibleParts == 0 then return voxels, existingDebris end
@@ -2355,7 +2374,19 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?
 
 	SmoothCleanupQueue = {}
 
-	if isServer then ServerEvents.SignalReset.FireAll(doNotRevertOwnership) end
+	if isServer then
+		for _, puppetData in pairs(Puppets) do
+			puppetData[3]:Disconnect()
+			puppetData[2](true)
+			DestroyPart(puppetData[1])
+		end
+
+		ServerEvents.SignalReset.FireAll(doNotRevertOwnership)
+	else
+		for _, puppetData in pairs(Puppets) do
+			puppetData[1]:Destroy()
+		end
+	end
 
 	if doNotRevertOwnership and USE_CLIENT_SERVER then
 		-- every operation is undone if the ownership is not meant to be reverted
@@ -2385,7 +2416,6 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?
 	ActiveGMWorkerCount = 0
 	ActiveGMWorkerGridSize = {}
 
-	for _, puppetData in pairs(Puppets) do puppetData[1]:Destroy() end
 	Puppets = {}
 	PuppetsLerpData = {}
 	PuppetNextIndex = 1
@@ -2423,7 +2453,10 @@ function Shatterbox.CreateHitbox()
 
 	hitbox.CleanupDelay = nil :: number?
 	hitbox.GridSize = nil :: number?
-	hitbox.SkipEncapsulatedVoxels = false :: boolean
+
+	hitbox.SkipEncapsulatedVoxels = nil :: boolean?
+	hitbox.SkipWalls = nil :: boolean?
+	hitbox.SkipFloors = nil :: boolean?
 
 	hitbox.DestructionType = "DEFAULT" :: ("DEFAULT"|"IMAGINARY")
 	hitbox.ImaginaryCallback = nil :: ( (imaginaryVoxels : {Types.ImaginaryVoxel}, existingDebris : {BasePart}) -> () )?

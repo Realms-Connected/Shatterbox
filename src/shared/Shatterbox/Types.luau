@@ -39,6 +39,8 @@ type SharedDestructionParams = {
 	GridSize : number?,
 	CleanupDelay : number?,
 	SkipEncapsulatedVoxels : boolean?,
+	SkipWalls : boolean?,
+	SkipFloors : boolean?,
 	ExcludePlayersReplication : {Player}?
 }
 

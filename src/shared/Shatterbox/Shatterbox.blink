@@ -95,6 +95,8 @@ struct DestructionParamsType {
 	GridSize : f32?,
 	CleanupDelay : f32?,
 	
+	SkipWalls : boolean?,
+	SkipFloors : boolean?,
 	SkipEncapsulatedVoxels : boolean?,
 
 	OnVoxelDestruct : string?,
