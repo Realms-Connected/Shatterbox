@@ -14,7 +14,7 @@ local axisID = {"X", "Y", "Z"}
 
 local PartTypeContainsPoint = {}
 
-PartTypeContainsPoint.Ball = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.Ball(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local dp = (p - cframe.Position) * UNEPS
 	local dx, dy, dz = dp.X, dp.Y, dp.Z
@@ -23,7 +23,7 @@ PartTypeContainsPoint.Ball = function(cframe : CFrame, size : Vector3, p : Vecto
 	return dx*dx + dy*dy + dz*dz <= minSize*minSize
 end
 
-PartTypeContainsPoint.Cylinder = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.Cylinder(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local localPoint = cframe:PointToObjectSpace(p):Abs() * UNEPS
 
@@ -35,14 +35,14 @@ PartTypeContainsPoint.Cylinder = function(cframe : CFrame, size : Vector3, p : V
 	return dy*dy + dz*dz <= minSize*minSize
 end
 
-PartTypeContainsPoint.Block = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.Block(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local localPoint = cframe:PointToObjectSpace(p):Abs() * UNEPS
 
 	return (localPoint.X <= size.X * 0.5) and (localPoint.Y <= size.Y * 0.5) and (localPoint.Z <= size.Z * 0.5)
 end
 
-PartTypeContainsPoint.Wedge = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.Wedge(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local localPoint = cframe:PointToObjectSpace(p) * UNEPS
 	local absPoint = localPoint:Abs()
@@ -51,7 +51,7 @@ PartTypeContainsPoint.Wedge = function(cframe : CFrame, size : Vector3, p : Vect
 	return (absPoint.X <= size.X * 0.5) and (absPoint.Y <= wsy * 0.5) and (absPoint.Z <= wsz * 0.5) and (localPoint.Y * wsz <= localPoint.Z * wsy)
 end
 
-PartTypeContainsPoint.CornerWedge = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.CornerWedge(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local localPoint = cframe:PointToObjectSpace(p) * UNEPS
 	local absPoint = localPoint:Abs()
@@ -64,54 +64,48 @@ end
 
 local GetVerts = {}
 
-GetVerts.Block = function(cframe : CFrame, size : Vector3)
+function GetVerts.Block(cframe : CFrame, size : Vector3)
     size = size * 0.5
+    local pos = cframe.Position
     local lx, ly, lz = cframe.XVector*size.X, cframe.YVector*size.Y, cframe.ZVector*size.Z
-    local ny, nz = -ly, -lz
-    local pnx, plx = cframe.Position - lx, cframe.Position + lx
-    local pnxny, pnxly, plxny, plxly = pnx + ny, pnx + ly, plx + ny, plx + ly
     return {
-        pnxny + nz,
-        pnxny + lz,
-        pnxly + nz,
-        pnxly + lz,
-        plxny + nz,
-        plxny + lz,
-        plxly + nz,
-        plxly + lz
+        pos - lx - ly - lz,
+        pos - lx - ly + lz,
+        pos - lx + ly - lz,
+        pos - lx + ly + lz,
+        pos + lx - ly - lz,
+        pos + lx - ly + lz,
+        pos + lx + ly - lz,
+        pos + lx + ly + lz
     }
 end
 local block_edges = { {1,2}, {1,3}, {1,5}, {2,4}, {2,6}, {3,4}, {3,7}, {4,8}, {5,6}, {5,7}, {6,8}, {7,8} }
 
-GetVerts.Wedge = function(cframe : CFrame, size : Vector3)
+function GetVerts.Wedge(cframe : CFrame, size : Vector3)
     size = size * 0.5
+    local pos = cframe.Position
     local lx, ly, lz = cframe.XVector*size.X, cframe.YVector*size.Y, cframe.ZVector*size.Z
-    local ny, nz = -ly, -lz
-    local pnx, plx = cframe.Position - lx, cframe.Position + lx
-    local pnxny, plxny = pnx + ny, plx + ny
     return {
-        pnxny + nz,
-        pnxny + lz,
-        plxny + nz,
-        plxny + lz,
-        pnx + ly + lz,
-        plx + ly + lz
+        pos - lx - ly - lz,
+        pos - lx - ly + lz,
+        pos + lx - ly - lz,
+        pos + lx - ly + lz,
+        pos - lx + ly + lz,
+        pos + lx + ly + lz
     }
 end
 local wedge_edges = { {1,2}, {2,4}, {4,3}, {3,1}, {2,5}, {4,6}, {5,6}, {1,3}, {1,5}, {3,6} }
 
-GetVerts.CornerWedge = function(cframe : CFrame, size : Vector3)
+function GetVerts.CornerWedge(cframe : CFrame, size : Vector3)
     size = size * 0.5
+    local pos = cframe.Position
     local lx, ly, lz = cframe.XVector*size.X, cframe.YVector*size.Y, cframe.ZVector*size.Z
-    local ny, nz = -ly, -lz
-    local pnx, plx = cframe.Position - lx, cframe.Position + lx
-    local pnxny, plxny = pnx + ny, plx + ny
     return {
-        pnxny + nz,
-        pnxny + lz,
-        plxny + nz,
-        plxny + lz,
-        plx + ly + nz
+        pos - lx - ly - lz,
+        pos - lx - ly + lz,
+        pos + lx - ly - lz,
+        pos + lx - ly + lz,
+        pos + lx + ly - lz
     }
 end
 local corner_wedge_edges = { {1,2}, {2,4}, {4,3}, {3,1}, {3,5}, {1,5}, {4,5} }
@@ -120,7 +114,7 @@ local corner_wedge_edges = { {1,2}, {2,4}, {4,3}, {3,1}, {3,5}, {1,5}, {4,5} }
 
 local GetNormals = {}
 
-GetNormals.Block = function(cframe : CFrame)
+function GetNormals.Block(cframe : CFrame)
     local lx, ly, lz = cframe.XVector, cframe.YVector, cframe.ZVector
     return {
         -lx, lx,
@@ -129,7 +123,7 @@ GetNormals.Block = function(cframe : CFrame)
     }
 end
 
-GetNormals.Wedge = function(cframe : CFrame, size : Vector3)
+function GetNormals.Wedge(cframe : CFrame, size : Vector3)
     local lx, ly, lz = cframe.XVector, cframe.YVector, cframe.ZVector
     return {
         -cframe.YVector,
@@ -139,7 +133,7 @@ GetNormals.Wedge = function(cframe : CFrame, size : Vector3)
     }
 end
 
-GetNormals.CornerWedge = function(cframe : CFrame, size : Vector3)
+function GetNormals.CornerWedge(cframe : CFrame, size : Vector3)
     local lx, ly, lz = cframe.XVector, cframe.YVector, cframe.ZVector
     return {
         -ly,
