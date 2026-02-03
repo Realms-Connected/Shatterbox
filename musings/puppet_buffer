@@ -1,0 +1,23 @@
+X - i25
+Y - i25
+Z - i25
+rX - i10
+rY - i10
+rZ - i10
+ID - u15
+
+Bits = 120
+Bytes = 15
+
+
+
+X - i25
+Y - i25
+Z - i25
+rX - u8
+rY - u8
+rZ - u8
+ID - u13
+
+Bits = 112
+Bytes = 14

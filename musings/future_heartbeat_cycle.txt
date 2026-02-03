@@ -1,0 +1,14 @@
+the queued destructions will be processed all in one frame, and will not have their static parts created immediately
+
+
+this is to allow imaginary destructible parts to be used, so that after all destructions are processed for the frame,
+
+
+greedy meshing can mesh everything that was affected, only then are the final static parts created and the originals destroyed.
+
+
+
+it is effectively the same idea behind imaginary voxels, but extended to utilize a queue and greedy meshing while still avoiding all intermediate parts
+
+
+there will be no frame limits, other than perhaps the number of processed destructions every frame

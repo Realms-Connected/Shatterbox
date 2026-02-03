@@ -21,10 +21,6 @@
 	visualizer:StopShowing()
 ]]
 
-local ShatterboxTemporary = workspace:FindFirstChild("ShatterboxTemporary")
-
-assert(ShatterboxTemporary, "You must require the Shatterbox.Main module before using this one.")
-
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local FadeParams = { Transparency = 1 }
@@ -60,7 +56,7 @@ function HitboxVisualizer.Create(hitbox : HitboxType)
 		v.Shape = hitbox.Shape
 		v.Size = hitbox.Size
 		v.CFrame = hitbox.CFrame
-		v.Parent = ShatterboxTemporary
+		v.Parent = workspace
 
 		if not useFade then return end
 
@@ -77,7 +73,7 @@ function HitboxVisualizer.Create(hitbox : HitboxType)
 
 	function visualizer:StartShowing()
 		if ccon then return end
-		vPart.Parent = ShatterboxTemporary
+		vPart.Parent = workspace
 		ccon = RunService.PreSimulation:Connect(function()
 			vPart.Color = visualizer.Color
 			vPart.Transparency = visualizer.Transparency

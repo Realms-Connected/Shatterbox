@@ -1,21 +1,30 @@
-export type Hitbox = {
+export type WorldInfo = {
 	CFrame : CFrame,
 	Size : Vector3,
+}
+
+export type Hitbox = WorldInfo & {
 	Shape : Enum.PartType
 }
 
-export type OnDestructCompleted = () -> ()
+export type DestroyedVoxelInfo = {
+	DirtyGroupID : string,
 
-export type OnVoxelDestruct = (voxel : Part, dirtyParent : Model, cuttingPart : Hitbox, isEdge : boolean, any...) -> ()
+	CuttingPart : Hitbox,
 
-export type ImaginaryBox = {
+	IsEdge : boolean,
+	IsAlreadyDebris : boolean,
 
-	CFrame : CFrame, -- the CFrame of the box
-	Size : Vector3, -- the Size of the box
+	UserData : {any}
+}
 
-	Original : Part, -- the original part before this iteration of Imaginary touched it
+export type OnDestructCompleted = (DestroyedVoxelCount : number, AffectedDirtyGroupIDs : { [string] : boolean }) -> ()
 
-	DirtyParent : Model, -- the target of smooth cleanup for this box
+export type OnVoxelDestruct = (voxel : Part, info : DestroyedVoxelInfo) -> ()
+
+export type ImaginaryBox = WorldInfo & {
+
+	DirtyGroupID : string, -- the dirty group ID for this box
 	GridSize : number -- the GridSize that was applied to this box
 }
 
@@ -29,7 +38,10 @@ type SharedDestructionParams = {
 	FilterTagged : (string | {string})?,
 	GridSize : number?,
 	CleanupDelay : number?,
-	SkipEncapsulatedVoxels : boolean?
+	SkipEncapsulatedVoxels : boolean?,
+	SkipWalls : boolean?,
+	SkipFloors : boolean?,
+	ExcludePlayersReplication : {Player}?
 }
 
 type UsesOnVoxelDestruct = {

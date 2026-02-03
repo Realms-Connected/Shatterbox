@@ -1,0 +1,18 @@
+before a dirty group is first created, the ancestor group instances are checked to see if this dirty group is a member of a falling group. 
+
+If it is, all of the rest of the members of the falling group are instantiated as dirty groups having a clone take the place of the original part
+
+this is so that the true originals can be restored even if the "originals" move
+
+
+
+
+crude approach:
+|	At the end of ImaginaryVoxels, run the DFSWeld algorithm on the affected
+|	falling groups. This will also have to be done at the end of every greedy 
+|	meshing phase if the worker is processing a dirty group that is a member
+|      of a falling group
+|	
+|	
+|	
+|	

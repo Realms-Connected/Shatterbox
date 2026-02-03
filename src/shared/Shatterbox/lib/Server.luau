@@ -151,532 +151,61 @@ local Queue: any = {
     Unreliable = table.create(256)
 }
 
+Events.Reliable[5] = {}
+Queue.Reliable[5] = table.create(256)
 Queue.Reliable[9] = table.create(256)
-export type Shatterbox_AttributesMap = {[string]: any}
-export type Shatterbox_PartProperties = { Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_Vec2 = { number }
+export type Shatterbox_Decal = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? }
+export type Shatterbox_Texture = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? }
+export type Shatterbox_Light = { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? }
+export type Shatterbox_PartProperties = { Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
 export type Shatterbox_Box = { CFrame: CFrame, Size: Vector3 }
 export type Shatterbox_Hitbox = { CFrame: CFrame, Size: Vector3, Shape: number }
-export type Shatterbox_PartInstance = { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_Dirtied = { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_OpDirty = { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } }
-export type Shatterbox_ImaginaryDestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }
-export type Shatterbox_DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }
+export type Shatterbox_PartInstance = { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
+export type Shatterbox_DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }
 export type Shatterbox_PuppetState = { GUID: string, CFrame: CFrame }
-local function Shatterbox_WriteEVENT_SignalUndo(Value: string): ()
-	-- Allocate BLOCK: 3 bytes
-	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 0)
-	local Length = #Value
-	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
-	Allocate(Length)
-	buffer.writestring(SendBuffer, SendOffset, Value, Length)
-end
-
 local function Shatterbox_WriteEVENT_SignalClearQueue(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 0)
+end
+
+local function Shatterbox_WriteEVENT_SignalReset(Value: boolean): ()
+	-- Allocate BLOCK: 2 bytes
+	local BLOCK_START = Allocate(2)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 1, Value and 1 or 0)
 end
 
-local function Shatterbox_WriteEVENT_SignalReset(Value: nil): ()
-	-- Allocate BLOCK: 1 bytes
-	local BLOCK_START = Allocate(1)
+local function Shatterbox_WriteEVENT_SignalResetArea(Value1: CFrame, Value2: Vector3): ()
+	-- Allocate BLOCK: 37 bytes
+	local BLOCK_START = Allocate(37)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 2)
+	local Vector = Value1.Position
+	buffer.writef32(SendBuffer, BLOCK_START + 1, Vector.X)
+	buffer.writef32(SendBuffer, BLOCK_START + 5, Vector.Y)
+	buffer.writef32(SendBuffer, BLOCK_START + 9, Vector.Z)
+	local rX, rY, rZ = Value1:ToOrientation()
+	buffer.writef32(SendBuffer, BLOCK_START + 13, rX)
+	buffer.writef32(SendBuffer, BLOCK_START + 17, rY)
+	buffer.writef32(SendBuffer, BLOCK_START + 21, rZ)
+	local Vector = Value2
+	buffer.writef32(SendBuffer, BLOCK_START + 25, Vector.X)
+	buffer.writef32(SendBuffer, BLOCK_START + 29, Vector.Y)
+	buffer.writef32(SendBuffer, BLOCK_START + 33, Vector.Z)
 end
 
-local function Shatterbox_WriteEVENT_CreatePuppets(Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+local function Shatterbox_WriteEVENT_CreatePuppets(Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 3)
 	-- START ARRAY
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, #Value)
-		-- Allocate BLOCK: 53 bytes
-	local ARRAY_START_1 = Allocate(53 * #Value)
+		-- Allocate BLOCK: 56 bytes
+	local ARRAY_START_1 = Allocate(56 * #Value)
 	for Index = 1, #Value do
 		local Item_1 = Value[Index]
-		local Length = #Item_1.GUID
-		-- Allocate 2
-		local OPERATION_OFFSET_0 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Item_1.GUID, Length)
-		local Vector = Item_1.CFrame.Position
-		-- Allocate 4
-		local OPERATION_OFFSET_1 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_1, Vector.X)
-		-- Allocate 4
-		local OPERATION_OFFSET_2 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_2, Vector.Y)
-		-- Allocate 4
-		local OPERATION_OFFSET_3 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Vector.Z)
-		local rX, rY, rZ = Item_1.CFrame:ToOrientation()
-		-- Allocate 4
-		local OPERATION_OFFSET_4 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_4, rX)
-		-- Allocate 4
-		local OPERATION_OFFSET_5 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_5, rY)
-		-- Allocate 4
-		local OPERATION_OFFSET_6 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_6, rZ)
-		local Vector = Item_1.Size
-		-- Allocate 4
-		local OPERATION_OFFSET_7 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_7, Vector.X)
-		-- Allocate 4
-		local OPERATION_OFFSET_8 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Y)
-		-- Allocate 4
-		local OPERATION_OFFSET_9 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_9, Vector.Z)
-		local Color = Item_1.Color
-		-- Allocate 1
-		local OPERATION_OFFSET_10 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Color.R * 255)
-		-- Allocate 1
-		local OPERATION_OFFSET_11 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Color.G * 255)
-		-- Allocate 1
-		local OPERATION_OFFSET_12 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Color.B * 255)
-		-- Allocate 2
-		local OPERATION_OFFSET_13 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Item_1.Material)
-		-- Allocate 2
-		local OPERATION_OFFSET_14 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		if Item_1.Transparency > 65504 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b0_11111_0000000000)
-		elseif Item_1.Transparency < -65504 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b1_11111_0000000000)
-		elseif Item_1.Transparency ~= Item_1.Transparency then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b1_11111_0000000001)
-		elseif Item_1.Transparency == 0 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0)
-		else
-			local float = Item_1.Transparency
-			local Abosulte = math.abs(float)
-			local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-			local RoundedValue = (Abosulte // Interval) * Interval
-			local Fraction, Exponent = math.frexp(RoundedValue)
-			Exponent += 14
-			local Mantissa = math.round(if Exponent <= 0
-				then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-				else Fraction * 0x800) % 0x400
-			local Result = Mantissa
-				+ math.max(Exponent, 0) * 0x400
-				+ if float < 0 then 0x8000 else 0
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, Result)
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_15 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_1.Reflectance ~= nil and 1 or 0)
-		if Item_1.Reflectance ~= nil then
-			-- Allocate BLOCK: 2 bytes
-			local BLOCK_START = Allocate(2)
-			if Item_1.Reflectance > 65504 then
-				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
-			elseif Item_1.Reflectance < -65504 then
-				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
-			elseif Item_1.Reflectance ~= Item_1.Reflectance then
-				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
-			elseif Item_1.Reflectance == 0 then
-				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
-			else
-				local float = Item_1.Reflectance
-				local Abosulte = math.abs(float)
-				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-				local RoundedValue = (Abosulte // Interval) * Interval
-				local Fraction, Exponent = math.frexp(RoundedValue)
-				Exponent += 14
-				local Mantissa = math.round(if Exponent <= 0
-					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-					else Fraction * 0x800) % 0x400
-				local Result = Mantissa
-					+ math.max(Exponent, 0) * 0x400
-					+ if float < 0 then 0x8000 else 0
-				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
-			end
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_16 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_1.MaterialVariant ~= nil and 1 or 0)
-		if Item_1.MaterialVariant ~= nil then
-			-- Allocate BLOCK: 2 bytes
-			local BLOCK_START = Allocate(2)
-			local Length = #Item_1.MaterialVariant
-			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_1.MaterialVariant, Length)
-		end
-		local Length = #Item_1.CollisionGroup
-		-- Allocate 2
-		local OPERATION_OFFSET_17 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Item_1.CollisionGroup, Length)
-		-- Allocate 2
-		local OPERATION_OFFSET_18 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		local Elements_2 = 0
-		for Key_2, Element_2 in Item_1.Attributes do
-			Elements_2 += 1
-			local Length = #Key_2
-			local OFFSET_0 = Allocate(2)
-			buffer.writeu16(SendBuffer, OFFSET_0, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
-			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
-		end
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, Elements_2)
-		-- START ARRAY
-		-- Allocate 2
-		local OPERATION_OFFSET_19 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, #Item_1.Tags)
-			-- Allocate BLOCK: 2 bytes
-		local ARRAY_START_2 = Allocate(2 * #Item_1.Tags)
-		for Index = 1, #Item_1.Tags do
-			local Item_2 = Item_1.Tags[Index]
-			local Length = #Item_2
-			-- Allocate 2
-			local OPERATION_OFFSET_0 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_2, Length)
-		end
-		-- END ARRAY
-	end
-	-- END ARRAY
-end
-
-local function Shatterbox_WriteEVENT_ReplicatePuppetStates(Value: { { GUID: string, CFrame: CFrame } }): ()
-	-- Allocate BLOCK: 3 bytes
-	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 4)
-	-- START ARRAY
-	buffer.writeu16(SendBuffer, BLOCK_START + 1, #Value)
-		-- Allocate BLOCK: 26 bytes
-	local ARRAY_START_1 = Allocate(26 * #Value)
-	for Index = 1, #Value do
-		local Item_1 = Value[Index]
-		local Length = #Item_1.GUID
-		-- Allocate 2
-		local OPERATION_OFFSET_0 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Item_1.GUID, Length)
-		local Vector = Item_1.CFrame.Position
-		-- Allocate 4
-		local OPERATION_OFFSET_1 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_1, Vector.X)
-		-- Allocate 4
-		local OPERATION_OFFSET_2 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_2, Vector.Y)
-		-- Allocate 4
-		local OPERATION_OFFSET_3 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Vector.Z)
-		local rX, rY, rZ = Item_1.CFrame:ToOrientation()
-		-- Allocate 4
-		local OPERATION_OFFSET_4 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_4, rX)
-		-- Allocate 4
-		local OPERATION_OFFSET_5 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_5, rY)
-		-- Allocate 4
-		local OPERATION_OFFSET_6 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_6, rZ)
-	end
-	-- END ARRAY
-end
-
-local function Shatterbox_WriteEVENT_DestroyPuppet(Value: string): ()
-	-- Allocate BLOCK: 3 bytes
-	local BLOCK_START = Allocate(3)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 5)
-	local Length = #Value
-	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
-	Allocate(Length)
-	buffer.writestring(SendBuffer, SendOffset, Value, Length)
-end
-
-local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
-	-- Allocate BLOCK: 5 bytes
-	local BLOCK_START = Allocate(5)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
-	-- START ARRAY
-	buffer.writeu16(SendBuffer, BLOCK_START + 1, #Value1)
-		-- Allocate BLOCK: 4 bytes
-	local ARRAY_START_1 = Allocate(4 * #Value1)
-	for Index = 1, #Value1 do
-		local Item_1 = Value1[Index]
-		local Length = #Item_1.ID
-		-- Allocate 2
-		local OPERATION_OFFSET_0 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Item_1.ID, Length)
-		-- START ARRAY
-		-- Allocate 2
-		local OPERATION_OFFSET_1 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_1, #Item_1.Dirties)
-			-- Allocate BLOCK: 53 bytes
-		local ARRAY_START_2 = Allocate(53 * #Item_1.Dirties)
-		for Index = 1, #Item_1.Dirties do
-			local Item_2 = Item_1.Dirties[Index]
-			local Vector = Item_2.OriginalPart.CFrame.Position
-			-- Allocate 4
-			local OPERATION_OFFSET_0 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Vector.X)
-			-- Allocate 4
-			local OPERATION_OFFSET_1 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_1, Vector.Y)
-			-- Allocate 4
-			local OPERATION_OFFSET_2 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_2, Vector.Z)
-			local rX, rY, rZ = Item_2.OriginalPart.CFrame:ToOrientation()
-			-- Allocate 4
-			local OPERATION_OFFSET_3 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_3, rX)
-			-- Allocate 4
-			local OPERATION_OFFSET_4 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_4, rY)
-			-- Allocate 4
-			local OPERATION_OFFSET_5 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_5, rZ)
-			local Vector = Item_2.OriginalPart.Size
-			-- Allocate 4
-			local OPERATION_OFFSET_6 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_6, Vector.X)
-			-- Allocate 4
-			local OPERATION_OFFSET_7 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_7, Vector.Y)
-			-- Allocate 4
-			local OPERATION_OFFSET_8 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Z)
-			-- START ARRAY
-			-- Allocate 2
-			local OPERATION_OFFSET_9 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_9, #Item_2.Children)
-				-- Allocate BLOCK: 36 bytes
-			local ARRAY_START_3 = Allocate(36 * #Item_2.Children)
-			for Index = 1, #Item_2.Children do
-				local Item_3 = Item_2.Children[Index]
-				local Vector = Item_3.CFrame.Position
-				-- Allocate 4
-				local OPERATION_OFFSET_0 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Vector.X)
-				-- Allocate 4
-				local OPERATION_OFFSET_1 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_1, Vector.Y)
-				-- Allocate 4
-				local OPERATION_OFFSET_2 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_2, Vector.Z)
-				local rX, rY, rZ = Item_3.CFrame:ToOrientation()
-				-- Allocate 4
-				local OPERATION_OFFSET_3 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_3, rX)
-				-- Allocate 4
-				local OPERATION_OFFSET_4 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_4, rY)
-				-- Allocate 4
-				local OPERATION_OFFSET_5 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_5, rZ)
-				local Vector = Item_3.Size
-				-- Allocate 4
-				local OPERATION_OFFSET_6 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_6, Vector.X)
-				-- Allocate 4
-				local OPERATION_OFFSET_7 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_7, Vector.Y)
-				-- Allocate 4
-				local OPERATION_OFFSET_8 = ARRAY_START_3
-				ARRAY_START_3 += 4
-				buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Z)
-			end
-			-- END ARRAY
-			local Color = Item_2.Color
-			-- Allocate 1
-			local OPERATION_OFFSET_10 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Color.R * 255)
-			-- Allocate 1
-			local OPERATION_OFFSET_11 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Color.G * 255)
-			-- Allocate 1
-			local OPERATION_OFFSET_12 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Color.B * 255)
-			-- Allocate 2
-			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Item_2.Material)
-			-- Allocate 2
-			local OPERATION_OFFSET_14 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			if Item_2.Transparency > 65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b0_11111_0000000000)
-			elseif Item_2.Transparency < -65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b1_11111_0000000000)
-			elseif Item_2.Transparency ~= Item_2.Transparency then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0b1_11111_0000000001)
-			elseif Item_2.Transparency == 0 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, 0)
-			else
-				local float = Item_2.Transparency
-				local Abosulte = math.abs(float)
-				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-				local RoundedValue = (Abosulte // Interval) * Interval
-				local Fraction, Exponent = math.frexp(RoundedValue)
-				Exponent += 14
-				local Mantissa = math.round(if Exponent <= 0
-					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-					else Fraction * 0x800) % 0x400
-				local Result = Mantissa
-					+ math.max(Exponent, 0) * 0x400
-					+ if float < 0 then 0x8000 else 0
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_14, Result)
-			end
-			-- Allocate 1
-			local OPERATION_OFFSET_15 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_2.Reflectance ~= nil and 1 or 0)
-			if Item_2.Reflectance ~= nil then
-				-- Allocate BLOCK: 2 bytes
-				local BLOCK_START = Allocate(2)
-				if Item_2.Reflectance > 65504 then
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
-				elseif Item_2.Reflectance < -65504 then
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
-				elseif Item_2.Reflectance ~= Item_2.Reflectance then
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
-				elseif Item_2.Reflectance == 0 then
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
-				else
-					local float = Item_2.Reflectance
-					local Abosulte = math.abs(float)
-					local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-					local RoundedValue = (Abosulte // Interval) * Interval
-					local Fraction, Exponent = math.frexp(RoundedValue)
-					Exponent += 14
-					local Mantissa = math.round(if Exponent <= 0
-						then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-						else Fraction * 0x800) % 0x400
-					local Result = Mantissa
-						+ math.max(Exponent, 0) * 0x400
-						+ if float < 0 then 0x8000 else 0
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
-				end
-			end
-			-- Allocate 1
-			local OPERATION_OFFSET_16 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_2.MaterialVariant ~= nil and 1 or 0)
-			if Item_2.MaterialVariant ~= nil then
-				-- Allocate BLOCK: 2 bytes
-				local BLOCK_START = Allocate(2)
-				local Length = #Item_2.MaterialVariant
-				buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
-				Allocate(Length)
-				buffer.writestring(SendBuffer, SendOffset, Item_2.MaterialVariant, Length)
-			end
-			local Length = #Item_2.CollisionGroup
-			-- Allocate 2
-			local OPERATION_OFFSET_17 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
-			-- Allocate 2
-			local OPERATION_OFFSET_18 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			local Elements_3 = 0
-			for Key_3, Element_3 in Item_2.Attributes do
-				Elements_3 += 1
-				local Length = #Key_3
-				local OFFSET_0 = Allocate(2)
-				buffer.writeu16(SendBuffer, OFFSET_0, Length)
-				Allocate(Length)
-				buffer.writestring(SendBuffer, SendOffset, Key_3, Length)
-				table.insert(SendInstances, if Element_3 == nil then Null else Element_3)
-			end
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, Elements_3)
-			-- START ARRAY
-			-- Allocate 2
-			local OPERATION_OFFSET_19 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_19, #Item_2.Tags)
-				-- Allocate BLOCK: 2 bytes
-			local ARRAY_START_3 = Allocate(2 * #Item_2.Tags)
-			for Index = 1, #Item_2.Tags do
-				local Item_3 = Item_2.Tags[Index]
-				local Length = #Item_3
-				-- Allocate 2
-				local OPERATION_OFFSET_0 = ARRAY_START_3
-				ARRAY_START_3 += 2
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
-				Allocate(Length)
-				buffer.writestring(SendBuffer, SendOffset, Item_3, Length)
-			end
-			-- END ARRAY
-		end
-		-- END ARRAY
-	end
-	-- END ARRAY
-	-- START ARRAY
-	buffer.writeu16(SendBuffer, BLOCK_START + 3, #Value2)
-		-- Allocate BLOCK: 51 bytes
-	local ARRAY_START_1 = Allocate(51 * #Value2)
-	for Index = 1, #Value2 do
-		local Item_1 = Value2[Index]
 		local Vector = Item_1.CFrame.Position
 		-- Allocate 4
 		local OPERATION_OFFSET_0 = ARRAY_START_1
@@ -716,53 +245,66 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 		local OPERATION_OFFSET_8 = ARRAY_START_1
 		ARRAY_START_1 += 4
 		buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Z)
-		local Color = Item_1.Color
 		-- Allocate 1
 		local OPERATION_OFFSET_9 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Color.R * 255)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Item_1.Anchored and 1 or 0)
 		-- Allocate 1
 		local OPERATION_OFFSET_10 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Color.G * 255)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_1.Color ~= nil and 1 or 0)
+		if Item_1.Color ~= nil then
+			-- Allocate BLOCK: 3 bytes
+			local BLOCK_START = Allocate(3)
+			local Color = Item_1.Color
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+		end
 		-- Allocate 1
 		local OPERATION_OFFSET_11 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Color.B * 255)
-		-- Allocate 2
-		local OPERATION_OFFSET_12 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_12, Item_1.Material)
-		-- Allocate 2
-		local OPERATION_OFFSET_13 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		if Item_1.Transparency > 65504 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b0_11111_0000000000)
-		elseif Item_1.Transparency < -65504 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000000)
-		elseif Item_1.Transparency ~= Item_1.Transparency then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000001)
-		elseif Item_1.Transparency == 0 then
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0)
-		else
-			local float = Item_1.Transparency
-			local Abosulte = math.abs(float)
-			local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-			local RoundedValue = (Abosulte // Interval) * Interval
-			local Fraction, Exponent = math.frexp(RoundedValue)
-			Exponent += 14
-			local Mantissa = math.round(if Exponent <= 0
-				then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-				else Fraction * 0x800) % 0x400
-			local Result = Mantissa
-				+ math.max(Exponent, 0) * 0x400
-				+ if float < 0 then 0x8000 else 0
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Result)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Item_1.Material ~= nil and 1 or 0)
+		if Item_1.Material ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Item_1.Material)
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_14 = ARRAY_START_1
+		local OPERATION_OFFSET_12 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_1.Reflectance ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Item_1.Transparency ~= nil and 1 or 0)
+		if Item_1.Transparency ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Item_1.Transparency > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Item_1.Transparency < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Item_1.Transparency ~= Item_1.Transparency then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Item_1.Transparency == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Item_1.Transparency
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_13 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_1.Reflectance ~= nil and 1 or 0)
 		if Item_1.Reflectance ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -791,9 +333,9 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 			end
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_15 = ARRAY_START_1
+		local OPERATION_OFFSET_14 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_1.MaterialVariant ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_1.MaterialVariant ~= nil and 1 or 0)
 		if Item_1.MaterialVariant ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -802,15 +344,392 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 			Allocate(Length)
 			buffer.writestring(SendBuffer, SendOffset, Item_1.MaterialVariant, Length)
 		end
-		local Length = #Item_1.CollisionGroup
-		-- Allocate 2
+		-- Allocate 1
+		local OPERATION_OFFSET_15 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_1.CollisionGroup ~= nil and 1 or 0)
+		if Item_1.CollisionGroup ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Item_1.CollisionGroup
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Item_1.CollisionGroup, Length)
+		end
+		-- Allocate 1
 		local OPERATION_OFFSET_16 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_16, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Item_1.CollisionGroup, Length)
-		-- Allocate 2
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_1.LeftSurface ~= nil and 1 or 0)
+		if Item_1.LeftSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.LeftSurface)
+		end
+		-- Allocate 1
 		local OPERATION_OFFSET_17 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_1.RightSurface ~= nil and 1 or 0)
+		if Item_1.RightSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.RightSurface)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_18 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_18, Item_1.FrontSurface ~= nil and 1 or 0)
+		if Item_1.FrontSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.FrontSurface)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_19 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_19, Item_1.BackSurface ~= nil and 1 or 0)
+		if Item_1.BackSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.BackSurface)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_20 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_20, Item_1.TopSurface ~= nil and 1 or 0)
+		if Item_1.TopSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.TopSurface)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_21 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_21, Item_1.BottomSurface ~= nil and 1 or 0)
+		if Item_1.BottomSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.BottomSurface)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_22 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_22, Item_1.Textures ~= nil and 1 or 0)
+		if Item_1.Textures ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Item_1.Textures)
+				-- Allocate BLOCK: 11 bytes
+			local ARRAY_START_3 = Allocate(11 * #Item_1.Textures)
+			for Index = 1, #Item_1.Textures do
+				local Item_3 = Item_1.Textures[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_3.OffsetStudsU ~= nil and 1 or 0)
+				if Item_3.OffsetStudsU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_8, Item_3.OffsetStudsV ~= nil and 1 or 0)
+				if Item_3.OffsetStudsV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsV)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Item_3.StudsPerTileU ~= nil and 1 or 0)
+				if Item_3.StudsPerTileU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_3.StudsPerTileV ~= nil and 1 or 0)
+				if Item_3.StudsPerTileV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileV)
+				end
+			end
+			-- END ARRAY
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_23 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_23, Item_1.Lights ~= nil and 1 or 0)
+		if Item_1.Lights ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Item_1.Lights)
+				-- Allocate BLOCK: 8 bytes
+			local ARRAY_START_3 = Allocate(8 * #Item_1.Lights)
+			for Index = 1, #Item_1.Lights do
+				local Item_3 = Item_1.Lights[Index]
+				local Length = #Item_3.ClassName
+				-- Allocate 2
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 2
+				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_3.ClassName, Length)
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.Brightness ~= nil and 1 or 0)
+				if Item_3.Brightness ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Brightness)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Color ~= nil and 1 or 0)
+				if Item_3.Color ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.Shadows ~= nil and 1 or 0)
+				if Item_3.Shadows ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Shadows and 1 or 0)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.Range ~= nil and 1 or 0)
+				if Item_3.Range ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Range)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.Angle ~= nil and 1 or 0)
+				if Item_3.Angle ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Angle)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_24 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_24, Item_1.Decals ~= nil and 1 or 0)
+		if Item_1.Decals ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Item_1.Decals)
+				-- Allocate BLOCK: 7 bytes
+			local ARRAY_START_3 = Allocate(7 * #Item_1.Decals)
+			for Index = 1, #Item_1.Decals do
+				local Item_3 = Item_1.Decals[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		-- Allocate 2
+		local OPERATION_OFFSET_25 = ARRAY_START_1
 		ARRAY_START_1 += 2
 		local Elements_2 = 0
 		for Key_2, Element_2 in Item_1.Attributes do
@@ -822,12 +741,12 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
 			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
 		end
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Elements_2)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_25, Elements_2)
 		-- START ARRAY
 		-- Allocate 2
-		local OPERATION_OFFSET_18 = ARRAY_START_1
+		local OPERATION_OFFSET_26 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, #Item_1.Tags)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_26, #Item_1.Tags)
 			-- Allocate BLOCK: 2 bytes
 		local ARRAY_START_2 = Allocate(2 * #Item_1.Tags)
 		for Index = 1, #Item_1.Tags do
@@ -845,291 +764,545 @@ local function Shatterbox_WriteEVENT_ReplicateMap(Value1: { { ID: string, Dirtie
 	-- END ARRAY
 end
 
-local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
-	-- Allocate BLOCK: 48 bytes
-	local BLOCK_START = Allocate(48)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
-	local Length = #Value1.ID
+local function Shatterbox_WriteEVENT_ReplicatePuppetStates(Value1: buffer, Value2: number): ()
+	-- Allocate BLOCK: 5 bytes
+	local BLOCK_START = Allocate(5)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 0)
+	local Length = buffer.len(Value1)
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
 	Allocate(Length)
-	buffer.writestring(SendBuffer, SendOffset, Value1.ID, Length)
-	local Vector = Value1.CuttingPart.CFrame.Position
-	buffer.writef32(SendBuffer, BLOCK_START + 3, Vector.X)
-	buffer.writef32(SendBuffer, BLOCK_START + 7, Vector.Y)
-	buffer.writef32(SendBuffer, BLOCK_START + 11, Vector.Z)
-	local rX, rY, rZ = Value1.CuttingPart.CFrame:ToOrientation()
-	buffer.writef32(SendBuffer, BLOCK_START + 15, rX)
-	buffer.writef32(SendBuffer, BLOCK_START + 19, rY)
-	buffer.writef32(SendBuffer, BLOCK_START + 23, rZ)
-	local Vector = Value1.CuttingPart.Size
-	buffer.writef32(SendBuffer, BLOCK_START + 27, Vector.X)
-	buffer.writef32(SendBuffer, BLOCK_START + 31, Vector.Y)
-	buffer.writef32(SendBuffer, BLOCK_START + 35, Vector.Z)
-	buffer.writeu8(SendBuffer, BLOCK_START + 39, Value1.CuttingPart.Shape)
-	buffer.writeu8(SendBuffer, BLOCK_START + 40, Value1.FilterTagged ~= nil and 1 or 0)
-	if Value1.FilterTagged ~= nil then
-		-- Allocate BLOCK: 2 bytes
-		local BLOCK_START = Allocate(2)
-		-- START ARRAY
-		buffer.writeu16(SendBuffer, BLOCK_START + 0, #Value1.FilterTagged)
-			-- Allocate BLOCK: 2 bytes
-		local ARRAY_START_2 = Allocate(2 * #Value1.FilterTagged)
-		for Index = 1, #Value1.FilterTagged do
-			local Item_2 = Value1.FilterTagged[Index]
-			local Length = #Item_2
-			-- Allocate 2
-			local OPERATION_OFFSET_0 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_2, Length)
-		end
-		-- END ARRAY
-	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 41, Value1.GridSize ~= nil and 1 or 0)
-	if Value1.GridSize ~= nil then
-		-- Allocate BLOCK: 4 bytes
-		local BLOCK_START = Allocate(4)
-		buffer.writef32(SendBuffer, BLOCK_START + 0, Value1.GridSize)
-	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 42, Value1.CleanupDelay ~= nil and 1 or 0)
-	if Value1.CleanupDelay ~= nil then
-		-- Allocate BLOCK: 4 bytes
-		local BLOCK_START = Allocate(4)
-		buffer.writef32(SendBuffer, BLOCK_START + 0, Value1.CleanupDelay)
-	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 43, Value1.SkipEncapsulatedVoxels ~= nil and 1 or 0)
-	if Value1.SkipEncapsulatedVoxels ~= nil then
-		-- Allocate BLOCK: 1 bytes
-		local BLOCK_START = Allocate(1)
-		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value1.SkipEncapsulatedVoxels and 1 or 0)
-	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 44, Value1.OnVoxelDestruct ~= nil and 1 or 0)
-	if Value1.OnVoxelDestruct ~= nil then
-		-- Allocate BLOCK: 2 bytes
-		local BLOCK_START = Allocate(2)
-		local Length = #Value1.OnVoxelDestruct
-		buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Value1.OnVoxelDestruct, Length)
-	end
-	-- START ARRAY
-	buffer.writeu16(SendBuffer, BLOCK_START + 45, #Value1.DestructParameters)
-	for Index = 1, #Value1.DestructParameters do
-		local Item_1 = Value1.DestructParameters[Index]
-		table.insert(SendInstances, if Item_1 == nil then Null else Item_1)
-	end
-	-- END ARRAY
-	buffer.writeu8(SendBuffer, BLOCK_START + 47, Value2 ~= nil and 1 or 0)
-	if Value2 ~= nil then
-		-- Allocate BLOCK: 2 bytes
-		local BLOCK_START = Allocate(2)
-		-- START ARRAY
-		buffer.writeu16(SendBuffer, BLOCK_START + 0, #Value2)
-			-- Allocate BLOCK: 51 bytes
-		local ARRAY_START_2 = Allocate(51 * #Value2)
-		for Index = 1, #Value2 do
-			local Item_2 = Value2[Index]
-			local Vector = Item_2.CFrame.Position
-			-- Allocate 4
-			local OPERATION_OFFSET_0 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Vector.X)
-			-- Allocate 4
-			local OPERATION_OFFSET_1 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_1, Vector.Y)
-			-- Allocate 4
-			local OPERATION_OFFSET_2 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_2, Vector.Z)
-			local rX, rY, rZ = Item_2.CFrame:ToOrientation()
-			-- Allocate 4
-			local OPERATION_OFFSET_3 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_3, rX)
-			-- Allocate 4
-			local OPERATION_OFFSET_4 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_4, rY)
-			-- Allocate 4
-			local OPERATION_OFFSET_5 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_5, rZ)
-			local Vector = Item_2.Size
-			-- Allocate 4
-			local OPERATION_OFFSET_6 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_6, Vector.X)
-			-- Allocate 4
-			local OPERATION_OFFSET_7 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_7, Vector.Y)
-			-- Allocate 4
-			local OPERATION_OFFSET_8 = ARRAY_START_2
-			ARRAY_START_2 += 4
-			buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Z)
-			local Color = Item_2.Color
-			-- Allocate 1
-			local OPERATION_OFFSET_9 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Color.R * 255)
-			-- Allocate 1
-			local OPERATION_OFFSET_10 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Color.G * 255)
-			-- Allocate 1
-			local OPERATION_OFFSET_11 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Color.B * 255)
-			-- Allocate 2
-			local OPERATION_OFFSET_12 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_12, Item_2.Material)
-			-- Allocate 2
-			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			if Item_2.Transparency > 65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b0_11111_0000000000)
-			elseif Item_2.Transparency < -65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000000)
-			elseif Item_2.Transparency ~= Item_2.Transparency then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000001)
-			elseif Item_2.Transparency == 0 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0)
-			else
-				local float = Item_2.Transparency
-				local Abosulte = math.abs(float)
-				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-				local RoundedValue = (Abosulte // Interval) * Interval
-				local Fraction, Exponent = math.frexp(RoundedValue)
-				Exponent += 14
-				local Mantissa = math.round(if Exponent <= 0
-					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-					else Fraction * 0x800) % 0x400
-				local Result = Mantissa
-					+ math.max(Exponent, 0) * 0x400
-					+ if float < 0 then 0x8000 else 0
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Result)
-			end
-			-- Allocate 1
-			local OPERATION_OFFSET_14 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_2.Reflectance ~= nil and 1 or 0)
-			if Item_2.Reflectance ~= nil then
-				-- Allocate BLOCK: 2 bytes
-				local BLOCK_START = Allocate(2)
-				if Item_2.Reflectance > 65504 then
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
-				elseif Item_2.Reflectance < -65504 then
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
-				elseif Item_2.Reflectance ~= Item_2.Reflectance then
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
-				elseif Item_2.Reflectance == 0 then
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
-				else
-					local float = Item_2.Reflectance
-					local Abosulte = math.abs(float)
-					local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-					local RoundedValue = (Abosulte // Interval) * Interval
-					local Fraction, Exponent = math.frexp(RoundedValue)
-					Exponent += 14
-					local Mantissa = math.round(if Exponent <= 0
-						then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-						else Fraction * 0x800) % 0x400
-					local Result = Mantissa
-						+ math.max(Exponent, 0) * 0x400
-						+ if float < 0 then 0x8000 else 0
-					buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
-				end
-			end
-			-- Allocate 1
-			local OPERATION_OFFSET_15 = ARRAY_START_2
-			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_2.MaterialVariant ~= nil and 1 or 0)
-			if Item_2.MaterialVariant ~= nil then
-				-- Allocate BLOCK: 2 bytes
-				local BLOCK_START = Allocate(2)
-				local Length = #Item_2.MaterialVariant
-				buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
-				Allocate(Length)
-				buffer.writestring(SendBuffer, SendOffset, Item_2.MaterialVariant, Length)
-			end
-			local Length = #Item_2.CollisionGroup
-			-- Allocate 2
-			local OPERATION_OFFSET_16 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_16, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
-			-- Allocate 2
-			local OPERATION_OFFSET_17 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			local Elements_3 = 0
-			for Key_3, Element_3 in Item_2.Attributes do
-				Elements_3 += 1
-				local Length = #Key_3
-				local OFFSET_0 = Allocate(2)
-				buffer.writeu16(SendBuffer, OFFSET_0, Length)
-				Allocate(Length)
-				buffer.writestring(SendBuffer, SendOffset, Key_3, Length)
-				table.insert(SendInstances, if Element_3 == nil then Null else Element_3)
-			end
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Elements_3)
-			-- START ARRAY
-			-- Allocate 2
-			local OPERATION_OFFSET_18 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, #Item_2.Tags)
-				-- Allocate BLOCK: 2 bytes
-			local ARRAY_START_3 = Allocate(2 * #Item_2.Tags)
-			for Index = 1, #Item_2.Tags do
-				local Item_3 = Item_2.Tags[Index]
-				local Length = #Item_3
-				-- Allocate 2
-				local OPERATION_OFFSET_0 = ARRAY_START_3
-				ARRAY_START_3 += 2
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
-				Allocate(Length)
-				buffer.writestring(SendBuffer, SendOffset, Item_3, Length)
-			end
-			-- END ARRAY
-		end
-		-- END ARRAY
-	end
+	buffer.copy(SendBuffer, SendOffset, Value1, 0, Length)
+	buffer.writeu16(SendBuffer, BLOCK_START + 3, Value2)
 end
 
-local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
-	-- Allocate BLOCK: 44 bytes
-	local BLOCK_START = Allocate(44)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 8)
-	local Length = #Value1.ID
-	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
-	Allocate(Length)
-	buffer.writestring(SendBuffer, SendOffset, Value1.ID, Length)
-	local Vector = Value1.CuttingPart.CFrame.Position
-	buffer.writef32(SendBuffer, BLOCK_START + 3, Vector.X)
-	buffer.writef32(SendBuffer, BLOCK_START + 7, Vector.Y)
-	buffer.writef32(SendBuffer, BLOCK_START + 11, Vector.Z)
-	local rX, rY, rZ = Value1.CuttingPart.CFrame:ToOrientation()
-	buffer.writef32(SendBuffer, BLOCK_START + 15, rX)
-	buffer.writef32(SendBuffer, BLOCK_START + 19, rY)
-	buffer.writef32(SendBuffer, BLOCK_START + 23, rZ)
-	local Vector = Value1.CuttingPart.Size
-	buffer.writef32(SendBuffer, BLOCK_START + 27, Vector.X)
-	buffer.writef32(SendBuffer, BLOCK_START + 31, Vector.Y)
-	buffer.writef32(SendBuffer, BLOCK_START + 35, Vector.Z)
-	buffer.writeu8(SendBuffer, BLOCK_START + 39, Value1.CuttingPart.Shape)
-	buffer.writeu8(SendBuffer, BLOCK_START + 40, Value1.FilterTagged ~= nil and 1 or 0)
-	if Value1.FilterTagged ~= nil then
-		-- Allocate BLOCK: 2 bytes
-		local BLOCK_START = Allocate(2)
-		-- START ARRAY
-		buffer.writeu16(SendBuffer, BLOCK_START + 0, #Value1.FilterTagged)
+local function Shatterbox_WriteEVENT_DestroyPuppet(Value: number): ()
+	-- Allocate BLOCK: 3 bytes
+	local BLOCK_START = Allocate(3)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 4)
+	buffer.writeu16(SendBuffer, BLOCK_START + 1, Value)
+end
+
+local function Shatterbox_ReadEVENT_CreateDirtyGroupsFromClient(): ({[string]: Part})
+	-- Read BLOCK: 2 bytes
+	local BLOCK_START = Read(2)
+	local Value = {}
+	local Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+	for _ = 1, Elements_1 do
+		local OFFSET_0 = Read(2)
+		local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
+		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		RecieveInstanceCursor += 1
+		local Element_1 = RecieveInstances[RecieveInstanceCursor]
+		if typeof(Element_1) ~= "Instance" then error(`Expected an Instance, got {typeof(Element_1)} instead.`) end
+		if not Element_1:IsA("Part") then error(`Expected an Instance of type "Part", got "{Element_1.ClassName}" instead.`) end
+		Value[Key_1] = Element_1
+	end
+	return Value
+end
+
+local function Shatterbox_WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+	-- Allocate BLOCK: 3 bytes
+	local BLOCK_START = Allocate(3)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local Vector = Element_1.CFrame.Position
+		local OFFSET_1 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_1, Vector.X)
+		local OFFSET_2 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_2, Vector.Y)
+		local OFFSET_3 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_3, Vector.Z)
+		local rX, rY, rZ = Element_1.CFrame:ToOrientation()
+		local OFFSET_4 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_4, rX)
+		local OFFSET_5 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_5, rY)
+		local OFFSET_6 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_6, rZ)
+		local Vector = Element_1.Size
+		local OFFSET_7 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_7, Vector.X)
+		local OFFSET_8 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_8, Vector.Y)
+		local OFFSET_9 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_9, Vector.Z)
+		local OFFSET_10 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_10, Element_1.Anchored and 1 or 0)
+		local OFFSET_11 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_11, Element_1.Color ~= nil and 1 or 0)
+		if Element_1.Color ~= nil then
+			-- Allocate BLOCK: 3 bytes
+			local BLOCK_START = Allocate(3)
+			local Color = Element_1.Color
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+		end
+		local OFFSET_12 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_12, Element_1.Material ~= nil and 1 or 0)
+		if Element_1.Material ~= nil then
 			-- Allocate BLOCK: 2 bytes
-		local ARRAY_START_2 = Allocate(2 * #Value1.FilterTagged)
-		for Index = 1, #Value1.FilterTagged do
-			local Item_2 = Value1.FilterTagged[Index]
+			local BLOCK_START = Allocate(2)
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Element_1.Material)
+		end
+		local OFFSET_13 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_13, Element_1.Transparency ~= nil and 1 or 0)
+		if Element_1.Transparency ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Element_1.Transparency > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Element_1.Transparency < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Element_1.Transparency ~= Element_1.Transparency then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Element_1.Transparency == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Element_1.Transparency
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		local OFFSET_14 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_14, Element_1.Reflectance ~= nil and 1 or 0)
+		if Element_1.Reflectance ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Element_1.Reflectance > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Element_1.Reflectance < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Element_1.Reflectance ~= Element_1.Reflectance then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Element_1.Reflectance == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Element_1.Reflectance
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		local OFFSET_15 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_15, Element_1.MaterialVariant ~= nil and 1 or 0)
+		if Element_1.MaterialVariant ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Element_1.MaterialVariant
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Element_1.MaterialVariant, Length)
+		end
+		local OFFSET_16 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_16, Element_1.CollisionGroup ~= nil and 1 or 0)
+		if Element_1.CollisionGroup ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Element_1.CollisionGroup
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Element_1.CollisionGroup, Length)
+		end
+		local OFFSET_17 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.LeftSurface ~= nil and 1 or 0)
+		if Element_1.LeftSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.LeftSurface)
+		end
+		local OFFSET_18 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.RightSurface ~= nil and 1 or 0)
+		if Element_1.RightSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.RightSurface)
+		end
+		local OFFSET_19 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.FrontSurface ~= nil and 1 or 0)
+		if Element_1.FrontSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.FrontSurface)
+		end
+		local OFFSET_20 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.BackSurface ~= nil and 1 or 0)
+		if Element_1.BackSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BackSurface)
+		end
+		local OFFSET_21 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.TopSurface ~= nil and 1 or 0)
+		if Element_1.TopSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.TopSurface)
+		end
+		local OFFSET_22 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.BottomSurface ~= nil and 1 or 0)
+		if Element_1.BottomSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BottomSurface)
+		end
+		local OFFSET_23 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.Textures ~= nil and 1 or 0)
+		if Element_1.Textures ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Textures)
+				-- Allocate BLOCK: 11 bytes
+			local ARRAY_START_3 = Allocate(11 * #Element_1.Textures)
+			for Index = 1, #Element_1.Textures do
+				local Item_3 = Element_1.Textures[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_3.OffsetStudsU ~= nil and 1 or 0)
+				if Item_3.OffsetStudsU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_8, Item_3.OffsetStudsV ~= nil and 1 or 0)
+				if Item_3.OffsetStudsV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsV)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Item_3.StudsPerTileU ~= nil and 1 or 0)
+				if Item_3.StudsPerTileU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_3.StudsPerTileV ~= nil and 1 or 0)
+				if Item_3.StudsPerTileV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileV)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_24 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Lights ~= nil and 1 or 0)
+		if Element_1.Lights ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Lights)
+				-- Allocate BLOCK: 8 bytes
+			local ARRAY_START_3 = Allocate(8 * #Element_1.Lights)
+			for Index = 1, #Element_1.Lights do
+				local Item_3 = Element_1.Lights[Index]
+				local Length = #Item_3.ClassName
+				-- Allocate 2
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 2
+				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_3.ClassName, Length)
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.Brightness ~= nil and 1 or 0)
+				if Item_3.Brightness ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Brightness)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Color ~= nil and 1 or 0)
+				if Item_3.Color ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.Shadows ~= nil and 1 or 0)
+				if Item_3.Shadows ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Shadows and 1 or 0)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.Range ~= nil and 1 or 0)
+				if Item_3.Range ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Range)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.Angle ~= nil and 1 or 0)
+				if Item_3.Angle ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Angle)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_25 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Decals ~= nil and 1 or 0)
+		if Element_1.Decals ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Decals)
+				-- Allocate BLOCK: 7 bytes
+			local ARRAY_START_3 = Allocate(7 * #Element_1.Decals)
+			for Index = 1, #Element_1.Decals do
+				local Item_3 = Element_1.Decals[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_26 = Allocate(2)
+		local Elements_2 = 0
+		for Key_2, Element_2 in Element_1.Attributes do
+			Elements_2 += 1
+			local Length = #Key_2
+			local OFFSET_0 = Allocate(2)
+			buffer.writeu16(SendBuffer, OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
+			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
+		end
+		buffer.writeu16(SendBuffer, OFFSET_26, Elements_2)
+		-- START ARRAY
+		local OFFSET_27 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_27, #Element_1.Tags)
+			-- Allocate BLOCK: 2 bytes
+		local ARRAY_START_2 = Allocate(2 * #Element_1.Tags)
+		for Index = 1, #Element_1.Tags do
+			local Item_2 = Element_1.Tags[Index]
 			local Length = #Item_2
 			-- Allocate 2
 			local OPERATION_OFFSET_0 = ARRAY_START_2
@@ -1140,28 +1313,538 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 		end
 		-- END ARRAY
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 41, Value1.GridSize ~= nil and 1 or 0)
-	if Value1.GridSize ~= nil then
-		-- Allocate BLOCK: 4 bytes
-		local BLOCK_START = Allocate(4)
-		buffer.writef32(SendBuffer, BLOCK_START + 0, Value1.GridSize)
-	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 42, Value1.CleanupDelay ~= nil and 1 or 0)
-	if Value1.CleanupDelay ~= nil then
-		-- Allocate BLOCK: 4 bytes
-		local BLOCK_START = Allocate(4)
-		buffer.writef32(SendBuffer, BLOCK_START + 0, Value1.CleanupDelay)
-	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 43, Value2 ~= nil and 1 or 0)
-	if Value2 ~= nil then
-		-- Allocate BLOCK: 2 bytes
-		local BLOCK_START = Allocate(2)
+	buffer.writeu16(SendBuffer, BLOCK_START + 1, Elements_1)
+end
+
+local function Shatterbox_WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+	-- Allocate BLOCK: 23 bytes
+	local BLOCK_START = Allocate(23)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value1 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local Vector = Element_1.CFrame.Position
+		local OFFSET_1 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_1, Vector.X)
+		local OFFSET_2 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_2, Vector.Y)
+		local OFFSET_3 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_3, Vector.Z)
+		local rX, rY, rZ = Element_1.CFrame:ToOrientation()
+		local OFFSET_4 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_4, rX)
+		local OFFSET_5 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_5, rY)
+		local OFFSET_6 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_6, rZ)
+		local Vector = Element_1.Size
+		local OFFSET_7 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_7, Vector.X)
+		local OFFSET_8 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_8, Vector.Y)
+		local OFFSET_9 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_9, Vector.Z)
+		local OFFSET_10 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_10, Element_1.Anchored and 1 or 0)
+		local OFFSET_11 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_11, Element_1.Color ~= nil and 1 or 0)
+		if Element_1.Color ~= nil then
+			-- Allocate BLOCK: 3 bytes
+			local BLOCK_START = Allocate(3)
+			local Color = Element_1.Color
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+		end
+		local OFFSET_12 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_12, Element_1.Material ~= nil and 1 or 0)
+		if Element_1.Material ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Element_1.Material)
+		end
+		local OFFSET_13 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_13, Element_1.Transparency ~= nil and 1 or 0)
+		if Element_1.Transparency ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Element_1.Transparency > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Element_1.Transparency < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Element_1.Transparency ~= Element_1.Transparency then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Element_1.Transparency == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Element_1.Transparency
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		local OFFSET_14 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_14, Element_1.Reflectance ~= nil and 1 or 0)
+		if Element_1.Reflectance ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Element_1.Reflectance > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Element_1.Reflectance < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Element_1.Reflectance ~= Element_1.Reflectance then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Element_1.Reflectance == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Element_1.Reflectance
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		local OFFSET_15 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_15, Element_1.MaterialVariant ~= nil and 1 or 0)
+		if Element_1.MaterialVariant ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Element_1.MaterialVariant
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Element_1.MaterialVariant, Length)
+		end
+		local OFFSET_16 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_16, Element_1.CollisionGroup ~= nil and 1 or 0)
+		if Element_1.CollisionGroup ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Element_1.CollisionGroup
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Element_1.CollisionGroup, Length)
+		end
+		local OFFSET_17 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.LeftSurface ~= nil and 1 or 0)
+		if Element_1.LeftSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.LeftSurface)
+		end
+		local OFFSET_18 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.RightSurface ~= nil and 1 or 0)
+		if Element_1.RightSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.RightSurface)
+		end
+		local OFFSET_19 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.FrontSurface ~= nil and 1 or 0)
+		if Element_1.FrontSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.FrontSurface)
+		end
+		local OFFSET_20 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.BackSurface ~= nil and 1 or 0)
+		if Element_1.BackSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BackSurface)
+		end
+		local OFFSET_21 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.TopSurface ~= nil and 1 or 0)
+		if Element_1.TopSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.TopSurface)
+		end
+		local OFFSET_22 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.BottomSurface ~= nil and 1 or 0)
+		if Element_1.BottomSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BottomSurface)
+		end
+		local OFFSET_23 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.Textures ~= nil and 1 or 0)
+		if Element_1.Textures ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Textures)
+				-- Allocate BLOCK: 11 bytes
+			local ARRAY_START_3 = Allocate(11 * #Element_1.Textures)
+			for Index = 1, #Element_1.Textures do
+				local Item_3 = Element_1.Textures[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_3.OffsetStudsU ~= nil and 1 or 0)
+				if Item_3.OffsetStudsU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_8, Item_3.OffsetStudsV ~= nil and 1 or 0)
+				if Item_3.OffsetStudsV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsV)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Item_3.StudsPerTileU ~= nil and 1 or 0)
+				if Item_3.StudsPerTileU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_3.StudsPerTileV ~= nil and 1 or 0)
+				if Item_3.StudsPerTileV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileV)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_24 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Lights ~= nil and 1 or 0)
+		if Element_1.Lights ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Lights)
+				-- Allocate BLOCK: 8 bytes
+			local ARRAY_START_3 = Allocate(8 * #Element_1.Lights)
+			for Index = 1, #Element_1.Lights do
+				local Item_3 = Element_1.Lights[Index]
+				local Length = #Item_3.ClassName
+				-- Allocate 2
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 2
+				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_3.ClassName, Length)
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.Brightness ~= nil and 1 or 0)
+				if Item_3.Brightness ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Brightness)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Color ~= nil and 1 or 0)
+				if Item_3.Color ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.Shadows ~= nil and 1 or 0)
+				if Item_3.Shadows ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Shadows and 1 or 0)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.Range ~= nil and 1 or 0)
+				if Item_3.Range ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Range)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.Angle ~= nil and 1 or 0)
+				if Item_3.Angle ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Angle)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_25 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Decals ~= nil and 1 or 0)
+		if Element_1.Decals ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Decals)
+				-- Allocate BLOCK: 7 bytes
+			local ARRAY_START_3 = Allocate(7 * #Element_1.Decals)
+			for Index = 1, #Element_1.Decals do
+				local Item_3 = Element_1.Decals[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_26 = Allocate(2)
+		local Elements_2 = 0
+		for Key_2, Element_2 in Element_1.Attributes do
+			Elements_2 += 1
+			local Length = #Key_2
+			local OFFSET_0 = Allocate(2)
+			buffer.writeu16(SendBuffer, OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
+			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
+		end
+		buffer.writeu16(SendBuffer, OFFSET_26, Elements_2)
 		-- START ARRAY
-		buffer.writeu16(SendBuffer, BLOCK_START + 0, #Value2)
-			-- Allocate BLOCK: 51 bytes
-		local ARRAY_START_2 = Allocate(51 * #Value2)
-		for Index = 1, #Value2 do
-			local Item_2 = Value2[Index]
+		local OFFSET_27 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_27, #Element_1.Tags)
+			-- Allocate BLOCK: 2 bytes
+		local ARRAY_START_2 = Allocate(2 * #Element_1.Tags)
+		for Index = 1, #Element_1.Tags do
+			local Item_2 = Element_1.Tags[Index]
+			local Length = #Item_2
+			-- Allocate 2
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Item_2, Length)
+		end
+		-- END ARRAY
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 1, Elements_1)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value2 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		-- START ARRAY
+		local OFFSET_1 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_1, #Element_1)
+			-- Allocate BLOCK: 56 bytes
+		local ARRAY_START_2 = Allocate(56 * #Element_1)
+		for Index = 1, #Element_1 do
+			local Item_2 = Element_1[Index]
 			local Vector = Item_2.CFrame.Position
 			-- Allocate 4
 			local OPERATION_OFFSET_0 = ARRAY_START_2
@@ -1201,53 +1884,66 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 			local OPERATION_OFFSET_8 = ARRAY_START_2
 			ARRAY_START_2 += 4
 			buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Z)
-			local Color = Item_2.Color
 			-- Allocate 1
 			local OPERATION_OFFSET_9 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Color.R * 255)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Item_2.Anchored and 1 or 0)
 			-- Allocate 1
 			local OPERATION_OFFSET_10 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Color.G * 255)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_2.Color ~= nil and 1 or 0)
+			if Item_2.Color ~= nil then
+				-- Allocate BLOCK: 3 bytes
+				local BLOCK_START = Allocate(3)
+				local Color = Item_2.Color
+				buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+				buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+				buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+			end
 			-- Allocate 1
 			local OPERATION_OFFSET_11 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Color.B * 255)
-			-- Allocate 2
-			local OPERATION_OFFSET_12 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_12, Item_2.Material)
-			-- Allocate 2
-			local OPERATION_OFFSET_13 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			if Item_2.Transparency > 65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b0_11111_0000000000)
-			elseif Item_2.Transparency < -65504 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000000)
-			elseif Item_2.Transparency ~= Item_2.Transparency then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0b1_11111_0000000001)
-			elseif Item_2.Transparency == 0 then
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, 0)
-			else
-				local float = Item_2.Transparency
-				local Abosulte = math.abs(float)
-				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
-				local RoundedValue = (Abosulte // Interval) * Interval
-				local Fraction, Exponent = math.frexp(RoundedValue)
-				Exponent += 14
-				local Mantissa = math.round(if Exponent <= 0
-					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
-					else Fraction * 0x800) % 0x400
-				local Result = Mantissa
-					+ math.max(Exponent, 0) * 0x400
-					+ if float < 0 then 0x8000 else 0
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_13, Result)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Item_2.Material ~= nil and 1 or 0)
+			if Item_2.Material ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Item_2.Material)
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_14 = ARRAY_START_2
+			local OPERATION_OFFSET_12 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_2.Reflectance ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Item_2.Transparency ~= nil and 1 or 0)
+			if Item_2.Transparency ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				if Item_2.Transparency > 65504 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+				elseif Item_2.Transparency < -65504 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+				elseif Item_2.Transparency ~= Item_2.Transparency then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+				elseif Item_2.Transparency == 0 then
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+				else
+					local float = Item_2.Transparency
+					local Abosulte = math.abs(float)
+					local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+					local RoundedValue = (Abosulte // Interval) * Interval
+					local Fraction, Exponent = math.frexp(RoundedValue)
+					Exponent += 14
+					local Mantissa = math.round(if Exponent <= 0
+						then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+						else Fraction * 0x800) % 0x400
+					local Result = Mantissa
+						+ math.max(Exponent, 0) * 0x400
+						+ if float < 0 then 0x8000 else 0
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+				end
+			end
+			-- Allocate 1
+			local OPERATION_OFFSET_13 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_2.Reflectance ~= nil and 1 or 0)
 			if Item_2.Reflectance ~= nil then
 				-- Allocate BLOCK: 2 bytes
 				local BLOCK_START = Allocate(2)
@@ -1276,9 +1972,9 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 				end
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_15 = ARRAY_START_2
+			local OPERATION_OFFSET_14 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_2.MaterialVariant ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_2.MaterialVariant ~= nil and 1 or 0)
 			if Item_2.MaterialVariant ~= nil then
 				-- Allocate BLOCK: 2 bytes
 				local BLOCK_START = Allocate(2)
@@ -1287,15 +1983,392 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 				Allocate(Length)
 				buffer.writestring(SendBuffer, SendOffset, Item_2.MaterialVariant, Length)
 			end
-			local Length = #Item_2.CollisionGroup
-			-- Allocate 2
+			-- Allocate 1
+			local OPERATION_OFFSET_15 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_2.CollisionGroup ~= nil and 1 or 0)
+			if Item_2.CollisionGroup ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				local Length = #Item_2.CollisionGroup
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
+			end
+			-- Allocate 1
 			local OPERATION_OFFSET_16 = ARRAY_START_2
-			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_16, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_2.CollisionGroup, Length)
-			-- Allocate 2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_2.LeftSurface ~= nil and 1 or 0)
+			if Item_2.LeftSurface ~= nil then
+				-- Allocate BLOCK: 1 bytes
+				local BLOCK_START = Allocate(1)
+				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.LeftSurface)
+			end
+			-- Allocate 1
 			local OPERATION_OFFSET_17 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_2.RightSurface ~= nil and 1 or 0)
+			if Item_2.RightSurface ~= nil then
+				-- Allocate BLOCK: 1 bytes
+				local BLOCK_START = Allocate(1)
+				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.RightSurface)
+			end
+			-- Allocate 1
+			local OPERATION_OFFSET_18 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_18, Item_2.FrontSurface ~= nil and 1 or 0)
+			if Item_2.FrontSurface ~= nil then
+				-- Allocate BLOCK: 1 bytes
+				local BLOCK_START = Allocate(1)
+				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.FrontSurface)
+			end
+			-- Allocate 1
+			local OPERATION_OFFSET_19 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_19, Item_2.BackSurface ~= nil and 1 or 0)
+			if Item_2.BackSurface ~= nil then
+				-- Allocate BLOCK: 1 bytes
+				local BLOCK_START = Allocate(1)
+				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.BackSurface)
+			end
+			-- Allocate 1
+			local OPERATION_OFFSET_20 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_20, Item_2.TopSurface ~= nil and 1 or 0)
+			if Item_2.TopSurface ~= nil then
+				-- Allocate BLOCK: 1 bytes
+				local BLOCK_START = Allocate(1)
+				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.TopSurface)
+			end
+			-- Allocate 1
+			local OPERATION_OFFSET_21 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_21, Item_2.BottomSurface ~= nil and 1 or 0)
+			if Item_2.BottomSurface ~= nil then
+				-- Allocate BLOCK: 1 bytes
+				local BLOCK_START = Allocate(1)
+				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.BottomSurface)
+			end
+			-- Allocate 1
+			local OPERATION_OFFSET_22 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_22, Item_2.Textures ~= nil and 1 or 0)
+			if Item_2.Textures ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				-- START ARRAY
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, #Item_2.Textures)
+					-- Allocate BLOCK: 11 bytes
+				local ARRAY_START_4 = Allocate(11 * #Item_2.Textures)
+				for Index = 1, #Item_2.Textures do
+					local Item_4 = Item_2.Textures[Index]
+					-- Allocate 1
+					local OPERATION_OFFSET_0 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_4.Color3 ~= nil and 1 or 0)
+					if Item_4.Color3 ~= nil then
+						-- Allocate BLOCK: 3 bytes
+						local BLOCK_START = Allocate(3)
+						local Color = Item_4.Color3
+						buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+						buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+						buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_1 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_4.ColorMap ~= nil and 1 or 0)
+					if Item_4.ColorMap ~= nil then
+						-- Allocate BLOCK: 2 bytes
+						local BLOCK_START = Allocate(2)
+						local Length = #Item_4.ColorMap
+						buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+						Allocate(Length)
+						buffer.writestring(SendBuffer, SendOffset, Item_4.ColorMap, Length)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_2 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_4.Transparency ~= nil and 1 or 0)
+					if Item_4.Transparency ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.Transparency)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_3 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_4.UVOffset ~= nil and 1 or 0)
+					if Item_4.UVOffset ~= nil then
+						-- START ARRAY
+							-- Allocate BLOCK: 4 bytes
+						local ARRAY_START_6 = Allocate(4 * 2)
+						for Index = 1, 2 do
+							local Item_6 = Item_4.UVOffset[Index]
+							-- Allocate 4
+							local OPERATION_OFFSET_0 = ARRAY_START_6
+							ARRAY_START_6 += 4
+							buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_6)
+						end
+						-- END ARRAY
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_4 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_4.UVScale ~= nil and 1 or 0)
+					if Item_4.UVScale ~= nil then
+						-- START ARRAY
+							-- Allocate BLOCK: 4 bytes
+						local ARRAY_START_6 = Allocate(4 * 2)
+						for Index = 1, 2 do
+							local Item_6 = Item_4.UVScale[Index]
+							-- Allocate 4
+							local OPERATION_OFFSET_0 = ARRAY_START_6
+							ARRAY_START_6 += 4
+							buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_6)
+						end
+						-- END ARRAY
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_5 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_4.ZIndex ~= nil and 1 or 0)
+					if Item_4.ZIndex ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_4.ZIndex)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_6 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_4.Face ~= nil and 1 or 0)
+					if Item_4.Face ~= nil then
+						-- Allocate BLOCK: 1 bytes
+						local BLOCK_START = Allocate(1)
+						buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_4.Face)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_7 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_4.OffsetStudsU ~= nil and 1 or 0)
+					if Item_4.OffsetStudsU ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.OffsetStudsU)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_8 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_8, Item_4.OffsetStudsV ~= nil and 1 or 0)
+					if Item_4.OffsetStudsV ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.OffsetStudsV)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_9 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Item_4.StudsPerTileU ~= nil and 1 or 0)
+					if Item_4.StudsPerTileU ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.StudsPerTileU)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_10 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_4.StudsPerTileV ~= nil and 1 or 0)
+					if Item_4.StudsPerTileV ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.StudsPerTileV)
+					end
+				end
+				-- END ARRAY
+			end
+			-- Allocate 1
+			local OPERATION_OFFSET_23 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_23, Item_2.Lights ~= nil and 1 or 0)
+			if Item_2.Lights ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				-- START ARRAY
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, #Item_2.Lights)
+					-- Allocate BLOCK: 8 bytes
+				local ARRAY_START_4 = Allocate(8 * #Item_2.Lights)
+				for Index = 1, #Item_2.Lights do
+					local Item_4 = Item_2.Lights[Index]
+					local Length = #Item_4.ClassName
+					-- Allocate 2
+					local OPERATION_OFFSET_0 = ARRAY_START_4
+					ARRAY_START_4 += 2
+					buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_4.ClassName, Length)
+					-- Allocate 1
+					local OPERATION_OFFSET_1 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_4.Brightness ~= nil and 1 or 0)
+					if Item_4.Brightness ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.Brightness)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_2 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_4.Color ~= nil and 1 or 0)
+					if Item_4.Color ~= nil then
+						-- Allocate BLOCK: 3 bytes
+						local BLOCK_START = Allocate(3)
+						local Color = Item_4.Color
+						buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+						buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+						buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_3 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_4.Shadows ~= nil and 1 or 0)
+					if Item_4.Shadows ~= nil then
+						-- Allocate BLOCK: 1 bytes
+						local BLOCK_START = Allocate(1)
+						buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_4.Shadows and 1 or 0)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_4 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_4.Range ~= nil and 1 or 0)
+					if Item_4.Range ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.Range)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_5 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_4.Angle ~= nil and 1 or 0)
+					if Item_4.Angle ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.Angle)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_6 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_4.Face ~= nil and 1 or 0)
+					if Item_4.Face ~= nil then
+						-- Allocate BLOCK: 1 bytes
+						local BLOCK_START = Allocate(1)
+						buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_4.Face)
+					end
+				end
+				-- END ARRAY
+			end
+			-- Allocate 1
+			local OPERATION_OFFSET_24 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_24, Item_2.Decals ~= nil and 1 or 0)
+			if Item_2.Decals ~= nil then
+				-- Allocate BLOCK: 2 bytes
+				local BLOCK_START = Allocate(2)
+				-- START ARRAY
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, #Item_2.Decals)
+					-- Allocate BLOCK: 7 bytes
+				local ARRAY_START_4 = Allocate(7 * #Item_2.Decals)
+				for Index = 1, #Item_2.Decals do
+					local Item_4 = Item_2.Decals[Index]
+					-- Allocate 1
+					local OPERATION_OFFSET_0 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_4.Color3 ~= nil and 1 or 0)
+					if Item_4.Color3 ~= nil then
+						-- Allocate BLOCK: 3 bytes
+						local BLOCK_START = Allocate(3)
+						local Color = Item_4.Color3
+						buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+						buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+						buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_1 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_4.ColorMap ~= nil and 1 or 0)
+					if Item_4.ColorMap ~= nil then
+						-- Allocate BLOCK: 2 bytes
+						local BLOCK_START = Allocate(2)
+						local Length = #Item_4.ColorMap
+						buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+						Allocate(Length)
+						buffer.writestring(SendBuffer, SendOffset, Item_4.ColorMap, Length)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_2 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_4.Transparency ~= nil and 1 or 0)
+					if Item_4.Transparency ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writef32(SendBuffer, BLOCK_START + 0, Item_4.Transparency)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_3 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_4.UVOffset ~= nil and 1 or 0)
+					if Item_4.UVOffset ~= nil then
+						-- START ARRAY
+							-- Allocate BLOCK: 4 bytes
+						local ARRAY_START_6 = Allocate(4 * 2)
+						for Index = 1, 2 do
+							local Item_6 = Item_4.UVOffset[Index]
+							-- Allocate 4
+							local OPERATION_OFFSET_0 = ARRAY_START_6
+							ARRAY_START_6 += 4
+							buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_6)
+						end
+						-- END ARRAY
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_4 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_4.UVScale ~= nil and 1 or 0)
+					if Item_4.UVScale ~= nil then
+						-- START ARRAY
+							-- Allocate BLOCK: 4 bytes
+						local ARRAY_START_6 = Allocate(4 * 2)
+						for Index = 1, 2 do
+							local Item_6 = Item_4.UVScale[Index]
+							-- Allocate 4
+							local OPERATION_OFFSET_0 = ARRAY_START_6
+							ARRAY_START_6 += 4
+							buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_6)
+						end
+						-- END ARRAY
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_5 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_4.ZIndex ~= nil and 1 or 0)
+					if Item_4.ZIndex ~= nil then
+						-- Allocate BLOCK: 4 bytes
+						local BLOCK_START = Allocate(4)
+						buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_4.ZIndex)
+					end
+					-- Allocate 1
+					local OPERATION_OFFSET_6 = ARRAY_START_4
+					ARRAY_START_4 += 1
+					buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_4.Face ~= nil and 1 or 0)
+					if Item_4.Face ~= nil then
+						-- Allocate BLOCK: 1 bytes
+						local BLOCK_START = Allocate(1)
+						buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_4.Face)
+					end
+				end
+				-- END ARRAY
+			end
+			-- Allocate 2
+			local OPERATION_OFFSET_25 = ARRAY_START_2
 			ARRAY_START_2 += 2
 			local Elements_3 = 0
 			for Key_3, Element_3 in Item_2.Attributes do
@@ -1307,12 +2380,12 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 				buffer.writestring(SendBuffer, SendOffset, Key_3, Length)
 				table.insert(SendInstances, if Element_3 == nil then Null else Element_3)
 			end
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_17, Elements_3)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_25, Elements_3)
 			-- START ARRAY
 			-- Allocate 2
-			local OPERATION_OFFSET_18 = ARRAY_START_2
+			local OPERATION_OFFSET_26 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_18, #Item_2.Tags)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_26, #Item_2.Tags)
 				-- Allocate BLOCK: 2 bytes
 			local ARRAY_START_3 = Allocate(2 * #Item_2.Tags)
 			for Index = 1, #Item_2.Tags do
@@ -1328,6 +2401,1360 @@ local function Shatterbox_WriteEVENT_ReplicateImaginary(Value1: { ID: string, Cu
 			-- END ARRAY
 		end
 		-- END ARRAY
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 3, Elements_1)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value3 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_1 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_1, Element_1 and 1 or 0)
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 5, Elements_1)
+	-- START ARRAY
+	buffer.writeu16(SendBuffer, BLOCK_START + 7, #Value4)
+		-- Allocate BLOCK: 47 bytes
+	local ARRAY_START_1 = Allocate(47 * #Value4)
+	for Index = 1, #Value4 do
+		local Item_1 = Value4[Index]
+		local Length = #Item_1.ID
+		-- Allocate 2
+		local OPERATION_OFFSET_0 = ARRAY_START_1
+		ARRAY_START_1 += 2
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Item_1.ID, Length)
+		local Vector = Item_1.CuttingPart.CFrame.Position
+		-- Allocate 4
+		local OPERATION_OFFSET_1 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_1, Vector.X)
+		-- Allocate 4
+		local OPERATION_OFFSET_2 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_2, Vector.Y)
+		-- Allocate 4
+		local OPERATION_OFFSET_3 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Vector.Z)
+		local rX, rY, rZ = Item_1.CuttingPart.CFrame:ToOrientation()
+		-- Allocate 4
+		local OPERATION_OFFSET_4 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_4, rX)
+		-- Allocate 4
+		local OPERATION_OFFSET_5 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_5, rY)
+		-- Allocate 4
+		local OPERATION_OFFSET_6 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_6, rZ)
+		local Vector = Item_1.CuttingPart.Size
+		-- Allocate 4
+		local OPERATION_OFFSET_7 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_7, Vector.X)
+		-- Allocate 4
+		local OPERATION_OFFSET_8 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Y)
+		-- Allocate 4
+		local OPERATION_OFFSET_9 = ARRAY_START_1
+		ARRAY_START_1 += 4
+		buffer.writef32(SendBuffer, OPERATION_OFFSET_9, Vector.Z)
+		-- Allocate 1
+		local OPERATION_OFFSET_10 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_1.CuttingPart.Shape)
+		-- Allocate 1
+		local OPERATION_OFFSET_11 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Item_1.FilterTagged ~= nil and 1 or 0)
+		if Item_1.FilterTagged ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Item_1.FilterTagged)
+				-- Allocate BLOCK: 2 bytes
+			local ARRAY_START_3 = Allocate(2 * #Item_1.FilterTagged)
+			for Index = 1, #Item_1.FilterTagged do
+				local Item_3 = Item_1.FilterTagged[Index]
+				local Length = #Item_3
+				-- Allocate 2
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 2
+				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_3, Length)
+			end
+			-- END ARRAY
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_12 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Item_1.GridSize ~= nil and 1 or 0)
+		if Item_1.GridSize ~= nil then
+			-- Allocate BLOCK: 4 bytes
+			local BLOCK_START = Allocate(4)
+			buffer.writef32(SendBuffer, BLOCK_START + 0, Item_1.GridSize)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_13 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_1.CleanupDelay ~= nil and 1 or 0)
+		if Item_1.CleanupDelay ~= nil then
+			-- Allocate BLOCK: 4 bytes
+			local BLOCK_START = Allocate(4)
+			buffer.writef32(SendBuffer, BLOCK_START + 0, Item_1.CleanupDelay)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_14 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_1.SkipWalls ~= nil and 1 or 0)
+		if Item_1.SkipWalls ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.SkipWalls and 1 or 0)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_15 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_1.SkipFloors ~= nil and 1 or 0)
+		if Item_1.SkipFloors ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.SkipFloors and 1 or 0)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_16 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_1.SkipEncapsulatedVoxels ~= nil and 1 or 0)
+		if Item_1.SkipEncapsulatedVoxels ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.SkipEncapsulatedVoxels and 1 or 0)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_17 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_1.OnVoxelDestruct ~= nil and 1 or 0)
+		if Item_1.OnVoxelDestruct ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Item_1.OnVoxelDestruct
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Item_1.OnVoxelDestruct, Length)
+		end
+		-- Allocate 1
+		local OPERATION_OFFSET_18 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_18, Item_1.UserData ~= nil and 1 or 0)
+		if Item_1.UserData ~= nil then
+			table.insert(SendInstances, if Item_1.UserData == nil then Null else Item_1.UserData)
+		end
+	end
+	-- END ARRAY
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value5 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_1 = Allocate(4)
+		buffer.writeu32(SendBuffer, OFFSET_1, Element_1)
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 9, Elements_1)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value6 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_1 = Allocate(2)
+		local Elements_2 = 0
+		for Key_2, Element_2 in Element_1 do
+			Elements_2 += 1
+			local Length = #Key_2
+			local OFFSET_0 = Allocate(2)
+			buffer.writeu16(SendBuffer, OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
+			local OFFSET_1 = Allocate(1)
+			buffer.writeu8(SendBuffer, OFFSET_1, Element_2 and 1 or 0)
+		end
+		buffer.writeu16(SendBuffer, OFFSET_1, Elements_2)
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 11, Elements_1)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value7 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_1 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 13, Elements_1)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value8 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_1 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 15, Elements_1)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value9 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_1 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 17, Elements_1)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value10 do
+		Elements_1 += 1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Key_1)
+		local Vector = Element_1.CFrame.Position
+		local OFFSET_1 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_1, Vector.X)
+		local OFFSET_2 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_2, Vector.Y)
+		local OFFSET_3 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_3, Vector.Z)
+		local rX, rY, rZ = Element_1.CFrame:ToOrientation()
+		local OFFSET_4 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_4, rX)
+		local OFFSET_5 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_5, rY)
+		local OFFSET_6 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_6, rZ)
+		local Vector = Element_1.Size
+		local OFFSET_7 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_7, Vector.X)
+		local OFFSET_8 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_8, Vector.Y)
+		local OFFSET_9 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_9, Vector.Z)
+		local OFFSET_10 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_10, Element_1.Anchored and 1 or 0)
+		local OFFSET_11 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_11, Element_1.Color ~= nil and 1 or 0)
+		if Element_1.Color ~= nil then
+			-- Allocate BLOCK: 3 bytes
+			local BLOCK_START = Allocate(3)
+			local Color = Element_1.Color
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+		end
+		local OFFSET_12 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_12, Element_1.Material ~= nil and 1 or 0)
+		if Element_1.Material ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Element_1.Material)
+		end
+		local OFFSET_13 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_13, Element_1.Transparency ~= nil and 1 or 0)
+		if Element_1.Transparency ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Element_1.Transparency > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Element_1.Transparency < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Element_1.Transparency ~= Element_1.Transparency then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Element_1.Transparency == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Element_1.Transparency
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		local OFFSET_14 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_14, Element_1.Reflectance ~= nil and 1 or 0)
+		if Element_1.Reflectance ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Element_1.Reflectance > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Element_1.Reflectance < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Element_1.Reflectance ~= Element_1.Reflectance then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Element_1.Reflectance == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Element_1.Reflectance
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		local OFFSET_15 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_15, Element_1.MaterialVariant ~= nil and 1 or 0)
+		if Element_1.MaterialVariant ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Element_1.MaterialVariant
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Element_1.MaterialVariant, Length)
+		end
+		local OFFSET_16 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_16, Element_1.CollisionGroup ~= nil and 1 or 0)
+		if Element_1.CollisionGroup ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Element_1.CollisionGroup
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Element_1.CollisionGroup, Length)
+		end
+		local OFFSET_17 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.LeftSurface ~= nil and 1 or 0)
+		if Element_1.LeftSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.LeftSurface)
+		end
+		local OFFSET_18 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.RightSurface ~= nil and 1 or 0)
+		if Element_1.RightSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.RightSurface)
+		end
+		local OFFSET_19 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.FrontSurface ~= nil and 1 or 0)
+		if Element_1.FrontSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.FrontSurface)
+		end
+		local OFFSET_20 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.BackSurface ~= nil and 1 or 0)
+		if Element_1.BackSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BackSurface)
+		end
+		local OFFSET_21 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.TopSurface ~= nil and 1 or 0)
+		if Element_1.TopSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.TopSurface)
+		end
+		local OFFSET_22 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.BottomSurface ~= nil and 1 or 0)
+		if Element_1.BottomSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BottomSurface)
+		end
+		local OFFSET_23 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.Textures ~= nil and 1 or 0)
+		if Element_1.Textures ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Textures)
+				-- Allocate BLOCK: 11 bytes
+			local ARRAY_START_3 = Allocate(11 * #Element_1.Textures)
+			for Index = 1, #Element_1.Textures do
+				local Item_3 = Element_1.Textures[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_3.OffsetStudsU ~= nil and 1 or 0)
+				if Item_3.OffsetStudsU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_8, Item_3.OffsetStudsV ~= nil and 1 or 0)
+				if Item_3.OffsetStudsV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsV)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Item_3.StudsPerTileU ~= nil and 1 or 0)
+				if Item_3.StudsPerTileU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_3.StudsPerTileV ~= nil and 1 or 0)
+				if Item_3.StudsPerTileV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileV)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_24 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Lights ~= nil and 1 or 0)
+		if Element_1.Lights ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Lights)
+				-- Allocate BLOCK: 8 bytes
+			local ARRAY_START_3 = Allocate(8 * #Element_1.Lights)
+			for Index = 1, #Element_1.Lights do
+				local Item_3 = Element_1.Lights[Index]
+				local Length = #Item_3.ClassName
+				-- Allocate 2
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 2
+				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_3.ClassName, Length)
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.Brightness ~= nil and 1 or 0)
+				if Item_3.Brightness ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Brightness)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Color ~= nil and 1 or 0)
+				if Item_3.Color ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.Shadows ~= nil and 1 or 0)
+				if Item_3.Shadows ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Shadows and 1 or 0)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.Range ~= nil and 1 or 0)
+				if Item_3.Range ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Range)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.Angle ~= nil and 1 or 0)
+				if Item_3.Angle ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Angle)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_25 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Decals ~= nil and 1 or 0)
+		if Element_1.Decals ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Decals)
+				-- Allocate BLOCK: 7 bytes
+			local ARRAY_START_3 = Allocate(7 * #Element_1.Decals)
+			for Index = 1, #Element_1.Decals do
+				local Item_3 = Element_1.Decals[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_26 = Allocate(2)
+		local Elements_2 = 0
+		for Key_2, Element_2 in Element_1.Attributes do
+			Elements_2 += 1
+			local Length = #Key_2
+			local OFFSET_0 = Allocate(2)
+			buffer.writeu16(SendBuffer, OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
+			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
+		end
+		buffer.writeu16(SendBuffer, OFFSET_26, Elements_2)
+		-- START ARRAY
+		local OFFSET_27 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_27, #Element_1.Tags)
+			-- Allocate BLOCK: 2 bytes
+		local ARRAY_START_2 = Allocate(2 * #Element_1.Tags)
+		for Index = 1, #Element_1.Tags do
+			local Item_2 = Element_1.Tags[Index]
+			local Length = #Item_2
+			-- Allocate 2
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Item_2, Length)
+		end
+		-- END ARRAY
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 19, Elements_1)
+	buffer.writeu16(SendBuffer, BLOCK_START + 21, Value11)
+end
+
+local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
+	-- Allocate BLOCK: 53 bytes
+	local BLOCK_START = Allocate(53)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 8)
+	local Length = #Value1
+	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
+	Allocate(Length)
+	buffer.writestring(SendBuffer, SendOffset, Value1, Length)
+	local Length = #Value2.ID
+	buffer.writeu16(SendBuffer, BLOCK_START + 3, Length)
+	Allocate(Length)
+	buffer.writestring(SendBuffer, SendOffset, Value2.ID, Length)
+	local Vector = Value2.CuttingPart.CFrame.Position
+	buffer.writef32(SendBuffer, BLOCK_START + 5, Vector.X)
+	buffer.writef32(SendBuffer, BLOCK_START + 9, Vector.Y)
+	buffer.writef32(SendBuffer, BLOCK_START + 13, Vector.Z)
+	local rX, rY, rZ = Value2.CuttingPart.CFrame:ToOrientation()
+	buffer.writef32(SendBuffer, BLOCK_START + 17, rX)
+	buffer.writef32(SendBuffer, BLOCK_START + 21, rY)
+	buffer.writef32(SendBuffer, BLOCK_START + 25, rZ)
+	local Vector = Value2.CuttingPart.Size
+	buffer.writef32(SendBuffer, BLOCK_START + 29, Vector.X)
+	buffer.writef32(SendBuffer, BLOCK_START + 33, Vector.Y)
+	buffer.writef32(SendBuffer, BLOCK_START + 37, Vector.Z)
+	buffer.writeu8(SendBuffer, BLOCK_START + 41, Value2.CuttingPart.Shape)
+	buffer.writeu8(SendBuffer, BLOCK_START + 42, Value2.FilterTagged ~= nil and 1 or 0)
+	if Value2.FilterTagged ~= nil then
+		-- Allocate BLOCK: 2 bytes
+		local BLOCK_START = Allocate(2)
+		-- START ARRAY
+		buffer.writeu16(SendBuffer, BLOCK_START + 0, #Value2.FilterTagged)
+			-- Allocate BLOCK: 2 bytes
+		local ARRAY_START_2 = Allocate(2 * #Value2.FilterTagged)
+		for Index = 1, #Value2.FilterTagged do
+			local Item_2 = Value2.FilterTagged[Index]
+			local Length = #Item_2
+			-- Allocate 2
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Item_2, Length)
+		end
+		-- END ARRAY
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 43, Value2.GridSize ~= nil and 1 or 0)
+	if Value2.GridSize ~= nil then
+		-- Allocate BLOCK: 4 bytes
+		local BLOCK_START = Allocate(4)
+		buffer.writef32(SendBuffer, BLOCK_START + 0, Value2.GridSize)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 44, Value2.CleanupDelay ~= nil and 1 or 0)
+	if Value2.CleanupDelay ~= nil then
+		-- Allocate BLOCK: 4 bytes
+		local BLOCK_START = Allocate(4)
+		buffer.writef32(SendBuffer, BLOCK_START + 0, Value2.CleanupDelay)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 45, Value2.SkipWalls ~= nil and 1 or 0)
+	if Value2.SkipWalls ~= nil then
+		-- Allocate BLOCK: 1 bytes
+		local BLOCK_START = Allocate(1)
+		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value2.SkipWalls and 1 or 0)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 46, Value2.SkipFloors ~= nil and 1 or 0)
+	if Value2.SkipFloors ~= nil then
+		-- Allocate BLOCK: 1 bytes
+		local BLOCK_START = Allocate(1)
+		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value2.SkipFloors and 1 or 0)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 47, Value2.SkipEncapsulatedVoxels ~= nil and 1 or 0)
+	if Value2.SkipEncapsulatedVoxels ~= nil then
+		-- Allocate BLOCK: 1 bytes
+		local BLOCK_START = Allocate(1)
+		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value2.SkipEncapsulatedVoxels and 1 or 0)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 48, Value2.OnVoxelDestruct ~= nil and 1 or 0)
+	if Value2.OnVoxelDestruct ~= nil then
+		-- Allocate BLOCK: 2 bytes
+		local BLOCK_START = Allocate(2)
+		local Length = #Value2.OnVoxelDestruct
+		buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Value2.OnVoxelDestruct, Length)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 49, Value2.UserData ~= nil and 1 or 0)
+	if Value2.UserData ~= nil then
+		table.insert(SendInstances, if Value2.UserData == nil then Null else Value2.UserData)
+	end
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value3 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local Vector = Element_1.CFrame.Position
+		local OFFSET_1 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_1, Vector.X)
+		local OFFSET_2 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_2, Vector.Y)
+		local OFFSET_3 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_3, Vector.Z)
+		local rX, rY, rZ = Element_1.CFrame:ToOrientation()
+		local OFFSET_4 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_4, rX)
+		local OFFSET_5 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_5, rY)
+		local OFFSET_6 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_6, rZ)
+		local Vector = Element_1.Size
+		local OFFSET_7 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_7, Vector.X)
+		local OFFSET_8 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_8, Vector.Y)
+		local OFFSET_9 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_9, Vector.Z)
+		local OFFSET_10 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_10, Element_1.Anchored and 1 or 0)
+		local OFFSET_11 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_11, Element_1.Color ~= nil and 1 or 0)
+		if Element_1.Color ~= nil then
+			-- Allocate BLOCK: 3 bytes
+			local BLOCK_START = Allocate(3)
+			local Color = Element_1.Color
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+			buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+		end
+		local OFFSET_12 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_12, Element_1.Material ~= nil and 1 or 0)
+		if Element_1.Material ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Element_1.Material)
+		end
+		local OFFSET_13 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_13, Element_1.Transparency ~= nil and 1 or 0)
+		if Element_1.Transparency ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Element_1.Transparency > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Element_1.Transparency < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Element_1.Transparency ~= Element_1.Transparency then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Element_1.Transparency == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Element_1.Transparency
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		local OFFSET_14 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_14, Element_1.Reflectance ~= nil and 1 or 0)
+		if Element_1.Reflectance ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			if Element_1.Reflectance > 65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b0_11111_0000000000)
+			elseif Element_1.Reflectance < -65504 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000000)
+			elseif Element_1.Reflectance ~= Element_1.Reflectance then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0b1_11111_0000000001)
+			elseif Element_1.Reflectance == 0 then
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, 0)
+			else
+				local float = Element_1.Reflectance
+				local Abosulte = math.abs(float)
+				local Interval = math.ldexp(1, math.floor(math.log(Abosulte, 2)) - 10)
+				local RoundedValue = (Abosulte // Interval) * Interval
+				local Fraction, Exponent = math.frexp(RoundedValue)
+				Exponent += 14
+				local Mantissa = math.round(if Exponent <= 0
+					then Fraction * 0x400 / math.ldexp(1, math.abs(Exponent))
+					else Fraction * 0x800) % 0x400
+				local Result = Mantissa
+					+ math.max(Exponent, 0) * 0x400
+					+ if float < 0 then 0x8000 else 0
+				buffer.writeu16(SendBuffer, BLOCK_START + 0, Result)
+			end
+		end
+		local OFFSET_15 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_15, Element_1.MaterialVariant ~= nil and 1 or 0)
+		if Element_1.MaterialVariant ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Element_1.MaterialVariant
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Element_1.MaterialVariant, Length)
+		end
+		local OFFSET_16 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_16, Element_1.CollisionGroup ~= nil and 1 or 0)
+		if Element_1.CollisionGroup ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			local Length = #Element_1.CollisionGroup
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Element_1.CollisionGroup, Length)
+		end
+		local OFFSET_17 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.LeftSurface ~= nil and 1 or 0)
+		if Element_1.LeftSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.LeftSurface)
+		end
+		local OFFSET_18 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.RightSurface ~= nil and 1 or 0)
+		if Element_1.RightSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.RightSurface)
+		end
+		local OFFSET_19 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.FrontSurface ~= nil and 1 or 0)
+		if Element_1.FrontSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.FrontSurface)
+		end
+		local OFFSET_20 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.BackSurface ~= nil and 1 or 0)
+		if Element_1.BackSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BackSurface)
+		end
+		local OFFSET_21 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.TopSurface ~= nil and 1 or 0)
+		if Element_1.TopSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.TopSurface)
+		end
+		local OFFSET_22 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.BottomSurface ~= nil and 1 or 0)
+		if Element_1.BottomSurface ~= nil then
+			-- Allocate BLOCK: 1 bytes
+			local BLOCK_START = Allocate(1)
+			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BottomSurface)
+		end
+		local OFFSET_23 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.Textures ~= nil and 1 or 0)
+		if Element_1.Textures ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Textures)
+				-- Allocate BLOCK: 11 bytes
+			local ARRAY_START_3 = Allocate(11 * #Element_1.Textures)
+			for Index = 1, #Element_1.Textures do
+				local Item_3 = Element_1.Textures[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_7 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_7, Item_3.OffsetStudsU ~= nil and 1 or 0)
+				if Item_3.OffsetStudsU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_8 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_8, Item_3.OffsetStudsV ~= nil and 1 or 0)
+				if Item_3.OffsetStudsV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.OffsetStudsV)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_9 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_9, Item_3.StudsPerTileU ~= nil and 1 or 0)
+				if Item_3.StudsPerTileU ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileU)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_10 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_3.StudsPerTileV ~= nil and 1 or 0)
+				if Item_3.StudsPerTileV ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.StudsPerTileV)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_24 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Lights ~= nil and 1 or 0)
+		if Element_1.Lights ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Lights)
+				-- Allocate BLOCK: 8 bytes
+			local ARRAY_START_3 = Allocate(8 * #Element_1.Lights)
+			for Index = 1, #Element_1.Lights do
+				local Item_3 = Element_1.Lights[Index]
+				local Length = #Item_3.ClassName
+				-- Allocate 2
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 2
+				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+				Allocate(Length)
+				buffer.writestring(SendBuffer, SendOffset, Item_3.ClassName, Length)
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.Brightness ~= nil and 1 or 0)
+				if Item_3.Brightness ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Brightness)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Color ~= nil and 1 or 0)
+				if Item_3.Color ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.Shadows ~= nil and 1 or 0)
+				if Item_3.Shadows ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Shadows and 1 or 0)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.Range ~= nil and 1 or 0)
+				if Item_3.Range ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Range)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.Angle ~= nil and 1 or 0)
+				if Item_3.Angle ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Angle)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_25 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Decals ~= nil and 1 or 0)
+		if Element_1.Decals ~= nil then
+			-- Allocate BLOCK: 2 bytes
+			local BLOCK_START = Allocate(2)
+			-- START ARRAY
+			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Element_1.Decals)
+				-- Allocate BLOCK: 7 bytes
+			local ARRAY_START_3 = Allocate(7 * #Element_1.Decals)
+			for Index = 1, #Element_1.Decals do
+				local Item_3 = Element_1.Decals[Index]
+				-- Allocate 1
+				local OPERATION_OFFSET_0 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_0, Item_3.Color3 ~= nil and 1 or 0)
+				if Item_3.Color3 ~= nil then
+					-- Allocate BLOCK: 3 bytes
+					local BLOCK_START = Allocate(3)
+					local Color = Item_3.Color3
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Color.R * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 1, Color.G * 255)
+					buffer.writeu8(SendBuffer, BLOCK_START + 2, Color.B * 255)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_1 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_1, Item_3.ColorMap ~= nil and 1 or 0)
+				if Item_3.ColorMap ~= nil then
+					-- Allocate BLOCK: 2 bytes
+					local BLOCK_START = Allocate(2)
+					local Length = #Item_3.ColorMap
+					buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+					Allocate(Length)
+					buffer.writestring(SendBuffer, SendOffset, Item_3.ColorMap, Length)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_2 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_2, Item_3.Transparency ~= nil and 1 or 0)
+				if Item_3.Transparency ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Item_3.Transparency)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_3 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_3, Item_3.UVOffset ~= nil and 1 or 0)
+				if Item_3.UVOffset ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVOffset[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_4 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_4, Item_3.UVScale ~= nil and 1 or 0)
+				if Item_3.UVScale ~= nil then
+					-- START ARRAY
+						-- Allocate BLOCK: 4 bytes
+					local ARRAY_START_5 = Allocate(4 * 2)
+					for Index = 1, 2 do
+						local Item_5 = Item_3.UVScale[Index]
+						-- Allocate 4
+						local OPERATION_OFFSET_0 = ARRAY_START_5
+						ARRAY_START_5 += 4
+						buffer.writef32(SendBuffer, OPERATION_OFFSET_0, Item_5)
+					end
+					-- END ARRAY
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_5 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_5, Item_3.ZIndex ~= nil and 1 or 0)
+				if Item_3.ZIndex ~= nil then
+					-- Allocate BLOCK: 4 bytes
+					local BLOCK_START = Allocate(4)
+					buffer.writeu32(SendBuffer, BLOCK_START + 0, Item_3.ZIndex)
+				end
+				-- Allocate 1
+				local OPERATION_OFFSET_6 = ARRAY_START_3
+				ARRAY_START_3 += 1
+				buffer.writeu8(SendBuffer, OPERATION_OFFSET_6, Item_3.Face ~= nil and 1 or 0)
+				if Item_3.Face ~= nil then
+					-- Allocate BLOCK: 1 bytes
+					local BLOCK_START = Allocate(1)
+					buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_3.Face)
+				end
+			end
+			-- END ARRAY
+		end
+		local OFFSET_26 = Allocate(2)
+		local Elements_2 = 0
+		for Key_2, Element_2 in Element_1.Attributes do
+			Elements_2 += 1
+			local Length = #Key_2
+			local OFFSET_0 = Allocate(2)
+			buffer.writeu16(SendBuffer, OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
+			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
+		end
+		buffer.writeu16(SendBuffer, OFFSET_26, Elements_2)
+		-- START ARRAY
+		local OFFSET_27 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_27, #Element_1.Tags)
+			-- Allocate BLOCK: 2 bytes
+		local ARRAY_START_2 = Allocate(2 * #Element_1.Tags)
+		for Index = 1, #Element_1.Tags do
+			local Item_2 = Element_1.Tags[Index]
+			local Length = #Item_2
+			-- Allocate 2
+			local OPERATION_OFFSET_0 = ARRAY_START_2
+			ARRAY_START_2 += 2
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Item_2, Length)
+		end
+		-- END ARRAY
+	end
+	buffer.writeu16(SendBuffer, BLOCK_START + 50, Elements_1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 52, Value4 ~= nil and 1 or 0)
+	if Value4 ~= nil then
+		-- Allocate BLOCK: 2 bytes
+		local BLOCK_START = Allocate(2)
+		local Elements_2 = 0
+		for Key_2, Element_2 in Value4 do
+			Elements_2 += 1
+			local Length = #Key_2
+			local OFFSET_0 = Allocate(2)
+			buffer.writeu16(SendBuffer, OFFSET_0, Length)
+			Allocate(Length)
+			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
+			local OFFSET_1 = Allocate(1)
+			buffer.writeu8(SendBuffer, OFFSET_1, Element_2 and 1 or 0)
+		end
+		buffer.writeu16(SendBuffer, BLOCK_START + 0, Elements_2)
 	end
 end
 
@@ -1335,16 +3762,16 @@ local function Shatterbox_ReadEVENT_ClientInitComplete(): (nil)
 	return nil
 end
 
+local function Shatterbox_WriteEVENT_SignalPrintState(Value: nil): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 10)
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
 	Shatterbox = {
-		SignalUndo = {
-			Fire = NOOP,
-			FireAll = NOOP,
-			FireList = NOOP,
-			FireExcept = NOOP
-		},
 		SignalClearQueue = {
 			Fire = NOOP,
 			FireAll = NOOP,
@@ -1352,6 +3779,12 @@ if not RunService:IsRunning() then
 			FireExcept = NOOP
 		},
 		SignalReset = {
+			Fire = NOOP,
+			FireAll = NOOP,
+			FireList = NOOP,
+			FireExcept = NOOP
+		},
+		SignalResetArea = {
 			Fire = NOOP,
 			FireAll = NOOP,
 			FireList = NOOP,
@@ -1375,7 +3808,16 @@ if not RunService:IsRunning() then
 			FireList = NOOP,
 			FireExcept = NOOP
 		},
-		ReplicateMap = {
+		CreateDirtyGroupsFromClient = {
+			On = NOOP
+		},
+		CreateDirtyGroupsFromServer = {
+			Fire = NOOP,
+			FireAll = NOOP,
+			FireList = NOOP,
+			FireExcept = NOOP
+		},
+		ReplicateState = {
 			Fire = NOOP,
 			FireAll = NOOP,
 			FireList = NOOP,
@@ -1387,14 +3829,14 @@ if not RunService:IsRunning() then
 			FireList = NOOP,
 			FireExcept = NOOP
 		},
-		ReplicateImaginary = {
+		ClientInitComplete = {
+			On = NOOP
+		},
+		SignalPrintState = {
 			Fire = NOOP,
 			FireAll = NOOP,
 			FireList = NOOP,
 			FireExcept = NOOP
-		},
-		ClientInitComplete = {
-			On = NOOP
 		},
 	},
 	})
@@ -1454,7 +3896,19 @@ Reliable.OnServerEvent:Connect(function(Player: Player, Buffer: buffer, Instance
 		-- Read BLOCK: 1 bytes
 		local BLOCK_START = Read(1)
 		local Index = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
-		if Index == 9 then
+		if Index == 5 then
+			local Value: {[string]: Part} = Shatterbox_ReadEVENT_CreateDirtyGroupsFromClient()
+			if #Events.Reliable[5] > 0 then
+				for _, Listener in Events.Reliable[5] do
+					task.spawn(Listener, Player, Value)
+				end
+			else
+				if #Queue.Reliable[5] > 256 then
+					warn("[Blink]: Event queue of \"CreateDirtyGroupsFromClient\" exceeded 256, did you forget to implement a listener?")
+				end
+				table.insert(Queue.Reliable[5], {Player, Value} :: {any})
+			end
+		elseif Index == 9 then
 			local Value: nil = Shatterbox_ReadEVENT_ClientInitComplete()
 			if Events.Reliable[9] ~= nil then
 				task.spawn(Events.Reliable[9], Player, Value)
@@ -1485,52 +3939,6 @@ local Returns = table.freeze({
 	StepReplication = StepReplication,
 
 	Shatterbox = {
-		SignalUndo = {
-			Fire = function(Player: Player, Value: string): ()
-				Load(PlayersMap[Player])
-				Shatterbox_WriteEVENT_SignalUndo(Value)
-				PlayersMap[Player] = Save()
-			end,
-			FireAll = function(Value: string): ()
-				Load()
-				Shatterbox_WriteEVENT_SignalUndo(Value)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
-				for _, Player in Players:GetPlayers() do
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
-				end
-			end,
-			FireList = function(List: {Player}, Value: string): ()
-				Load()
-				Shatterbox_WriteEVENT_SignalUndo(Value)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
-				for _, Player in List do
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
-				end
-			end,
-			FireExcept = function(Except: Player, Value: string): ()
-				Load()
-				Shatterbox_WriteEVENT_SignalUndo(Value)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
-				for _, Player in Players:GetPlayers() do
-					if Player == Except then
-						continue
-					end
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
-				end
-			end,
-		},
 		SignalClearQueue = {
 			Fire = function(Player: Player, Value: nil): ()
 				Load(PlayersMap[Player])
@@ -1578,12 +3986,12 @@ local Returns = table.freeze({
 			end,
 		},
 		SignalReset = {
-			Fire = function(Player: Player, Value: nil): ()
+			Fire = function(Player: Player, Value: boolean): ()
 				Load(PlayersMap[Player])
 				Shatterbox_WriteEVENT_SignalReset(Value)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value: nil): ()
+			FireAll = function(Value: boolean): ()
 				Load()
 				Shatterbox_WriteEVENT_SignalReset(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1595,7 +4003,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value: nil): ()
+			FireList = function(List: {Player}, Value: boolean): ()
 				Load()
 				Shatterbox_WriteEVENT_SignalReset(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1607,7 +4015,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value: nil): ()
+			FireExcept = function(Except: Player, Value: boolean): ()
 				Load()
 				Shatterbox_WriteEVENT_SignalReset(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1623,13 +4031,59 @@ local Returns = table.freeze({
 				end
 			end,
 		},
+		SignalResetArea = {
+			Fire = function(Player: Player, Value1: CFrame, Value2: Vector3): ()
+				Load(PlayersMap[Player])
+				Shatterbox_WriteEVENT_SignalResetArea(Value1, Value2)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value1: CFrame, Value2: Vector3): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalResetArea(Value1, Value2)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value1: CFrame, Value2: Vector3): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalResetArea(Value1, Value2)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value1: CFrame, Value2: Vector3): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalResetArea(Value1, Value2)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+		},
 		CreatePuppets = {
-			Fire = function(Player: Player, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			Fire = function(Player: Player, Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load(PlayersMap[Player])
 				Shatterbox_WriteEVENT_CreatePuppets(Value)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireAll = function(Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_CreatePuppets(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1641,7 +4095,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireList = function(List: {Player}, Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_CreatePuppets(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1653,7 +4107,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value: { { GUID: string, CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireExcept = function(Except: Player, Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
 				Load()
 				Shatterbox_WriteEVENT_CreatePuppets(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1670,58 +4124,49 @@ local Returns = table.freeze({
 			end,
 		},
 		ReplicatePuppetStates = {
-			Fire = function(Player: Player, Value: { { GUID: string, CFrame: CFrame } }): ()
-				Load(PlayersMap[Player])
-				Shatterbox_WriteEVENT_ReplicatePuppetStates(Value)
-				PlayersMap[Player] = Save()
-			end,
-			FireAll = function(Value: { { GUID: string, CFrame: CFrame } }): ()
+			Fire = function(Player: Player, Value1: buffer, Value2: number): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicatePuppetStates(Value)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
-				for _, Player in Players:GetPlayers() do
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
-				end
+				Shatterbox_WriteEVENT_ReplicatePuppetStates(Value1, Value2)
+				local Buffer = buffer.create(SendCursor)
+				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
+				Unreliable:FireClient(Player, Buffer, SendInstances)
 			end,
-			FireList = function(List: {Player}, Value: { { GUID: string, CFrame: CFrame } }): ()
+			FireAll = function(Value1: buffer, Value2: number): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicatePuppetStates(Value)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				Shatterbox_WriteEVENT_ReplicatePuppetStates(Value1, Value2)
+				local Buffer = buffer.create(SendCursor)
+				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
+				Unreliable:FireAllClients(Buffer, SendInstances)
+			end,
+			FireList = function(List: {Player}, Value1: buffer, Value2: number): ()
+				Load()
+				Shatterbox_WriteEVENT_ReplicatePuppetStates(Value1, Value2)
+				local Buffer = buffer.create(SendCursor)
+				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
 				for _, Player in List do
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
+					Unreliable:FireClient(Player, Buffer, SendInstances)
 				end
 			end,
-			FireExcept = function(Except: Player, Value: { { GUID: string, CFrame: CFrame } }): ()
+			FireExcept = function(Except: Player, Value1: buffer, Value2: number): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicatePuppetStates(Value)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				Shatterbox_WriteEVENT_ReplicatePuppetStates(Value1, Value2)
+				local Buffer = buffer.create(SendCursor)
+				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
 				for _, Player in Players:GetPlayers() do
 					if Player == Except then
 						continue
 					end
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
+					Unreliable:FireClient(Player, Buffer, SendInstances)
 				end
 			end,
 		},
 		DestroyPuppet = {
-			Fire = function(Player: Player, Value: string): ()
+			Fire = function(Player: Player, Value: number): ()
 				Load(PlayersMap[Player])
 				Shatterbox_WriteEVENT_DestroyPuppet(Value)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value: string): ()
+			FireAll = function(Value: number): ()
 				Load()
 				Shatterbox_WriteEVENT_DestroyPuppet(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1733,7 +4178,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value: string): ()
+			FireList = function(List: {Player}, Value: number): ()
 				Load()
 				Shatterbox_WriteEVENT_DestroyPuppet(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1745,7 +4190,7 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value: string): ()
+			FireExcept = function(Except: Player, Value: number): ()
 				Load()
 				Shatterbox_WriteEVENT_DestroyPuppet(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -1761,15 +4206,30 @@ local Returns = table.freeze({
 				end
 			end,
 		},
-		ReplicateMap = {
-			Fire = function(Player: Player, Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+		CreateDirtyGroupsFromClient = {
+			On = function(Listener: (Player: Player, Value: {[string]: Part}) -> ()): () -> ()
+				table.insert(Events.Reliable[5], Listener)
+				for Index, Arguments in Queue.Reliable[5] do
+					task.spawn(Listener, table.unpack(Arguments))
+				end
+				Queue.Reliable[5] = {}
+				return function (): ()
+					local Index = table.find(Events.Reliable[5], Listener)
+					if Index ~= nil then
+						table.remove(Events.Reliable[5], Index)
+					end
+				end
+			end
+		},
+		CreateDirtyGroupsFromServer = {
+			Fire = function(Player: Player, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 				Load(PlayersMap[Player])
-				Shatterbox_WriteEVENT_ReplicateMap(Value1, Value2)
+				Shatterbox_WriteEVENT_CreateDirtyGroupsFromServer(Value)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireAll = function(Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateMap(Value1, Value2)
+				Shatterbox_WriteEVENT_CreateDirtyGroupsFromServer(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					Load(PlayersMap[Player])
@@ -1779,9 +4239,9 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireList = function(List: {Player}, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateMap(Value1, Value2)
+				Shatterbox_WriteEVENT_CreateDirtyGroupsFromServer(Value)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in List do
 					Load(PlayersMap[Player])
@@ -1791,9 +4251,55 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value1: { { ID: string, Dirties: { { OriginalPart: { CFrame: CFrame, Size: Vector3 }, Children: { { CFrame: CFrame, Size: Vector3 } }, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } } } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }): ()
+			FireExcept = function(Except: Player, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateMap(Value1, Value2)
+				Shatterbox_WriteEVENT_CreateDirtyGroupsFromServer(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+		},
+		ReplicateState = {
+			Fire = function(Player: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+				Load(PlayersMap[Player])
+				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+				Load()
+				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+				Load()
+				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+				Load()
+				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					if Player == Except then
@@ -1808,14 +4314,14 @@ local Returns = table.freeze({
 			end,
 		},
 		ReplicateDestruction = {
-			Fire = function(Player: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			Fire = function(Player: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
 				Load(PlayersMap[Player])
-				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2)
+				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3, Value4)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireAll = function(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2)
+				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3, Value4)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					Load(PlayersMap[Player])
@@ -1825,9 +4331,9 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireList = function(List: {Player}, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2)
+				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3, Value4)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in List do
 					Load(PlayersMap[Player])
@@ -1837,55 +4343,9 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, DestructParameters: { any } }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
+			FireExcept = function(Except: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
-				for _, Player in Players:GetPlayers() do
-					if Player == Except then
-						continue
-					end
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
-				end
-			end,
-		},
-		ReplicateImaginary = {
-			Fire = function(Player: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
-				Load(PlayersMap[Player])
-				Shatterbox_WriteEVENT_ReplicateImaginary(Value1, Value2)
-				PlayersMap[Player] = Save()
-			end,
-			FireAll = function(Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
-				Load()
-				Shatterbox_WriteEVENT_ReplicateImaginary(Value1, Value2)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
-				for _, Player in Players:GetPlayers() do
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
-				end
-			end,
-			FireList = function(List: {Player}, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
-				Load()
-				Shatterbox_WriteEVENT_ReplicateImaginary(Value1, Value2)
-				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
-				for _, Player in List do
-					Load(PlayersMap[Player])
-					local Position = Allocate(Size)
-					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
-					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
-					PlayersMap[Player] = Save()
-				end
-			end,
-			FireExcept = function(Except: Player, Value1: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number? }, Value2: { { CFrame: CFrame, Size: Vector3, Color: Color3, Material: number, Transparency: number, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string, Attributes: {[string]: any}, Tags: { string } } }?): ()
-				Load()
-				Shatterbox_WriteEVENT_ReplicateImaginary(Value1, Value2)
+				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3, Value4)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					if Player == Except then
@@ -1912,6 +4372,52 @@ local Returns = table.freeze({
 					end
 				end
 			end
+		},
+		SignalPrintState = {
+			Fire = function(Player: Player, Value: nil): ()
+				Load(PlayersMap[Player])
+				Shatterbox_WriteEVENT_SignalPrintState(Value)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value: nil): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalPrintState(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value: nil): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalPrintState(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value: nil): ()
+				Load()
+				Shatterbox_WriteEVENT_SignalPrintState(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
 		},
 	},
 })

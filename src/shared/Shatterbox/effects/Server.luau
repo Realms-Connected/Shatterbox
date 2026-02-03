@@ -1,5 +1,6 @@
 --#selene: allow(unused_variable)
 --#selene: allow(multiple_statements)
+--#selene: allow(incorrect_standard_library_use)
 
 local Shatterbox
 local Types = require(script.Parent.Parent:WaitForChild("Types"))
@@ -15,7 +16,7 @@ function ServerEffects:SetReference(shatterbox) Shatterbox = shatterbox end
 -- define your server side effects here. Defining the same effect name on both sides causes the effect to do different things on server and client sides.
 --[[
 
-ServerEffects.EffectName = function(voxel, dirtyParent, cuttingPart, isEdge)
+ServerEffects.EffectName = function(voxel, info)
 
 
 end
@@ -27,10 +28,46 @@ end
 
 
 
+-- Maps one numeric range onto another
+local function map(x, a_0, a_1, b_0, b_1) return b_0 + (b_1 - b_0)*(x - a_0)/(a_1 - a_0) end
 
 
--- The default client behavior (for when an OnVoxelDestruct callback does not exist)
-ServerEffects.Default = function(voxel) voxel:Destroy() end
+-- This effect assumes a spherical hitbox (Shape "Ball").
+-- This is an example show you how to use voxel space to perform calculations that are consistent regardless of the gridsize or orientation of voxels.
+-- The inner 33% of voxels are removed.
+-- Starting at the point where voxels are no longer removed, voxels are black. There is a gradient until around the edges, where the voxels should be their original color.
+ServerEffects.MappingVoxelSpace = function(voxel, info)
+
+    if info.IsAlreadyDebris then return end
+
+    -- the radius of the spherical hitbox
+    local R = info.CuttingPart.Size * 0.5
+
+    -- from the center of the sphere, how many voxels away the edge of the sphere is on each axis (in local space)
+    local MaxVoxelDist = Shatterbox.VoxelCountVector(voxel, math.min(R.X, R.Y, R.Z)*Vector3.one)
+
+    -- from the center of the current voxel, how many voxels away the center of the sphere is on each axis (in local space)
+    local VoxelDist = Shatterbox.VoxelDistanceVector(voxel, info.CuttingPart.CFrame.Position):Min(MaxVoxelDist)
+
+    -- The magnitude of this vector is guaranteed to be in the range 0 to close to 1 because spheres hold a consistent magnitude
+    local NormalDist = (VoxelDist / MaxVoxelDist).Magnitude
+
+    -- destroy voxels close to the center (inner 33% by default)
+    local NormalDistThreshold = 0.33
+
+    if NormalDist < NormalDistThreshold then
+        voxel:Destroy()
+        return
+    end
+
+    -- map and clamp the range [NormalDistThreshold, 1] to the range [1, 0]
+    -- So where the voxels begin to appear, they start at black, and where the voxels end, they should be their original color.
+    local Shade = math.clamp(map(NormalDist, NormalDistThreshold,1, 1,0), 0, 1)
+
+    voxel.Color = voxel.Color:Lerp(Color3.new(), Shade)
+end
+
+
 
 
 
@@ -42,41 +79,35 @@ ServerEffects.Default = function(voxel) voxel:Destroy() end
 -- Debris is tweened by clients, having the CFrames replicateed from the server.
 -- Only non-floors turn into debris (a floor has a vertical normal when casting toward it from the cuttingPart).
 -- Floors have a separate effect that makes them appear "broken".
-ServerEffects.BumpyFloorBreakWalls = function(voxel, dirtyParent, cuttingPart, isEdge, normal)
+-- the check cast for floors originates from `UserData.CastOrigin`, if that value is not provided then `CuttingPart.CFrame.Position` is used instead
 
-    -- retrieves a clone of the untouched original part, to check if the voxel should be considered a floor
-    local castTo = Shatterbox.GetOriginalPart(dirtyParent)
-    castTo.Parent = workspace
+-- Pre-allocated RaycastParams instance
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Include
 
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Include
+ServerEffects.BumpyFloorBreakWalls = function(voxel, info : Types.DestroyedVoxelInfo)
+    if info.IsAlreadyDebris then return end
+
+    local O = info.UserData.CastOrigin or info.CuttingPart.CFrame.Position
+    local toVoxel = voxel.Position - O
+    -- retrieves the untouched original part, to check if the voxel should be considered a floor
+    local castTo = Shatterbox.GetOriginalPart(info.DirtyGroupID)
+
     raycastParams.FilterDescendantsInstances = { castTo }
 
-    local O = cuttingPart.CFrame.Position
-    local hitResult = workspace:Raycast(O, voxel.Position - O, raycastParams)
+    castTo.Parent = workspace
+    local hitResult = workspace:Raycast(O - toVoxel * 0.01, toVoxel * 1.01, raycastParams)
+    castTo.Parent = nil
 
-    castTo.Parent = nil -- the return value of GetOriginalPart is cached and automatically deleted after 5 seconds
+    if hitResult and hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then -- if the normal is facing up, it is a floor
 
-    -- if the normal is facing up, it is a floor
-    if hitResult and hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then
+        voxel.Position += Vector3.yAxis * (math.random() - 0.5) -- add some random vertical offset to floor voxels
 
-        local randomYoffset = math.random() - 0.5
-
-        voxel.Position += hitResult.Normal * randomYoffset
-
-        dirtyParent.Destroying:Once(function() -- the server-side dirtyParent does not replicate to clients, so we can't just parent the voxel (it wouldn't replicate)
-            voxel:Destroy()
-        end)
-    else
-        voxel.Anchored = false
+    else -- everything else becomes a falling voxel using puppeteer
 
         Shatterbox.Puppeteer(voxel) -- start controlled replication of "voxel" to clients (tween between replication of CFrames)
 
-        if hitResult then
-            voxel.AssemblyLinearVelocity = -hitResult.Normal * (math.random() * 25 + 50)
-        end
-
-        voxel.Parent = dirtyParent -- makes debris work with smooth cleanup and makes debris destructible again (the server side debris isn't replicated for clients when puppeteering)
+        voxel.AssemblyLinearVelocity = toVoxel.Unit * (math.random() * 25 + 50)
     end
 end
 

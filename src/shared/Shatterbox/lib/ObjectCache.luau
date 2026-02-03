@@ -1,3 +1,4 @@
+local RunService = game:GetService("RunService")
 --!strict
 --!native
 local FAR_AWAY_CFRAME = CFrame.new(2^24, 2^24, 2^24)
@@ -62,12 +63,16 @@ end
 function Cache:GetPart(PartCFrame: CFrame?): BasePart
 	local Part = table.remove(self._FreeObjects) or self:_GetNew(self._ExpandAmount, true)
 
+
 	for _, tag in ipairs(Part:GetTags()) do -- I added these two loops, not sure if it's the best placement
 		Part:RemoveTag(tag)
 	end
+	Part:AddTag("ObjectCache")
+
 	for att in pairs(Part:GetAttributes()) do
 		Part:SetAttribute(att)
 	end
+
 
 	self._Objects[Part] = nil
 	if PartCFrame then
@@ -86,6 +91,11 @@ function Cache:ReturnPart(Part: BasePart)
 	if self._Objects[Part] then
 		return
 	end
+
+	Part:RemoveTag("ObjectCache")
+
+	Part.Parent = self.CacheHolder
+	Part.Anchored = true
 
 	self._Objects[Part] = true
 
@@ -154,16 +164,23 @@ function Constructor.new(Template: BasePart | Model, CacheSize: number?, CachesC
 	local TargetParts = table.create(PreallocAmount)
 
 	local IsTemplateModel = Template:IsA("Model")
-	for Index = 1, PreallocAmount do
-		local Object = Template:Clone()
-		local ObjectRoot: BasePart = if IsTemplateModel then (Object:: Model).PrimaryPart:: BasePart else Object:: BasePart
+	task.spawn(function()
+		for Index = 1, PreallocAmount do
 
-		FreeObjects[Index] = Object
-		TargetParts[Index] = ObjectRoot
+			if Index % 100 == 0 then
+				RunService.Heartbeat:Wait()
+			end
 
-		ObjectRoot.CFrame = FAR_AWAY_CFRAME;
-		(Object:: Instance).Parent = CacheParent
-	end
+			local Object = Template:Clone()
+			local ObjectRoot: BasePart = if IsTemplateModel then (Object:: Model).PrimaryPart:: BasePart else Object:: BasePart
+
+			FreeObjects[Index] = Object
+			TargetParts[Index] = ObjectRoot
+
+			ObjectRoot.CFrame = FAR_AWAY_CFRAME;
+			(Object:: Instance).Parent = CacheParent
+		end
+	end)
 
 	CacheParent.Parent = CachesContainer or workspace
 

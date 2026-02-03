@@ -1,7 +1,7 @@
 --!native
 --!optimize 2
 
-
+--#selene: allow(unused_variable)
 
 local EPSILON = 1e-3
 local UNEPS = 1 - EPSILON
@@ -14,7 +14,7 @@ local axisID = {"X", "Y", "Z"}
 
 local PartTypeContainsPoint = {}
 
-PartTypeContainsPoint.Ball = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.Ball(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local dp = (p - cframe.Position) * UNEPS
 	local dx, dy, dz = dp.X, dp.Y, dp.Z
@@ -23,7 +23,7 @@ PartTypeContainsPoint.Ball = function(cframe : CFrame, size : Vector3, p : Vecto
 	return dx*dx + dy*dy + dz*dz <= minSize*minSize
 end
 
-PartTypeContainsPoint.Cylinder = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.Cylinder(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local localPoint = cframe:PointToObjectSpace(p):Abs() * UNEPS
 
@@ -35,14 +35,14 @@ PartTypeContainsPoint.Cylinder = function(cframe : CFrame, size : Vector3, p : V
 	return dy*dy + dz*dz <= minSize*minSize
 end
 
-PartTypeContainsPoint.Block = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.Block(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local localPoint = cframe:PointToObjectSpace(p):Abs() * UNEPS
 
 	return (localPoint.X <= size.X * 0.5) and (localPoint.Y <= size.Y * 0.5) and (localPoint.Z <= size.Z * 0.5)
 end
 
-PartTypeContainsPoint.Wedge = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.Wedge(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local localPoint = cframe:PointToObjectSpace(p) * UNEPS
 	local absPoint = localPoint:Abs()
@@ -51,7 +51,7 @@ PartTypeContainsPoint.Wedge = function(cframe : CFrame, size : Vector3, p : Vect
 	return (absPoint.X <= size.X * 0.5) and (absPoint.Y <= wsy * 0.5) and (absPoint.Z <= wsz * 0.5) and (localPoint.Y * wsz <= localPoint.Z * wsy)
 end
 
-PartTypeContainsPoint.CornerWedge = function(cframe : CFrame, size : Vector3, p : Vector3)
+function PartTypeContainsPoint.CornerWedge(cframe : CFrame, size : Vector3, p : Vector3)
 
 	local localPoint = cframe:PointToObjectSpace(p) * UNEPS
 	local absPoint = localPoint:Abs()
@@ -64,54 +64,48 @@ end
 
 local GetVerts = {}
 
-GetVerts.Block = function(cframe : CFrame, size : Vector3)
+function GetVerts.Block(cframe : CFrame, size : Vector3)
     size = size * 0.5
+    local pos = cframe.Position
     local lx, ly, lz = cframe.XVector*size.X, cframe.YVector*size.Y, cframe.ZVector*size.Z
-    local ny, nz = -ly, -lz
-    local pnx, plx = cframe.Position - lx, cframe.Position + lx
-    local pnxny, pnxly, plxny, plxly = pnx + ny, pnx + ly, plx + ny, plx + ly
     return {
-        pnxny + nz,
-        pnxny + lz,
-        pnxly + nz,
-        pnxly + lz,
-        plxny + nz,
-        plxny + lz,
-        plxly + nz,
-        plxly + lz
+        pos - lx - ly - lz,
+        pos - lx - ly + lz,
+        pos - lx + ly - lz,
+        pos - lx + ly + lz,
+        pos + lx - ly - lz,
+        pos + lx - ly + lz,
+        pos + lx + ly - lz,
+        pos + lx + ly + lz
     }
 end
 local block_edges = { {1,2}, {1,3}, {1,5}, {2,4}, {2,6}, {3,4}, {3,7}, {4,8}, {5,6}, {5,7}, {6,8}, {7,8} }
 
-GetVerts.Wedge = function(cframe : CFrame, size : Vector3)
+function GetVerts.Wedge(cframe : CFrame, size : Vector3)
     size = size * 0.5
+    local pos = cframe.Position
     local lx, ly, lz = cframe.XVector*size.X, cframe.YVector*size.Y, cframe.ZVector*size.Z
-    local ny, nz = -ly, -lz
-    local pnx, plx = cframe.Position - lx, cframe.Position + lx
-    local pnxny, plxny = pnx + ny, plx + ny
     return {
-        pnxny + nz,
-        pnxny + lz,
-        plxny + nz,
-        plxny + lz,
-        pnx + ly + lz,
-        plx + ly + lz
+        pos - lx - ly - lz,
+        pos - lx - ly + lz,
+        pos + lx - ly - lz,
+        pos + lx - ly + lz,
+        pos - lx + ly + lz,
+        pos + lx + ly + lz
     }
 end
 local wedge_edges = { {1,2}, {2,4}, {4,3}, {3,1}, {2,5}, {4,6}, {5,6}, {1,3}, {1,5}, {3,6} }
 
-GetVerts.CornerWedge = function(cframe : CFrame, size : Vector3)
+function GetVerts.CornerWedge(cframe : CFrame, size : Vector3)
     size = size * 0.5
+    local pos = cframe.Position
     local lx, ly, lz = cframe.XVector*size.X, cframe.YVector*size.Y, cframe.ZVector*size.Z
-    local ny, nz = -ly, -lz
-    local pnx, plx = cframe.Position - lx, cframe.Position + lx
-    local pnxny, plxny = pnx + ny, plx + ny
     return {
-        pnxny + nz,
-        pnxny + lz,
-        plxny + nz,
-        plxny + lz,
-        plx + ly + nz
+        pos - lx - ly - lz,
+        pos - lx - ly + lz,
+        pos + lx - ly - lz,
+        pos + lx - ly + lz,
+        pos + lx + ly - lz
     }
 end
 local corner_wedge_edges = { {1,2}, {2,4}, {4,3}, {3,1}, {3,5}, {1,5}, {4,5} }
@@ -120,7 +114,7 @@ local corner_wedge_edges = { {1,2}, {2,4}, {4,3}, {3,1}, {3,5}, {1,5}, {4,5} }
 
 local GetNormals = {}
 
-GetNormals.Block = function(cframe : CFrame)
+function GetNormals.Block(cframe : CFrame)
     local lx, ly, lz = cframe.XVector, cframe.YVector, cframe.ZVector
     return {
         -lx, lx,
@@ -129,7 +123,7 @@ GetNormals.Block = function(cframe : CFrame)
     }
 end
 
-GetNormals.Wedge = function(cframe : CFrame, size : Vector3)
+function GetNormals.Wedge(cframe : CFrame, size : Vector3)
     local lx, ly, lz = cframe.XVector, cframe.YVector, cframe.ZVector
     return {
         -cframe.YVector,
@@ -139,7 +133,7 @@ GetNormals.Wedge = function(cframe : CFrame, size : Vector3)
     }
 end
 
-GetNormals.CornerWedge = function(cframe : CFrame, size : Vector3)
+function GetNormals.CornerWedge(cframe : CFrame, size : Vector3)
     local lx, ly, lz = cframe.XVector, cframe.YVector, cframe.ZVector
     return {
         -ly,
@@ -386,141 +380,6 @@ local function CylinderIntersectsBlock(cylinderCFrame, cylinderSize, cylinderBox
 end
 
 
--- subdivision functions
-
-type PartType = {CFrame : CFrame, Size : Vector3}
-
-
-local function MOTS(Part : PartType, GridSize : number)
-	local PartSize = Part.Size
-	local Axis = {}
-
-	for axis in pairs(localAxisVectors) do
-		if PartSize[axis] * 0.5 < GridSize then continue end
-		table.insert(Axis, axis)
-	end
-
-	if #Axis == 0 then return nil end
-
-	local createdParts = { { CFrame = Part.CFrame, Size = PartSize } }
-	local tmpParts = {}
-
-	for _, axis in pairs(Axis) do
-		local ax, ay, az = axis == "X", axis == "Y", axis == "Z"
-		local l_axis = localAxisVectors[axis]
-
-		for _, part in pairs(createdParts) do
-			local size = part.Size
-            local hs, cframe = size[axis] * 0.5, part.CFrame
-            local la = cframe[l_axis]
-
-            local numVoxels = size[axis] // GridSize
-            if numVoxels % 2 == 0 then
-
-                local hla = la * 0.5 * hs
-                local ps = Vector3.new( (ax and hs or size.X), (ay and hs or size.Y), (az and hs or size.Z) )
-                table.insert(tmpParts, {
-                    CFrame = (cframe + hla):Orthonormalize(),
-                    Size = ps
-                })
-                table.insert(tmpParts, {
-                    CFrame = (cframe - hla):Orthonormalize(),
-                    Size = ps
-                })
-            else
-                local vs = size[axis] / numVoxels
-                local FHV, CHV = vs * math.floor(numVoxels * 0.5), vs * math.ceil(numVoxels * 0.5)
-
-                local off = CHV * 0.5
-                table.insert(tmpParts, {
-                    CFrame = (cframe - off * la):Orthonormalize(),
-                    Size = Vector3.new(
-                        ax and FHV or size.X,
-                        ay and FHV or size.Y,
-                        az and FHV or size.Z
-                    )
-                })
-                off = FHV * 0.5
-                table.insert(tmpParts, {
-                    CFrame = (cframe + off * la):Orthonormalize(),
-                    Size = Vector3.new(
-                        ax and CHV or size.X,
-                        ay and CHV or size.Y,
-                        az and CHV or size.Z
-                    )
-                })
-            end
-		end
-
-		createdParts = tmpParts
-		tmpParts = {}
-	end
-
-	return createdParts
-end
-
-
-local function KDS(Part : PartType, GridSize : number)
-	local PartSize = Part.Size
-	local axis, maxSize
-
-	for a in pairs(localAxisVectors) do
-		local PartSizeAxis = PartSize[a]
-		if PartSizeAxis * 0.5 < GridSize then continue end
-		if axis and maxSize > PartSizeAxis then continue end
-		axis, maxSize = a, PartSizeAxis
-	end
-
-    if not axis then return nil end
-
-    local hs = PartSize[axis] * 0.5
-    local cframe = Part.CFrame
-
-    local numVoxels = PartSize[axis] // GridSize
-    if numVoxels % 2 == 0 then
-
-        local hla = cframe[localAxisVectors[axis]] * 0.5 * hs
-
-        local ps = Vector3.new(
-            axis == "X" and hs or PartSize.X,
-            axis == "Y" and hs or PartSize.Y,
-            axis == "Z" and hs or PartSize.Z
-        )
-
-        return { { CFrame = (cframe + hla):Orthonormalize(), Size = ps }, { CFrame = (cframe - hla):Orthonormalize(), Size = ps } }
-    else
-        local AX, AY, AZ = axis == "X", axis == "Y", axis == "Z"
-        local la = cframe[localAxisVectors[axis]]
-        local vs = PartSize[axis] / numVoxels
-
-        local createdParts = table.create(2)
-
-        local FHV, CHV = vs * math.floor(numVoxels * 0.5), vs * math.ceil(numVoxels * 0.5)
-
-        local off = CHV * 0.5
-        createdParts[1] = {
-            CFrame = (cframe - off * la):Orthonormalize(),
-            Size = Vector3.new(
-                AX and FHV or PartSize.X,
-                AY and FHV or PartSize.Y,
-                AZ and FHV or PartSize.Z
-            )
-        }
-
-        off = FHV * 0.5
-        createdParts[2] = {
-            CFrame = (cframe + off * la):Orthonormalize(),
-            Size = Vector3.new(
-                AX and CHV or PartSize.X,
-                AY and CHV or PartSize.Y,
-                AZ and CHV or PartSize.Z
-            )
-        }
-
-        return createdParts
-    end
-end
-
 
 
 local VertexMath = {}
@@ -540,9 +399,5 @@ VertexMath.PartContainsAVert = PartContainsAVert
 VertexMath.BallIntersectsBlock = BallIntersectsBlock
 
 VertexMath.CylinderIntersectsBlock = CylinderIntersectsBlock
-
-VertexMath.MOTS = MOTS
-
-VertexMath.KDS = KDS
 
 return VertexMath

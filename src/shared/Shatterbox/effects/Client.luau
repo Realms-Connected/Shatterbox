@@ -21,7 +21,7 @@ function ClientEffects:SetReference(shatterbox) Shatterbox = shatterbox end
 -- define your client side effects here. Defining the same effect name on both sides causes the effect to do different things on server and client sides.
 --[[
 
-ClientEffects.EffectName = function(voxel, dirtyParent, cuttingPart, isEdge)
+ClientEffects.EffectName = function(voxel, info)
 
 
 end
@@ -40,7 +40,7 @@ end
 
 
 -- The default client behavior (for when an OnVoxelDestruct callback does not exist)
-ClientEffects.Default = function(voxel) voxel:Destroy() end
+-- ClientEffects.Default = function(voxel) voxel:Destroy() end
 
 
 
@@ -48,33 +48,32 @@ ClientEffects.Default = function(voxel) voxel:Destroy() end
 
 
 
--- An example effect that leaves rough destructible edges around the destruction that are cleaned on smooth cleanup
-ClientEffects.Rough = function(voxel, dirtyParent, cuttingPart, isEdge)
+-- An example effect that leaves rough edges around the destruction that are cleaned on smooth cleanup
+ClientEffects.Rough = function(voxel, info : Types.DestroyedVoxelInfo)
 
-    if voxel:HasTag("StaticDebris") then
-        voxel.Parent = dirtyParent -- makes the debris destructible again
-        if Shatterbox.PartEncapsulatesBlockPart(cuttingPart, voxel) then voxel:Destroy() end -- fully contained debris is destroyed
+    if info.IsAlreadyDebris then -- the voxel is already debris
+        if not info.IsEdge then voxel:Destroy() end -- fully contained debris is destroyed
         return
     end
 
     local roll = math.random()
 
-    if isEdge and roll < 0.8 then
+    if info.IsEdge and roll < 0.8 then -- 80% of edge voxels become "edge debris"
         voxel.CFrame *= CFrame.Angles(math.random() * 2 * math.pi, math.random() * 2 * math.pi, math.random() * 2 * math.pi)
         voxel.Size *= math.random() + 1
-        voxel.Parent = dirtyParent -- makes the debris destructible again
-        voxel:AddTag("StaticDebris")
         return
     end
 
-    if roll > 0.05 then voxel:Destroy() return end
+    if roll > 0.05 then voxel:Destroy() return end -- a small percentage of voxels are destroyed
+
+    -- all other voxels are flying debris
 
     voxel.Anchored = false
     voxel.CanCollide = false
     voxel.AssemblyLinearVelocity = (Vector3.new(math.random(), math.random(), math.random()) - Vector3.one * 0.5) * 80
     voxel.AssemblyAngularVelocity = (Vector3.new(math.random(), math.random(), math.random()) - Vector3.one * 0.5) * 20
 
-    -- remember to destroy the part
+    -- remember to destroy the voxel
     game.Debris:AddItem(voxel, 3)
 end
 
