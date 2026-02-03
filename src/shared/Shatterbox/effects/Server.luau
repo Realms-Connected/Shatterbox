@@ -99,7 +99,7 @@ ServerEffects.BumpyFloorBreakWalls = function(voxel, info : Types.DestroyedVoxel
     local hitResult = workspace:Raycast(O - toVoxel * 0.01, toVoxel * 1.01, raycastParams)
     castTo.Parent = nil
 
-    if hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then -- if the normal is facing up, it is a floor
+    if hitResult and hitResult.Normal:FuzzyEq(Vector3.yAxis, 0.01) then -- if the normal is facing up, it is a floor
 
         voxel.Position += Vector3.yAxis * (math.random() - 0.5) -- add some random vertical offset to floor voxels
 
@@ -107,7 +107,7 @@ ServerEffects.BumpyFloorBreakWalls = function(voxel, info : Types.DestroyedVoxel
 
         Shatterbox.Puppeteer(voxel) -- start controlled replication of "voxel" to clients (tween between replication of CFrames)
 
-        voxel.AssemblyLinearVelocity = -hitResult.Normal * (math.random() * 25 + 50)
+        voxel.AssemblyLinearVelocity = toVoxel.Unit * (math.random() * 25 + 50)
     end
 end
 

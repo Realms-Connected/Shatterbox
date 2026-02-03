@@ -1377,7 +1377,6 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 	for FallingGroupID in pairs(OperationAffectedFallingGroups[params.ID]) do
 		DFSWeld(FallingGroupID)
 	end
-	OperationAffectedFallingGroups[params.ID] = {}
 
 	--debug.profileend()
 
