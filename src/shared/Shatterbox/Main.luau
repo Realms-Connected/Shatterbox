@@ -363,7 +363,7 @@ end
 
 
 -- coroutine based greedy meshing with smooth display of results
-local function GreedyMeshWorker(DirtyGroupID : string, ImaginaryParts : { Types.ImaginaryBox })
+local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Types.ImaginaryBox })
 	local GridSize = GreedyMeshingQueue[DirtyGroupID]
 
 	local dirtyGroupData = DirtyGroupData[DirtyGroupID]
@@ -377,7 +377,8 @@ local function GreedyMeshWorker(DirtyGroupID : string, ImaginaryParts : { Types.
 	local VSX, VSY, VSZ = VoxelSize.X, VoxelSize.Y, VoxelSize.Z
 
 	-- flat 3d state/visited array : index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
-	local State, Visited = {}, {}
+	local Visited = {}
+	local State = {} -- buffer.create(math.ceil(DIMX*DIMYDIMZ / 8))
 
 	-- information about the original parts, used for smoothly displaying the output of greedy meshing
 	local OriginalParts = {} :: { Part }
@@ -395,7 +396,6 @@ local function GreedyMeshWorker(DirtyGroupID : string, ImaginaryParts : { Types.
 		local _, n = InitGreedyState(member, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 		if n > 0 then
 			count += n
-
 			ImaginaryDestroyQueue[member] = true
 		end
 	end
@@ -414,57 +414,53 @@ local function GreedyMeshWorker(DirtyGroupID : string, ImaginaryParts : { Types.
 	local sx, sy, sz = 1, 1, 1
 	while count > 0 do
 		local X, Y, Z = sx, sy, sz
-		local iyz = (Y - 1)*DIMZ + Z
-		local si = (X - 1)*DIMYDIMZ + iyz
+		local si = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
 		-- find first unvisited and active state position
 		while Visited[si] or not State[si] do
-
-			if X < DIMX then
-				X += 1
+			if Z < DIMZ then
+				Z += 1
 			else
-				X = 1
+				Z = 1
 				if Y < DIMY then
 					Y += 1
 				else
 					Y = 1
-					if Z < DIMZ then
-						Z += 1
+					if X < DIMX then
+						X += 1
 					else
-						Z = 1
+						X = 1
 					end
 				end
-				iyz = (Y - 1)*DIMZ + Z
 			end
-
-			si = (X - 1)*DIMYDIMZ + iyz
+			si = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
 		end
 		sx, sy, sz = X, Y, Z
 
 		Visited[si] = true
 
-		-- planar expansion along X axis
-		while X < DIMX do
-			local DX = X + 1
+		-- planar expansion along Z axis
+		while Z < DIMZ do
+			local DZ = Z + 1
 
-			local index = (DX - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
+			local index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + DZ
 			if Visited[index] or not State[index] then break end
 
 			Visited[index] = true
 
-			X = DX
+			Z = DZ
 		end
 
 		-- planar expansion along Y axis
 		while Y < DIMY do
 			local DY = Y + 1
-			local iyz = (DY - 1)*DIMZ + Z
 			local breakExpansion = false
 
 			local indices = {}
 
-			for ix = sx, X do
+			for iz = sz, Z do
 
-				local index = (ix - 1)*DIMYDIMZ + iyz
+				local index = (X - 1)*DIMYDIMZ + (DY - 1)*DIMZ + iz
+
 				if Visited[index] or not State[index] then
 					breakExpansion = true
 					break
@@ -482,18 +478,19 @@ local function GreedyMeshWorker(DirtyGroupID : string, ImaginaryParts : { Types.
 			Y = DY
 		end
 
-		-- planar expansion along Z axis
-		while Z < DIMZ do
-			local DZ = Z + 1
+		-- planar expansion along X axis
+		while X < DIMX do
+			local DX = X + 1
 			local breakExpansion = false
 
 			local indices = {}
 
-			for ix = sx, X do
-				local ixz = (ix - 1)*DIMYDIMZ + DZ
-				for iy = sy, Y do
+			for iy = sy, Y do
 
-					local index = ixz + (iy - 1)*DIMZ
+				for iz = sz, Z do
+
+					local index = (DX - 1)*DIMYDIMZ + (iy - 1)*DIMZ + iz
+
 					if Visited[index] or not State[index] then
 						breakExpansion = true
 						break
@@ -511,7 +508,7 @@ local function GreedyMeshWorker(DirtyGroupID : string, ImaginaryParts : { Types.
 				Visited[index] = true
 			end
 
-			Z = DZ
+			X = DX
 		end
 
 		-- the number of voxels in the meshed span on every axis
@@ -527,15 +524,16 @@ local function GreedyMeshWorker(DirtyGroupID : string, ImaginaryParts : { Types.
 	end
 
 	for _, meshedInfo in ipairs(meshed) do
-		local found = nil
-		for _, original in ipairs(OriginalParts) do
+		local index, found = nil, nil
+		for i, original in ipairs(OriginalParts) do
 			if original.CFrame:FuzzyEq(meshedInfo.CFrame, 0.001) and original.Size:FuzzyEq(meshedInfo.Size, 0.001) then
-				found = original
+				index, found = i, original
 				break
 			end
 		end
 
-		if found then
+		if index then
+			table.remove(OriginalParts, index)
 			ImaginaryDestroyQueue[found] = nil
 		else
 			InstantiatePart(DirtyGroupID, meshedInfo.CFrame, meshedInfo.Size)
@@ -1865,7 +1863,7 @@ local function HeartbeatWorker(deltaTime)
 			end
 
 			for DirtyGroupID, ImaginaryParts in pairs(DirtyGroupImaginaryParts) do
-				GreedyMeshWorker(DirtyGroupID, ImaginaryParts)
+				GreedyMeshBehavior(DirtyGroupID, ImaginaryParts)
 			end
 		else
 			for _, toCreate in ipairs(ImaginaryCreateQueue) do
