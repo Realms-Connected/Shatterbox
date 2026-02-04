@@ -33,26 +33,13 @@ Settings.DefaultSmoothCleanupDelay = 60 -- the default smooth cleanup delay if n
 
 -- Part division settings
 
-Settings.MaxDivisionsPerFrame = 1000 -- Limits the count of part subdivisions per frame using `Destroy` (1 division = up to 8 new parts before greedy meshing)
-
 Settings.DefaultGridSize = 1
-
-Settings.MaxOpsPerFrame = 10 -- Limits the number of calls to GetPartsInPart every frame using `Destroy`
-
-Settings.UsePriorityQueue = true -- If true, newer operations take precedence over old ones, if false, round-robin processing is used
-	Settings.PrioritizeRecentN = 10 -- If using priority queue, the most recent N (default 10) operations are prioritized using round-robin
 
 
 
 -- Greedy meshing settings
 
 Settings.UseGreedyMeshing = true
-
-Settings.GMTraversalsPerFrame = 10000 -- How many times greedy meshing can iterate through a 3D grid for each worker. Effectively limits the number of visited cells per frame
-
-Settings.GMPartCreationsPerFrame = 500 -- How many parts greedy meshing should try to make every frame once the worker is finished traversing. This is a soft-limit, not a hard-limit, for smooth visual display
-
-Settings.GMWorkerCount = 5 -- How many greedy meshing workers there are. Each worker performs calculations for a single dirty group before displaying the meshed output
 
 
 

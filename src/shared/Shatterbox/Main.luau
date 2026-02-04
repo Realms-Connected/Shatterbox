@@ -193,23 +193,18 @@ local DirtyGroupMembers = {} :: { [string] : { [Part] : boolean } }
 -- Smooth cleanup map [DirtyGroupID] : secondsUntilCleanup
 local SmoothCleanupQueue = {} :: { [string] : number }
 
+local ImaginaryCreateQueue = {} :: { Types.ImaginaryBox }
+local ImaginaryDestroyQueue = {} :: { [Part] : boolean }
+
 -- Ongoing operations array
 local ShatterQueue = {} :: { Types.DestructionParams }
--- Dirty groups involved in ongoing operations map [DirtyGroupID] : { [DestructionID] : boolean }
-local CountOperationsProcessing = {} :: { [string] : { [string] : boolean } }
--- Dirty groups affected by an ongoing operation map [DestructionID] : { [DirtyGroupID] : boolean }
-local OperationAffectedDirtyGroups = {} :: { [string] : { [string] : boolean } }
--- Voxels blacklisted by an ongoing operation (one destruction cannot re-destroy a voxel that it created)
-local OperationBlacklistedVoxels = {} :: { [Part] : boolean }
 -- Falling groups being processed by an ongoing operation [DestructionID] : { [FallingGroupID] : boolean }
 local OperationAffectedFallingGroups = {} :: { [string] : { [string] : boolean }}
 
 -- Dirty groups waiting to be greedy meshed [DirtyGroupID] : GridSize
 local GreedyMeshingQueue = {} :: { [string] : number }
-local GreedyWorkers = {} :: { [string] : thread }
-local GreedyWorkersTerminationFlags = {} :: { [string] : boolean }
-local ActiveGMWorkerCount = 0
-local ActiveGMWorkerGridSize = {} :: { [string] : number }
+
+local NewPlayerStateReplicationQueue = {} :: {Player}
 
 -- Elements of the Puppets array are of the form {Part, boolean} where the Part is the puppet master/slave (server side master, client side slave) and the boolean is whether or not that puppet is getting interpolated.
 local Puppets = {} :: { {} }
@@ -325,23 +320,12 @@ local function DestroyPart(part)
 end
 
 
--- Flags a dirty group for GreedyMeshing processing
-local function QueueGreedyMeshing(DirtyGroupID : string, GridSize : number)
-
-	-- If this group is already being meshed, schedule termination for the coroutine
-	if GreedyWorkers[DirtyGroupID] then GreedyWorkersTerminationFlags[DirtyGroupID] = true end
-
-	-- If this group was already flagged for greedy meshing, take the minimum of the grid sizes (for a higher level of compatibility)
-	local previousGridSize = GreedyMeshingQueue[DirtyGroupID]
-	GreedyMeshingQueue[DirtyGroupID] = previousGridSize and math.min(GridSize, previousGridSize) or GridSize
-end
-
 local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 
 	local minCFrame, _, S, _, _, _, NVX, NVY, NVZ = GridInfo(part.CFrame:Orthonormalize(), part.Size, GridSize)
 
 	if not minCFrame.Rotation:FuzzyEq(groupMin.Rotation, EPSILON) then
-		return 0
+		return nil, 0
 	end
 
 	local off = minCFrame.Position - groupMin.Position
@@ -354,27 +338,19 @@ local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 					   math.floor(ODZ + 0.5)
 
 	if math.abs(DX - ODX) > EPSILON or math.abs(DY - ODY) > EPSILON or math.abs(DZ - ODZ) > EPSILON then
-		return 0
+		return nil, 0
 	end
 
 	DX -= 1
 	DY -= 1
 
-	local traversed = 0
 	-- Initialize the 3d state volume
 	for X = 1, NVX do
 		local dixz = (X + DX)*DIMYDIMZ + DZ
 		for Y = 1, NVY do
 			local di = dixz + (Y + DY)*DIMZ
 			for Z = 1, NVZ do
-				if traversed == Settings.GMTraversalsPerFrame then
-					coroutine.yield()
-					traversed = 0
-				end
-
 				State[di + Z] = true
-
-				traversed += 1
 			end
 		end
 	end
@@ -385,8 +361,10 @@ local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 	return {1 + DX, 1 + DY, 1 + DZ, DX + NVX, DY + NVY, DZ + NVZ}, NVX * NVY * NVZ
 end
 
+
 -- coroutine based greedy meshing with smooth display of results
-local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
+local function GreedyMeshWorker(DirtyGroupID : string, ImaginaryParts : { Types.ImaginaryBox })
+	local GridSize = GreedyMeshingQueue[DirtyGroupID]
 
 	local dirtyGroupData = DirtyGroupData[DirtyGroupID]
 	local dirtyGroupMembers = DirtyGroupMembers[DirtyGroupID]
@@ -402,13 +380,7 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 	local State, Visited = {}, {}
 
 	-- information about the original parts, used for smoothly displaying the output of greedy meshing
-	local OriginalPartsInfo = {} :: {
-		{
-			Part : Part,
-			PartGridInfo : {any},
-			Contributed : {number}
-		}
-	}
+	local OriginalParts = {} :: { Part }
 
 	-- the total number of voxels in the State array
 	local count = 0
@@ -416,22 +388,28 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 	for member in pairs(dirtyGroupMembers) do
 		if member:HasTag(DebrisTag) then continue end
 
-		local gridInfo, n = InitGreedyState(member, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+		table.insert(OriginalParts, member)
+
+		if ImaginaryDestroyQueue[member] then continue end
+
+		local _, n = InitGreedyState(member, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 		if n > 0 then
 			count += n
 
-			table.insert(OriginalPartsInfo, {
-				Part = member,
-				PartGridInfo = gridInfo,
-
-				Contributed = {}
-			})
+			ImaginaryDestroyQueue[member] = true
 		end
 	end
 
-	local meshed = {}
+	for _, imaginaryMember in ipairs(ImaginaryParts) do
+		local _, n = InitGreedyState(imaginaryMember, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+		if n > 0 then
+			count += n
+		end
+	end
 
-	local traversed = 0
+	if count == 0 then return end
+
+	local meshed = {}
 
 	local sx, sy, sz = 1, 1, 1
 	while count > 0 do
@@ -440,10 +418,6 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 		local si = (X - 1)*DIMYDIMZ + iyz
 		-- find first unvisited and active state position
 		while Visited[si] or not State[si] do
-			if traversed == Settings.GMTraversalsPerFrame then
-				coroutine.yield()
-				traversed = 0
-			end
 
 			if X < DIMX then
 				X += 1
@@ -462,7 +436,6 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 				iyz = (Y - 1)*DIMZ + Z
 			end
 
-			traversed += 1
 			si = (X - 1)*DIMYDIMZ + iyz
 		end
 		sx, sy, sz = X, Y, Z
@@ -473,16 +446,10 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 		while X < DIMX do
 			local DX = X + 1
 
-			if traversed == Settings.GMTraversalsPerFrame then
-				coroutine.yield()
-				traversed = 0
-			end
-
 			local index = (DX - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
 			if Visited[index] or not State[index] then break end
 
 			Visited[index] = true
-			traversed += 1
 
 			X = DX
 		end
@@ -496,10 +463,6 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 			local indices = {}
 
 			for ix = sx, X do
-				if traversed == Settings.GMTraversalsPerFrame then
-					coroutine.yield()
-					traversed = 0
-				end
 
 				local index = (ix - 1)*DIMYDIMZ + iyz
 				if Visited[index] or not State[index] then
@@ -508,7 +471,6 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 				end
 
 				indices[index] = true
-				traversed += 1
 			end
 
 			if breakExpansion then break end
@@ -530,10 +492,6 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 			for ix = sx, X do
 				local ixz = (ix - 1)*DIMYDIMZ + DZ
 				for iy = sy, Y do
-					if traversed == Settings.GMTraversalsPerFrame then
-						coroutine.yield()
-						traversed = 0
-					end
 
 					local index = ixz + (iy - 1)*DIMZ
 					if Visited[index] or not State[index] then
@@ -542,7 +500,6 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 					end
 
 					indices[index] = true
-					traversed += 1
 				end
 
 				if breakExpansion then break end
@@ -565,100 +522,24 @@ local function GreedyMeshWorker(DirtyGroupID : string, GridSize : number?)
 		-- define a cuboid using the start and end positions.
 		table.insert(meshed, {
 			CFrame = ( groupMin + groupMin.XVector*VSX*((X + sx)*0.5 - 1) + groupMin.YVector*VSY*((Y + sy)*0.5 - 1) + groupMin.ZVector*VSZ*((Z + sz)*0.5 - 1) ):Orthonormalize(),
-			Size = VoxelSize * Vector3.new(NX, NY, NZ),
-
-			Contributed = {},
-
-			MINX = sx,
-			MINY = sy,
-			MINZ = sz,
-
-			MAXX = X,
-			MAXY = Y,
-			MAXZ = Z
+			Size = VoxelSize * Vector3.new(NX, NY, NZ)
 		})
 	end
 
-	-- process voxel count contributions (for smooth display of greedy meshing)
-	for meshedIndex, MI in ipairs(meshed) do
-		local contributedToMeshed, MINX, MINY, MINZ, MAXX, MAXY, MAXZ = MI.Contributed, MI.MINX, MI.MINY, MI.MINZ, MI.MAXX, MI.MAXY, MI.MAXZ
-
-		for i, partInfo in ipairs(OriginalPartsInfo) do
-			local PMINX, PMINY, PMINZ, PMAXX, PMAXY, PMAXZ = unpack(partInfo.PartGridInfo)
-
-			-- SAT test in voxel coordinate space??
-			if math.max(PMINX, MINX) > math.min(PMAXX, MAXX) or math.max(PMINY, MINY) > math.min(PMAXY, MAXY) or math.max(PMINZ, MINZ) > math.min(PMAXZ, MAXZ) then continue end
-
-			table.insert(contributedToMeshed, i)
-			table.insert(partInfo.Contributed, meshedIndex)
-		end
-	end
-
-	local InstancedMeshIDs, numInstanced, numMeshed = {}, 0, #meshed
-
-	count = 0
-
-	-- Expertly performing dual DFS for smooth display of meshing (visual groups are instantiated one by one)
-	while numInstanced < numMeshed do
-		if count >= Settings.GMPartCreationsPerFrame then
-			coroutine.yield()
-			count = 0
-		end
-
-		local startIndex
-		for i, meshedInfo in ipairs(meshed) do
-			if InstancedMeshIDs[i] then continue end
-			if #meshedInfo.Contributed == 1 then -- do not re-create parts that didn't change
-				InstancedMeshIDs[i] = true
-				numInstanced += 1
-				continue
-			end
-			startIndex = i
-			break
-		end
-
-		local visitedOriginals, visitedMeshed, pathStack = {}, { [startIndex] = true }, {startIndex}
-
-		while #pathStack > 0 do
-			local mi = table.remove(pathStack)
-			local meshedInfo = meshed[mi]
-
-			for _, io in ipairs(meshedInfo.Contributed) do
-				if visitedOriginals[io] then continue end
-				visitedOriginals[io] = true
-
-				local partInfo = OriginalPartsInfo[io]
-
-				for _, im in ipairs(partInfo.Contributed) do
-					if visitedMeshed[im] then continue end
-					visitedMeshed[im] = true
-
-					table.insert(pathStack, im)
-				end
+	for _, meshedInfo in ipairs(meshed) do
+		local found = nil
+		for _, original in ipairs(OriginalParts) do
+			if original.CFrame:FuzzyEq(meshedInfo.CFrame, 0.001) and original.Size:FuzzyEq(meshedInfo.Size, 0.001) then
+				found = original
+				break
 			end
 		end
 
-		for meshedID in pairs(visitedMeshed) do
-			InstancedMeshIDs[meshedID] = true
-			numInstanced += 1
-
-			local meshedInfo = meshed[meshedID]
-
+		if found then
+			ImaginaryDestroyQueue[found] = nil
+		else
 			InstantiatePart(DirtyGroupID, meshedInfo.CFrame, meshedInfo.Size)
-
-			count += 1
 		end
-
-		--[[
-		if USE_OBJECTCACHE and not (USE_CLIENT_SERVER and isServer) then
-			for originalID in pairs(visitedOriginals) do
-				CachedParts:ReturnPart(OriginalPartsInfo[originalID].Part)
-			end
-		else--]]
-			for originalID in pairs(visitedOriginals) do
-				DestroyPart(OriginalPartsInfo[originalID].Part)
-			end
-		--end
 	end
 end
 
@@ -964,12 +845,6 @@ local function UndoDirtyGroup(DirtyGroupID : string)
 	local groupData = DirtyGroupData[DirtyGroupID]
 	local groupMembers = DirtyGroupMembers[DirtyGroupID]
 
-	-- schedule greedy meshing termination if it is happening for this dirty group
-	if Settings.UseGreedyMeshing and GreedyWorkers[DirtyGroupID] then
-		GreedyWorkersTerminationFlags[DirtyGroupID] = true
-		repeat RunService.Heartbeat:Wait() until not GreedyWorkers[DirtyGroupID]
-	end
-
 	local OriginalPart = groupData.OriginalPart
 	if not USE_CLIENT_SERVER or not OriginalPart:IsA("Part") or OriginalPart.Shape ~= Enum.PartType.Block then
 		OriginalPart.Parent = groupData.OriginalParent
@@ -979,6 +854,9 @@ local function UndoDirtyGroup(DirtyGroupID : string)
 
 	for member in pairs(groupMembers) do DestroyPart(member) end
 	DirtyGroupMembers[DirtyGroupID] = {}
+
+	GreedyMeshingQueue[DirtyGroupID] = nil
+	SmoothCleanupQueue[DirtyGroupID] = nil
 end
 
 
@@ -1017,8 +895,6 @@ local function MarkDirty(Part : Part, destructionParams : Types.InternalImaginar
 	if Part:HasTag(DebrisTag) then return CreatedDirtyGroups end
 
 	local VisitedDirtyGroups = {}
-
-	local GridSize = Part:GetAttribute("GridSize")
 
 	local PartDirtyGroupID = Part:GetAttribute(DirtyGroupIDAttribute)
 
@@ -1061,9 +937,6 @@ local function MarkDirty(Part : Part, destructionParams : Types.InternalImaginar
 
 	if PartDirtyGroupID then
 		VisitedDirtyGroups[PartDirtyGroupID] = true
-		if Settings.UseGreedyMeshing and not Part:GetAttribute(FallingGroupIDAttribute) and Part:IsA("Part") and Part.Shape == Enum.PartType.Block then
-			QueueGreedyMeshing(PartDirtyGroupID, GridSize or destructionParams.GridSize or Settings.DefaultGridSize)
-		end
 		if not PartIsDivisible and NonDivisibleInteraction ~= "NONE" and not next(DirtyGroupMembers[PartDirtyGroupID]) then
 			Part.Parent = nil
 			if NonDivisibleInteraction == "FALL" then
@@ -1090,6 +963,8 @@ end
 local function GetDestructibleParts(destructionParams : Types.InternalImaginaryParams | Types.InternalDestructionParams)
 	local cuttingPart, replicated = destructionParams.CuttingPart, destructionParams.replicated
 
+	local ParameterGridSize = destructionParams.GridSize
+
 	local skipFloors, skipWalls = destructionParams.SkipFloors, destructionParams.SkipWalls
 	local skipFloorsOrWalls = skipFloors or skipWalls
 
@@ -1101,9 +976,17 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 
 	local AffectedFallingGroups = OperationAffectedFallingGroups[destructionParams.ID] or {}
 
+	local AffectedDirtyGroups = {}
+
 	for _, part in ipairs( workspace:GetPartsInPart(IntersectingPart, destructionParams.FilterTagged and OverlapParamsOfTagged(destructionParams.FilterTagged)) ) do
+		if ImaginaryDestroyQueue[part] then continue end
 
 		if (replicated and not part:IsDescendantOf(mapContainer)) or ShouldSkipInstance(part) then continue end
+
+		if part:HasTag(DebrisTag) then
+			table.insert(partsInPart, part)
+			continue
+		end
 
 		if skipFloorsOrWalls then
 			raycastParams.FilterDescendantsInstances = { part }
@@ -1128,6 +1011,16 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 
 		if part:IsA("Part") and part.Shape == Enum.PartType.Block then
 			table.insert(partsInPart, part)
+
+			local DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute)
+			local groupData = DirtyGroupData[DirtyGroupID]
+
+			local newGridSize = ParameterGridSize or groupData.GridSize or Settings.DefaultGridSize
+			local oldGridSize = GreedyMeshingQueue[DirtyGroupID]
+
+			GreedyMeshingQueue[DirtyGroupID] = oldGridSize and math.min(oldGridSize, newGridSize) or newGridSize
+
+			AffectedDirtyGroups[DirtyGroupID] = true
 		end
 	end
 
@@ -1146,28 +1039,60 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 
 	OperationAffectedFallingGroups[destructionParams.ID] = AffectedFallingGroups
 
-	return partsInPart, createdDirtyGroups, createdFallingGroups
+	return partsInPart, createdDirtyGroups, createdFallingGroups, AffectedDirtyGroups
+end
+
+-- Returns all of the imaginary destructible parts that intersect the cuttingPart, removing them from the ImaginaryCreateQueue when that happens.
+local function GetImaginaryDestructibleParts(cuttingPart, verts, normals)
+	local iBa, iC = cuttingPart.Shape.Name == "Ball", cuttingPart.Shape.Name == "Cylinder"
+
+	local processed = {}
+	local destructibles = {}
+
+	while #ImaginaryCreateQueue > 0 do
+		local ivox = table.remove(ImaginaryCreateQueue)
+		local voxVerts = BlockVerts(ivox.CFrame, ivox.Size)
+
+		local intersected = PartContainsAVert(cuttingPart, voxVerts)
+		if not intersected then
+			if iBa then
+				intersected = VertexMath.BallIntersectsBlock(cuttingPart.CFrame, cuttingPart.Size, ivox.CFrame, ivox.Size)
+			elseif iC then
+				intersected = VertexMath.CylinderIntersectsBlock(cuttingPart.CFrame, cuttingPart.Size, verts, normals, ivox.CFrame, ivox.Size, BlockVerts(ivox.CFrame, ivox.Size), BlockNormals(ivox.CFrame))
+			else
+				intersected = PartContainsAVert(cuttingPart, verts) or VertexMath.SAT(verts, normals, voxVerts, BlockNormals(ivox.CFrame))
+			end
+		end
+
+		table.insert(intersected and destructibles or processed, ivox)
+	end
+
+	ImaginaryCreateQueue = processed
+	return destructibles
 end
 
 
 --Performs voxel destruction according to the parameters, returning an array of un-created voxels as well as any existing debris as a second returned array.
-local function ImaginaryVoxels(params, frameLimit, toDestroy)
+local function ImaginaryVoxels(params, destructibleParts, dirtyGroups)
+	local toDestroy, AffectedDirtyGroups
+	if destructibleParts then
+		toDestroy, AffectedDirtyGroups = destructibleParts, dirtyGroups
+	else
+		toDestroy, _, _, AffectedDirtyGroups = GetDestructibleParts(params)
+	end
+
 	local voxels, existingDebris = {} :: {Types.ImaginaryVoxel}, {} :: {BasePart}
 	local voxelCount = 0
 
-	toDestroy = toDestroy or GetDestructibleParts(params)
-
-	if #toDestroy == 0 then return voxels end
-
 	--debug.profilebegin("FindDestructibleParts")
 	local partsInPart = {}
-	for i, part in ipairs(toDestroy) do
+	for _, part in ipairs(toDestroy) do
 		if part:HasTag(DebrisTag) then
 			table.insert(existingDebris, part)
 			continue
 		end
 
-		part.CanQuery = false
+		ImaginaryDestroyQueue[part] = true
 
 		local DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute)
 
@@ -1175,14 +1100,11 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 			CFrame = part.CFrame,
 			Size = part.Size,
 
-			DestructionID = params.ID,
-
 			DirtyGroupID = DirtyGroupID,
+
 			GridSize = params.GridSize or DirtyGroupData[DirtyGroupID].GridSize or Settings.DefaultGridSize
 		})
 	end
-
-	--debug.profileend()
 
 	local cuttingPart = params.CuttingPart
 	local cpcf, cps, cpsh = cuttingPart.CFrame, cuttingPart.Size, cuttingPart.Shape.Name
@@ -1197,12 +1119,14 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 		intersectingNormals = GetNormals[cpsh](cpcf, cps)
 	end
 
-	--[[
-	local imaginaryDestructibles = GetImaginaryDestructibleParts(cuttingPart, intersectingVerts, intersectingNormals)
-	if #imaginaryDestructibles > 0 then
-		table.move(imaginaryDestructibles, 1, #imaginaryDestructibles, #partsInPart + 1, partsInPart)
+	if #ImaginaryCreateQueue > 0 then
+		local ImaginaryDestructibleParts = GetImaginaryDestructibleParts(params.CuttingPart, intersectingVerts, intersectingNormals)
+		if #ImaginaryDestructibleParts > 0 then table.move(ImaginaryDestructibleParts, 1, #ImaginaryDestructibleParts, #partsInPart + 1, partsInPart) end
 	end
-	--]]
+
+	if #partsInPart == 0 then return nil, existingDebris end
+
+	--debug.profileend()
 
 	local dividing = partsInPart :: {Types.ImaginaryBox}
 	partsInPart = nil
@@ -1216,19 +1140,12 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 	-- imaginary division step
 	while #dividing > 0 do
 
-		if frameLimit and frameDivs > Settings.MaxDivisionsPerFrame then
-			table.move(dividing, 1, #dividing, #creating + 1, creating)
-			--table.move(dividing, 1, #dividing, #ImaginaryWorkQueue + 1, ImaginaryWorkQueue)
-			break
-		end
-
 		--debug.profilebegin("IntersectionTest")
 
 		local toDivide = table.remove(dividing, 1)
 		local verts = BlockVerts(toDivide.CFrame, toDivide.Size)
 
 		local intersected = PartContainsAVert(cuttingPart, verts)
-
 		if not intersected then
 			if iBa then
 				intersected = VertexMath.BallIntersectsBlock(cpcf, cps, toDivide.CFrame, toDivide.Size)
@@ -1246,7 +1163,7 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 		--debug.profilebegin("ProcessIntersection")
 
 		if intersected then
-			local s, gridSize, DirtyGroupID, destructionID = toDivide.Size, toDivide.GridSize, toDivide.DirtyGroupID, toDivide.DestructionID
+			local s, gridSize, DirtyGroupID = toDivide.Size, toDivide.GridSize, toDivide.DirtyGroupID
 
 			local voxelCountAxis = Vector3.one:Max(s // gridSize)
 			local toDivideVoxelContributions = voxelCountAxis.X*voxelCountAxis.Y*voxelCountAxis.Z
@@ -1275,17 +1192,13 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 				for _, created in ipairs(newVoxels) do
 					created.GridSize = gridSize
 					created.DirtyGroupID = DirtyGroupID
-					created.DestructionID = destructionID
 				end
-				-- add them to the list of voxels
 				table.move(newVoxels, 1, #newVoxels, #voxels + 1, voxels)
 
 				-- toDivide is done being processed
 				continue
 			end
 			--debug.profileend()
-
-			if frameLimit then frameDivs += 1 end
 
 			-- if toDivide is not encapsulated within CuttingPart, it lies along the edge of the destruction
 			toDivide.isEdge = true
@@ -1295,7 +1208,6 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 
 			-- use Subdivide (either KD or MOT to subdivide toDivide)
 			for _, created in ipairs(SubdivideFunctions[(maxsize > 2 * minsize) and "KD" or "MOT"](toDivide, gridSize)) do
-				--
 				-- early encapsulation check on the children parts because encapsulation checks are faster than intersection checks
 				if PartContainsAllVerts(cuttingPart, BlockVerts(created.CFrame, created.Size)) then
 
@@ -1310,18 +1222,14 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 					for _, v in ipairs(newVoxels) do
 						v.GridSize = gridSize
 						v.DirtyGroupID = DirtyGroupID
-						v.DestructionID = destructionID
 					end
-					-- add these new voxels to the list of voxels
 					table.move(newVoxels, 1, #newVoxels, #voxels + 1, voxels)
 
 					continue
 				end
-				--]]
 
 				created.GridSize = gridSize
 				created.DirtyGroupID = DirtyGroupID
-				created.DestructionID = destructionID
 				created.isEdge = true
 				table.insert(dividing, created)
 			end
@@ -1337,18 +1245,10 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 
 	--debug.profilebegin("CreateNewState")
 
-	--[[
-	if #creating > 0 then
-		table.move(creating, 1, #creating, #ImaginaryCreateQueue + 1, ImaginaryCreateQueue)
-	end
-
-	if #toDestroy > 0 then
-		table.move(toDestroy, 1, #toDestroy, #ImaginaryDestroyQueue + 1, ImaginaryDestroyQueue)
-	end
-	--]]
+	if #creating > 0 then table.move(creating, 1, #creating, #ImaginaryCreateQueue + 1, ImaginaryCreateQueue) end
 
 	-- create new static parts
-	--
+	--[[
 	for _, ibox in ipairs(creating) do
 		InstantiatePart(ibox.DirtyGroupID, ibox.CFrame, ibox.Size)
 	end
@@ -1374,13 +1274,15 @@ local function ImaginaryVoxels(params, frameLimit, toDestroy)
 	end
 	--]]
 
+	--[[
 	for FallingGroupID in pairs(OperationAffectedFallingGroups[params.ID]) do
 		DFSWeld(FallingGroupID)
 	end
+	--]]
 
 	--debug.profileend()
 
-	return setmetatable(voxels, { __len = function() return voxelCount end }) :: {Types.ImaginaryVoxel}, existingDebris :: {BasePart}
+	return setmetatable(voxels, { __len = function() return voxelCount end }) :: {Types.ImaginaryVoxel}, existingDebris :: {BasePart}, AffectedDirtyGroups :: {[string] : boolean}
 end
 --]]
 
@@ -1396,89 +1298,54 @@ local function HandleVoxelDestruction(callbackName : string?, voxel : Part, info
 	if not info.IsAlreadyDebris then voxel:AddTag(DebrisTag) end
 end
 
--- pops an element from the ShatterQueue, removing the completed operations that it might find before finding one to complete.
-local function PopShatterQueue()
-	local popped, shatterPart, partsInPart
-	local v = table.remove(ShatterQueue)
 
-	while v and not popped do
-		local DestructionID = v.ID
-		local AffectedDirtyGroupIDs = OperationAffectedDirtyGroups[DestructionID]
-		local BlacklistedVoxels = OperationBlacklistedVoxels[DestructionID]
-
-		shatterPart, partsInPart = v.CuttingPart, {}
-
-		for _, part in ipairs( GetDestructibleParts(v) ) do
-
-			if part:HasTag(DebrisTag) then
-				if not BlacklistedVoxels[part] then
-					BlacklistedVoxels[part] = true
-					HandleVoxelDestruction(v.OnVoxelDestruct, part, {
-						DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute),
-						CuttingPart = shatterPart,
-						IsEdge = not PartEncapsulatesBlockPart(shatterPart, part.CFrame, part.Size),
-						IsAlreadyDebris = true,
-						UserData = v.UserData
-					})
-				end
-				continue
-			end
-
-
-			table.insert(partsInPart, part)
-		end
-
-		if #partsInPart == 0 then
-			if v.OnDestructCompleted then v.OnDestructCompleted(v.DestroyedVoxels, AffectedDirtyGroupIDs) end
-
-			for DirtyGroupID in pairs(AffectedDirtyGroupIDs) do
-				local count = CountOperationsProcessing[DirtyGroupID] - 1
-				CountOperationsProcessing[DirtyGroupID] = count > 0 and count or nil
-			end
-			OperationAffectedDirtyGroups[DestructionID] = nil
-			OperationAffectedFallingGroups[DestructionID] = nil
-			OperationBlacklistedVoxels[DestructionID] = nil
-
-			v = table.remove(ShatterQueue)
-		else
-			popped = v
-			table.insert(ShatterQueue, Settings.UsePriorityQueue and math.max(1, #ShatterQueue + 1 - Settings.PrioritizeRecentN) or 1, popped)
-		end
-	end
-
-	return popped, partsInPart
-end
 
 -- processes one of the operations in the ShatterQueue, removing it if the operation is finished. It queues all divisions for this step of the operation.
 -- returns true if an operation step was procesed.
-local function ShatterWorker()
-	local popped, partsInPart = PopShatterQueue()
-	if not popped then return false end
-
-	local blacklistedVoxels = OperationBlacklistedVoxels[popped.ID]
-
-	local ivoxels = ImaginaryVoxels(popped, true, partsInPart)
-	popped.DestroyedVoxels += #ivoxels -- count voxel contributions
-
-	local OnVoxelDestruct = popped.OnVoxelDestruct
-	if OnVoxelDestructRegistry[OnVoxelDestruct] then
+local function ProcessShatterQueue()
+	if #ShatterQueue == 0 then return end
+	repeat
+		local popped = table.remove(ShatterQueue)
+		local OnVoxelDestruct = popped.OnVoxelDestruct
 		local CuttingPart, UserData = popped.CuttingPart, popped.UserData
-		for _, ivoxel in ipairs(ivoxels) do
-			local voxel = Shatterbox.InstantiateImaginaryVoxel(ivoxel, true)
 
-			blacklistedVoxels[voxel] = true
+		local ivoxels, existingDebris, affectedIDs = ImaginaryVoxels(popped)
 
-			HandleVoxelDestruction(OnVoxelDestruct, voxel, {
-				DirtyGroupID = ivoxel.DirtyGroupID,
-				CuttingPart = CuttingPart,
-				IsEdge = ivoxel.isEdge,
-				IsAlreadyDebris = false,
-				UserData = UserData
-			})
+		if ivoxels then
+			if OnVoxelDestructRegistry[OnVoxelDestruct] then
+				for _, ivoxel in ipairs(ivoxels) do
+					HandleVoxelDestruction(OnVoxelDestruct, Shatterbox.InstantiateImaginaryVoxel(ivoxel, true), {
+						DirtyGroupID = ivoxel.DirtyGroupID,
+						CuttingPart = CuttingPart,
+						IsEdge = ivoxel.isEdge,
+						IsAlreadyDebris = false,
+						UserData = UserData
+					})
+				end
+			end
 		end
-	end
 
-	return true
+		if #existingDebris > 0 then
+			if OnVoxelDestructRegistry[OnVoxelDestruct] then
+				for _, debris in ipairs(existingDebris) do
+					HandleVoxelDestruction(OnVoxelDestruct, debris, {
+						DirtyGroupID = debris:GetAttribute(DirtyGroupIDAttribute),
+						CuttingPart = CuttingPart,
+						IsEdge = not PartEncapsulatesBlockPart(CuttingPart, debris.CFrame, debris.Size),
+						IsAlreadyDebris = true,
+						UserData = UserData
+					})
+				end
+			else
+				for _, debris in ipairs(existingDebris) do DestroyPart(debris) end
+			end
+		end
+
+		if popped.OnDestructCompleted then popped.OnDestructCompleted(ivoxels and #ivoxels or 0, affectedIDs) end
+
+		OperationAffectedFallingGroups[popped.ID] = nil
+
+	until #ShatterQueue == 0
 end
 
 
@@ -1500,6 +1367,17 @@ local function CreateSerialDirtyGroups(SerialDirtyGroups)
 	end
 end
 
+-- Creates dirty groups for the server and every player except "plr"
+local function CreateDirtyGroupsFromClient(plr, DirtyGroups)
+	local SerialDirtyGroups = {}
+	for DirtyGroupID, part in pairs(DirtyGroups) do
+		PopulateDirtyGroup(part, DirtyGroupID)
+		SerialDirtyGroups[DirtyGroupID] = SerializedPartInstance(part)
+	end
+
+	ServerEvents.CreateDirtyGroupsFromServer.FireExcept(plr, SerialDirtyGroups)
+end
+
 
 local function ReplicateDestructionToClients(destructionType : DestructionTypes, destructionParams : Types.DestructionParams, createdDirtyGroups : { [string] : boolean })
 
@@ -1516,18 +1394,18 @@ local function ReplicateDestructionToClients(destructionType : DestructionTypes,
 			if found then table.remove(PlayerList, found) end
 		end
 
-		ServerEvents.ReplicateDestruction.FireList(PlayerList, destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups, OperationAffectedDirtyGroups[destructionParams.ID])
+		ServerEvents.ReplicateDestruction.FireList(PlayerList, destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups)
 	else
-		ServerEvents.ReplicateDestruction.FireAll(destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups, OperationAffectedDirtyGroups[destructionParams.ID])
+		ServerEvents.ReplicateDestruction.FireAll(destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups)
 	end
 end
 
-local function ReplicateDestructionFromServer(destructionType, serialParams, serialNewDirtyGroups, affectedDirtyGroupIDs)
+local function ReplicateDestructionFromServer(destructionType, serialParams, serialNewDirtyGroups)
+	if not clientInitComplete then return end
+
 	local destructionParams = DeserializedDestructionParams(serialParams)
 
 	CreateSerialDirtyGroups(serialNewDirtyGroups)
-
-	while not clientInitComplete do RunService.Heartbeat:Wait() end
 
 	if destructionType == IMAGINARY then
 		destructionParams.SkipEncapsulatedVoxels = true
@@ -1535,15 +1413,7 @@ local function ReplicateDestructionFromServer(destructionType, serialParams, ser
 		ImaginaryVoxels(destructionParams)
 
 	elseif destructionType == NORMAL then
-		local DestructionID = destructionParams.ID
 
-		OperationAffectedDirtyGroups[DestructionID] = affectedDirtyGroupIDs
-		for DirtyGroupID in pairs(affectedDirtyGroupIDs) do
-			CountOperationsProcessing[DirtyGroupID] = (CountOperationsProcessing[DirtyGroupID] or 0) + 1
-		end
-		OperationBlacklistedVoxels[DestructionID] = {}
-
-		destructionParams.DestroyedVoxels = 0
 		table.insert(ShatterQueue, destructionParams)
 	end
 end
@@ -1786,11 +1656,6 @@ local function ReplicateStateToPlayer(plr)
 		end
 	end
 
-	local serialShatterQueue = {}
-	for _, destructionParams in ipairs(ShatterQueue) do
-		table.insert(serialShatterQueue, SerializedDestructionParams(destructionParams))
-	end
-
 	local serialPuppets = {}
 	for puppetID, puppetData in pairs(Puppets) do
 		serialPuppets[puppetID] = SerializedPartInstance(puppetData[1])
@@ -1801,21 +1666,16 @@ local function ReplicateStateToPlayer(plr)
 		serialDirtyGroupMembers,
 		destroyedDirtyGroups,
 
-		serialShatterQueue,
-		CountOperationsProcessing,
-		OperationAffectedDirtyGroups,
-
 		SmoothCleanupQueue,
 
 		GreedyMeshingQueue,
-		ActiveGMWorkerGridSize,
 
 		serialPuppets,
 		PuppetNextIndex
 	)
 end
 
-local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMembers, destroyedDirtyGroups, serialShatterQueue, serverCountOperationsProcessing, serverOperationAffectedDirtyGroups, serverSmoothCleanupQueue, serverGreedyMeshingQueue, serverActiveGMWorkerGridSize, serialPuppets, serverPuppetsNextIndex)
+local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMembers, destroyedDirtyGroups, serverSmoothCleanupQueue, serverGreedyMeshingQueue, serialPuppets, serverPuppetsNextIndex)
 
 	for DirtyGroupID, serializedPart in pairs(serialDirtyGroupData) do
 		DirtyGroupData[DirtyGroupID] = {
@@ -1843,24 +1703,9 @@ local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMe
 		end
 	end
 
-	for _, serialDestructionParams in ipairs(serialShatterQueue) do
-		table.insert(ShatterQueue, DeserializedDestructionParams(serialDestructionParams))
-	end
-	CountOperationsProcessing = serverCountOperationsProcessing
-	OperationAffectedDirtyGroups = serverOperationAffectedDirtyGroups
-
 	SmoothCleanupQueue = serverSmoothCleanupQueue
 
 	GreedyMeshingQueue = serverGreedyMeshingQueue
-	for DirtyGroupID, GridSize in pairs(serverActiveGMWorkerGridSize) do
-		local thr = coroutine.create(GreedyMeshWorker)
-
-		GreedyWorkers[DirtyGroupID] = thr
-		ActiveGMWorkerCount += 1
-		ActiveGMWorkerGridSize[DirtyGroupID] = GridSize
-
-		coroutine.resume(thr, DirtyGroupID, GridSize)
-	end
 
 	PuppetNextIndex = serverPuppetsNextIndex
 	for puppetID, serialPuppet in pairs(serialPuppets) do
@@ -1869,6 +1714,8 @@ local function ReplicateStateFromServer(serialDirtyGroupData, serialDirtyGroupMe
 
 	clientInitComplete = true
 end
+
+local function QueueNewPlayerStateReplication(plr) table.insert(NewPlayerStateReplicationQueue, plr) end
 
 
 
@@ -1882,82 +1729,12 @@ local function SmoothCleanupBehavior(deltaTime)
 		if countdown > 0 then
 			SmoothCleanupQueue[DirtyGroupID] = countdown
 		else
-			table.insert(toReset, DirtyGroupID)
+			toReset[DirtyGroupID] = true
 		end
 	end
 
-	local waitingToTerminate = {}
-
-	for _, DirtyGroupID in ipairs(toReset) do
-		if CountOperationsProcessing[DirtyGroupID] then continue end
-
-		if GreedyMeshingQueue[DirtyGroupID] then GreedyMeshingQueue[DirtyGroupID] = nil end
-		if GreedyWorkers[DirtyGroupID] then
-			waitingToTerminate[DirtyGroupID] = true
-			continue
-		end
-
-		SmoothCleanupQueue[DirtyGroupID] = nil
-		UndoDirtyGroup(DirtyGroupID)
-	end
-
-	while RunService.Heartbeat:Wait() do
-		local allDone = true
-		for DirtyGroupID in pairs(waitingToTerminate) do
-			if GreedyWorkers[DirtyGroupID] then
-				allDone = false
-				break
-			end
-		end
-		if allDone then break end
-	end
-
-	for DirtyGroupID in pairs(waitingToTerminate) do
-		SmoothCleanupQueue[DirtyGroupID] = nil
-		UndoDirtyGroup(DirtyGroupID)
-	end
+	for DirtyGroupID in pairs(toReset) do UndoDirtyGroup(DirtyGroupID) end
 end
-
-local function GreedyMeshingBehavior()
-	-- Start more greedy meshing coroutines if there is space to do so
-	if ActiveGMWorkerCount < Settings.GMWorkerCount then
-		-- Start greedy meshing coroutines until the limit is reached or there are no more flagged groups
-		local toRemove = {}
-		for DirtyGroupID, GridSize in pairs(GreedyMeshingQueue) do
-			if CountOperationsProcessing[DirtyGroupID] or GreedyWorkers[DirtyGroupID] then continue end
-			if not next(DirtyGroupMembers[DirtyGroupID]) then -- groups that have no members should not be greedy meshed
-				toRemove[DirtyGroupID] = true
-				continue
-			end
-			local thr = coroutine.create(GreedyMeshWorker)
-
-			toRemove[DirtyGroupID] = true
-			GreedyWorkers[DirtyGroupID] = thr
-			ActiveGMWorkerCount += 1
-			ActiveGMWorkerGridSize[DirtyGroupID] = GridSize
-
-			coroutine.resume(thr, DirtyGroupID, GridSize)
-
-			if ActiveGMWorkerCount >= Settings.GMWorkerCount then break end
-		end
-		for DirtyGroupID in pairs(toRemove) do GreedyMeshingQueue[DirtyGroupID] = nil end
-	end
-	-- Manage the lifecycle of all of the coroutines, terminating or resuming where required
-	for DirtyGroupID, thr in pairs(GreedyWorkers) do
-		local status = coroutine.status(thr)
-
-		if status == "dead" or (status == "suspended" and GreedyWorkersTerminationFlags[DirtyGroupID]) then
-			GreedyWorkersTerminationFlags[DirtyGroupID] = nil
-			GreedyWorkers[DirtyGroupID] = nil
-			ActiveGMWorkerCount -= 1
-			ActiveGMWorkerGridSize[DirtyGroupID] = nil
-
-		elseif status == "suspended" then
-			coroutine.resume(thr)
-		end
-	end
-end
-
 
 
 local TAU = 2*math.pi
@@ -2070,15 +1847,46 @@ local function HeartbeatWorker(deltaTime)
 
 	if Settings.UseSmoothCleanup then coroutine.wrap(SmoothCleanupBehavior)(deltaTime) end
 
-	frameDivs = 0
-	local ops = 0
+	ProcessShatterQueue()
 
-	while #ShatterQueue > 0 and frameDivs < Settings.MaxDivisionsPerFrame and ops < Settings.MaxOpsPerFrame do
-		ShatterWorker()
-		ops += 1
+	if #ImaginaryCreateQueue > 0 then
+		if Settings.UseGreedyMeshing then
+			local DirtyGroupImaginaryParts = {}
+
+			for _, toCreate in ipairs(ImaginaryCreateQueue) do
+				local DirtyGroupID = toCreate.DirtyGroupID
+				local ImaginaryParts = DirtyGroupImaginaryParts[DirtyGroupID]
+				if not ImaginaryParts then
+					ImaginaryParts = {}
+					DirtyGroupImaginaryParts[DirtyGroupID] = ImaginaryParts
+				end
+
+				table.insert(ImaginaryParts, toCreate)
+			end
+
+			for DirtyGroupID, ImaginaryParts in pairs(DirtyGroupImaginaryParts) do
+				GreedyMeshWorker(DirtyGroupID, ImaginaryParts)
+			end
+		else
+			for _, toCreate in ipairs(ImaginaryCreateQueue) do
+				InstantiatePart(toCreate.DirtyGroupID, toCreate.CFrame, toCreate.Size)
+			end
+		end
+
+		ImaginaryCreateQueue = {}
 	end
 
-	if Settings.UseGreedyMeshing then GreedyMeshingBehavior() end
+	if next(ImaginaryDestroyQueue) then
+		for toDestroy in pairs(ImaginaryDestroyQueue) do
+			DestroyPart(toDestroy)
+		end
+		ImaginaryDestroyQueue = {}
+	end
+
+	if #NewPlayerStateReplicationQueue > 0 then
+		for _, plr in ipairs(NewPlayerStateReplicationQueue) do ReplicateStateToPlayer(plr) end
+		NewPlayerStateReplicationQueue = {}
+	end
 
 	if isServer then PuppeteerBehavior(deltaTime) end
 end
@@ -2191,24 +1999,8 @@ function Shatterbox.Destroy(intersectingPart : Part | Model | Types.WorldInfo | 
 
 		local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
 
-		params.DestroyedVoxels = 0
-
-		local destructibleParts, createdDirtyGroups, createdFallingGroups = GetDestructibleParts(params)
-		if #destructibleParts == 0 then return end
-
-		local DestructionID = params.ID
-
-		local AffectedDirtyGroups = {}
-		for _, part in ipairs(destructibleParts) do
-			local DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute)
-			if AffectedDirtyGroups[DirtyGroupID] then continue end
-			AffectedDirtyGroups[DirtyGroupID] = true
-			CountOperationsProcessing[DirtyGroupID] = (CountOperationsProcessing[DirtyGroupID] or 0) + 1
-		end
-		OperationAffectedDirtyGroups[DestructionID] = AffectedDirtyGroups
-		OperationBlacklistedVoxels[DestructionID] = {}
-
 		if USE_CLIENT_SERVER and isServer then
+			local _, createdDirtyGroups = GetDestructibleParts(params)
 			ReplicateDestructionToClients(NORMAL, params, createdDirtyGroups)
 		end
 
@@ -2229,18 +2021,17 @@ function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.Worl
 
 	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication, SkipFloors, SkipWalls)
 
-	local destructibleParts, createdDirtyGroups, createdFallingGroups = GetDestructibleParts(params)
-	if #destructibleParts == 0 then return voxels, existingDebris end
+	local destructibleParts, createdDirtyGroups, _, affectedIDs = GetDestructibleParts(params)
 
 	if USE_CLIENT_SERVER and isServer then
 		ReplicateDestructionToClients(IMAGINARY, params, createdDirtyGroups)
 	end
 
-	voxels, existingDebris = ImaginaryVoxels(params, false, destructibleParts)
+	voxels, existingDebris = ImaginaryVoxels(params, destructibleParts, affectedIDs)
 
 	OperationAffectedFallingGroups[params.ID] = nil
 
-	return voxels, existingDebris
+	return voxels or {}, existingDebris
 end
 
 -- Will return a created voxel using the supplied ImaginaryVoxel, will automatically parent the voxel to the ShatterboxTemporary folder and give it the DebrisTag tag
@@ -2272,8 +2063,6 @@ function Shatterbox.ResetArea(area : Part | Types.WorldInfo)
 	local AreaVerts = VertexMath.GetVerts.Block(ACF, AS)
 	local AreaNormals = VertexMath.GetNormals.Block(ACF)
 
-	local toResetIDs, toTerminate = {}, {}
-
 	-- Check all of the dirty groups to see if any of them intersect the area
 	for DirtyGroupID, groupData in pairs(DirtyGroupData) do
 
@@ -2302,59 +2091,8 @@ function Shatterbox.ResetArea(area : Part | Types.WorldInfo)
 			end
 		end
 
-
-		if intersected then
-			-- if this DirtyGroupID is going to be reset and still has operations processing it, cancel those operations
-			local countProcessing = CountOperationsProcessing[DirtyGroupID]
-			if countProcessing then
-				local toCancel, countFound = {}, 0
-				for DestructionID, AffectedIDs in pairs(OperationAffectedDirtyGroups) do
-					if not AffectedIDs[DirtyGroupID] then continue end
-					toCancel[DestructionID] = true
-					countFound += 1
-					if countFound == countProcessing then break end
-				end
-				for DestructionID in pairs(toCancel) do
-					for i, destructionParams in ipairs(ShatterQueue) do
-						if destructionParams.ID == DestructionID then
-							table.remove(ShatterQueue, i)
-							break
-						end
-					end
-					OperationAffectedDirtyGroups[DestructionID] = nil
-				end
-			end
-			-- if this DirtyGroupID is being greedy meshed, flag the thread for termination before resetting
-			if GreedyWorkers[DirtyGroupID] then
-				toTerminate[DirtyGroupID] = true
-			else
-				-- flag this id for resetting
-				toResetIDs[DirtyGroupID] = true
-			end
-		end
+		if intersected then UndoDirtyGroup(DirtyGroupID) end
 	end
-
-	for DirtyGroupID in pairs(toResetIDs) do UndoDirtyGroup(DirtyGroupID) end
-
-	-- terminate all active greedy meshing workers in the area, then wait for them to terminate
-	if next(toTerminate) then
-		for DirtyGroupID in pairs(toTerminate) do
-			GreedyWorkersTerminationFlags[DirtyGroupID] = true
-		end
-		while RunService.Heartbeat:Wait() do
-			local allDone = true
-			for DirtyGroupID in pairs(toTerminate) do
-				if GreedyWorkers[DirtyGroupID] then
-					allDone = false
-					break
-				end
-			end
-			if allDone then break end
-		end
-	end
-
-	-- revert all destructions bounded by the area
-	for DirtyGroupID in pairs(toTerminate) do UndoDirtyGroup(DirtyGroupID) end
 end
 
 
@@ -2362,16 +2100,10 @@ end
 function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?)
 	-- stop all queued destructions
 	ShatterQueue = {}
-	CountOperationsProcessing = {}
-	OperationAffectedDirtyGroups = {}
-
-	-- wait for all greedy meshing coroutines to terminate
-	for DirtyGroupID in pairs(GreedyWorkers) do
-		GreedyWorkersTerminationFlags[DirtyGroupID] = true
-	end
-	while ActiveGMWorkerCount > 0 do RunService.Heartbeat:Wait() end
 
 	SmoothCleanupQueue = {}
+
+	GreedyMeshingQueue = {}
 
 	if isServer then
 		for _, puppetData in pairs(Puppets) do
@@ -2386,6 +2118,12 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?
 			puppetData[1]:Destroy()
 		end
 	end
+
+	Puppets = {}
+	PuppetsLerpData = {}
+	PuppetNextReplicationIndex = 1
+	CreatePuppetQueue = {}
+	PuppetNextIndex = 1
 
 	if doNotRevertOwnership and USE_CLIENT_SERVER then
 		-- every operation is undone if the ownership is not meant to be reverted
@@ -2408,18 +2146,6 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?
 		DirtyGroupData = {}
 		DirtyGroupMembers = {}
 	end
-
-	GreedyMeshingQueue = {}
-	GreedyWorkers = {}
-	GreedyWorkersTerminationFlags = {}
-	ActiveGMWorkerCount = 0
-	ActiveGMWorkerGridSize = {}
-
-	Puppets = {}
-	PuppetsLerpData = {}
-	PuppetNextIndex = 1
-	PuppetNextReplicationIndex = 1
-	CreatePuppetQueue = {}
 end
 
 
@@ -2626,51 +2352,16 @@ local function PrintState()
 	str = str..P.. "}"
 	print(str)
 
-	str = P .. "CountOperationsProcessing: {"
-	for DirtyGroupID, processing in pairs(CountOperationsProcessing) do
-		local count = 0
-		for _ in pairs(processing) do count += 1 end
-		str = str..P.. "  [" .. DirtyGroupID .. "] = " .. count
-	end
-	str = str..P.. "}"
-	print(str)
-
-	str = P .. "OperationAffectedDirtyGroups: {"
-	for DestructionID, AffectedIDs in pairs(OperationAffectedDirtyGroups) do
-		str = str..P.. "  [" .. DestructionID .. "] = {"
-		for DirtyGroupID in pairs(AffectedIDs) do
-			str = str..P.. "    " .. DirtyGroupID
-		end
-		str = str..P.. "  }"
-	end
-	str = str..P.. "}"
-	print(str)
 
 	--print("Instanced: " .. ci)
 	--print("Destroyed: " .. cd)
 
-	str = P .. "GreedyWorkers: {"
-	for DirtyGroupID in pairs(GreedyWorkers) do
-		str = str..P.. "  " .. DirtyGroupID
-	end
-	str = str..P.. "}"
-	print(str)
-
-	str = P .. "GreedyWorkersTerminationFlags: {"
-	for DirtyGroupID in pairs(GreedyWorkersTerminationFlags) do
-		str = str..P.. "  " .. DirtyGroupID
-	end
-	str = str..P.. "}"
-	print(str)
-
 	str = P .. "GreedyMeshingQueue: {"
-	for DirtyGroupID in pairs(GreedyMeshingQueue) do
-		str = str..P.. "  " .. DirtyGroupID
+	for DirtyGroupID, GridSize in pairs(GreedyMeshingQueue) do
+		str = str..P.. "  " .. DirtyGroupID .. ": " .. GridSize
 	end
 	str = str..P.. "}"
 	print(str)
-
-	print(P .. "ActiveGMWorkerCount: " .. ActiveGMWorkerCount)
 end
 
 function Shatterbox.PrintState()
@@ -2689,18 +2380,9 @@ RunService.Heartbeat:Connect(HeartbeatWorker)
 if isServer then
 
 	if USE_CLIENT_SERVER then
-		ServerEvents.ClientInitComplete.On(ReplicateStateToPlayer)
+		ServerEvents.ClientInitComplete.On(QueueNewPlayerStateReplication)
 
-		ServerEvents.CreateDirtyGroupsFromClient.On(function(plr, DirtyGroups)
-
-			local SerialDirtyGroups = {}
-			for DirtyGroupID, part in pairs(DirtyGroups) do
-				PopulateDirtyGroup(part, DirtyGroupID)
-				SerialDirtyGroups[DirtyGroupID] = SerializedPartInstance(part)
-			end
-
-			ServerEvents.CreateDirtyGroupsFromServer.FireExcept(plr, SerialDirtyGroups)
-		end)
+		ServerEvents.CreateDirtyGroupsFromClient.On(CreateDirtyGroupsFromClient)
 	end
 
 elseif isClient then

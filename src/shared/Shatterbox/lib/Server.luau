@@ -1316,9 +1316,9 @@ local function Shatterbox_WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Elements_1)
 end
 
-local function Shatterbox_WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
-	-- Allocate BLOCK: 23 bytes
-	local BLOCK_START = Allocate(23)
+local function Shatterbox_WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
+	-- Allocate BLOCK: 15 bytes
+	local BLOCK_START = Allocate(15)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value1 do
@@ -2415,151 +2415,18 @@ local function Shatterbox_WriteEVENT_ReplicateState(Value1: {[string]: { CFrame:
 		buffer.writeu8(SendBuffer, OFFSET_1, Element_1 and 1 or 0)
 	end
 	buffer.writeu16(SendBuffer, BLOCK_START + 5, Elements_1)
-	-- START ARRAY
-	buffer.writeu16(SendBuffer, BLOCK_START + 7, #Value4)
-		-- Allocate BLOCK: 47 bytes
-	local ARRAY_START_1 = Allocate(47 * #Value4)
-	for Index = 1, #Value4 do
-		local Item_1 = Value4[Index]
-		local Length = #Item_1.ID
-		-- Allocate 2
-		local OPERATION_OFFSET_0 = ARRAY_START_1
-		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
+	local Elements_1 = 0
+	for Key_1, Element_1 in Value4 do
+		Elements_1 += 1
+		local Length = #Key_1
+		local OFFSET_0 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_0, Length)
 		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Item_1.ID, Length)
-		local Vector = Item_1.CuttingPart.CFrame.Position
-		-- Allocate 4
-		local OPERATION_OFFSET_1 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_1, Vector.X)
-		-- Allocate 4
-		local OPERATION_OFFSET_2 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_2, Vector.Y)
-		-- Allocate 4
-		local OPERATION_OFFSET_3 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_3, Vector.Z)
-		local rX, rY, rZ = Item_1.CuttingPart.CFrame:ToOrientation()
-		-- Allocate 4
-		local OPERATION_OFFSET_4 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_4, rX)
-		-- Allocate 4
-		local OPERATION_OFFSET_5 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_5, rY)
-		-- Allocate 4
-		local OPERATION_OFFSET_6 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_6, rZ)
-		local Vector = Item_1.CuttingPart.Size
-		-- Allocate 4
-		local OPERATION_OFFSET_7 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_7, Vector.X)
-		-- Allocate 4
-		local OPERATION_OFFSET_8 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_8, Vector.Y)
-		-- Allocate 4
-		local OPERATION_OFFSET_9 = ARRAY_START_1
-		ARRAY_START_1 += 4
-		buffer.writef32(SendBuffer, OPERATION_OFFSET_9, Vector.Z)
-		-- Allocate 1
-		local OPERATION_OFFSET_10 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_10, Item_1.CuttingPart.Shape)
-		-- Allocate 1
-		local OPERATION_OFFSET_11 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_11, Item_1.FilterTagged ~= nil and 1 or 0)
-		if Item_1.FilterTagged ~= nil then
-			-- Allocate BLOCK: 2 bytes
-			local BLOCK_START = Allocate(2)
-			-- START ARRAY
-			buffer.writeu16(SendBuffer, BLOCK_START + 0, #Item_1.FilterTagged)
-				-- Allocate BLOCK: 2 bytes
-			local ARRAY_START_3 = Allocate(2 * #Item_1.FilterTagged)
-			for Index = 1, #Item_1.FilterTagged do
-				local Item_3 = Item_1.FilterTagged[Index]
-				local Length = #Item_3
-				-- Allocate 2
-				local OPERATION_OFFSET_0 = ARRAY_START_3
-				ARRAY_START_3 += 2
-				buffer.writeu16(SendBuffer, OPERATION_OFFSET_0, Length)
-				Allocate(Length)
-				buffer.writestring(SendBuffer, SendOffset, Item_3, Length)
-			end
-			-- END ARRAY
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_12 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_12, Item_1.GridSize ~= nil and 1 or 0)
-		if Item_1.GridSize ~= nil then
-			-- Allocate BLOCK: 4 bytes
-			local BLOCK_START = Allocate(4)
-			buffer.writef32(SendBuffer, BLOCK_START + 0, Item_1.GridSize)
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_13 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_13, Item_1.CleanupDelay ~= nil and 1 or 0)
-		if Item_1.CleanupDelay ~= nil then
-			-- Allocate BLOCK: 4 bytes
-			local BLOCK_START = Allocate(4)
-			buffer.writef32(SendBuffer, BLOCK_START + 0, Item_1.CleanupDelay)
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_14 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_14, Item_1.SkipWalls ~= nil and 1 or 0)
-		if Item_1.SkipWalls ~= nil then
-			-- Allocate BLOCK: 1 bytes
-			local BLOCK_START = Allocate(1)
-			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.SkipWalls and 1 or 0)
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_15 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_15, Item_1.SkipFloors ~= nil and 1 or 0)
-		if Item_1.SkipFloors ~= nil then
-			-- Allocate BLOCK: 1 bytes
-			local BLOCK_START = Allocate(1)
-			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.SkipFloors and 1 or 0)
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_16 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_1.SkipEncapsulatedVoxels ~= nil and 1 or 0)
-		if Item_1.SkipEncapsulatedVoxels ~= nil then
-			-- Allocate BLOCK: 1 bytes
-			local BLOCK_START = Allocate(1)
-			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.SkipEncapsulatedVoxels and 1 or 0)
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_17 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_1.OnVoxelDestruct ~= nil and 1 or 0)
-		if Item_1.OnVoxelDestruct ~= nil then
-			-- Allocate BLOCK: 2 bytes
-			local BLOCK_START = Allocate(2)
-			local Length = #Item_1.OnVoxelDestruct
-			buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Item_1.OnVoxelDestruct, Length)
-		end
-		-- Allocate 1
-		local OPERATION_OFFSET_18 = ARRAY_START_1
-		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_18, Item_1.UserData ~= nil and 1 or 0)
-		if Item_1.UserData ~= nil then
-			table.insert(SendInstances, if Item_1.UserData == nil then Null else Item_1.UserData)
-		end
+		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_1 = Allocate(4)
+		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
 	end
-	-- END ARRAY
+	buffer.writeu16(SendBuffer, BLOCK_START + 7, Elements_1)
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value5 do
 		Elements_1 += 1
@@ -2569,70 +2436,11 @@ local function Shatterbox_WriteEVENT_ReplicateState(Value1: {[string]: { CFrame:
 		Allocate(Length)
 		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
 		local OFFSET_1 = Allocate(4)
-		buffer.writeu32(SendBuffer, OFFSET_1, Element_1)
+		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
 	end
 	buffer.writeu16(SendBuffer, BLOCK_START + 9, Elements_1)
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value6 do
-		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
-		local OFFSET_1 = Allocate(2)
-		local Elements_2 = 0
-		for Key_2, Element_2 in Element_1 do
-			Elements_2 += 1
-			local Length = #Key_2
-			local OFFSET_0 = Allocate(2)
-			buffer.writeu16(SendBuffer, OFFSET_0, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
-			local OFFSET_1 = Allocate(1)
-			buffer.writeu8(SendBuffer, OFFSET_1, Element_2 and 1 or 0)
-		end
-		buffer.writeu16(SendBuffer, OFFSET_1, Elements_2)
-	end
-	buffer.writeu16(SendBuffer, BLOCK_START + 11, Elements_1)
-	local Elements_1 = 0
-	for Key_1, Element_1 in Value7 do
-		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
-		local OFFSET_1 = Allocate(4)
-		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
-	end
-	buffer.writeu16(SendBuffer, BLOCK_START + 13, Elements_1)
-	local Elements_1 = 0
-	for Key_1, Element_1 in Value8 do
-		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
-		local OFFSET_1 = Allocate(4)
-		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
-	end
-	buffer.writeu16(SendBuffer, BLOCK_START + 15, Elements_1)
-	local Elements_1 = 0
-	for Key_1, Element_1 in Value9 do
-		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
-		local OFFSET_1 = Allocate(4)
-		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
-	end
-	buffer.writeu16(SendBuffer, BLOCK_START + 17, Elements_1)
-	local Elements_1 = 0
-	for Key_1, Element_1 in Value10 do
 		Elements_1 += 1
 		local OFFSET_0 = Allocate(2)
 		buffer.writeu16(SendBuffer, OFFSET_0, Key_1)
@@ -3137,13 +2945,13 @@ local function Shatterbox_WriteEVENT_ReplicateState(Value1: {[string]: { CFrame:
 		end
 		-- END ARRAY
 	end
-	buffer.writeu16(SendBuffer, BLOCK_START + 19, Elements_1)
-	buffer.writeu16(SendBuffer, BLOCK_START + 21, Value11)
+	buffer.writeu16(SendBuffer, BLOCK_START + 11, Elements_1)
+	buffer.writeu16(SendBuffer, BLOCK_START + 13, Value7)
 end
 
-local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
-	-- Allocate BLOCK: 53 bytes
-	local BLOCK_START = Allocate(53)
+local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+	-- Allocate BLOCK: 52 bytes
+	local BLOCK_START = Allocate(52)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 8)
 	local Length = #Value1
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
@@ -3739,23 +3547,6 @@ local function Shatterbox_WriteEVENT_ReplicateDestruction(Value1: string, Value2
 		-- END ARRAY
 	end
 	buffer.writeu16(SendBuffer, BLOCK_START + 50, Elements_1)
-	buffer.writeu8(SendBuffer, BLOCK_START + 52, Value4 ~= nil and 1 or 0)
-	if Value4 ~= nil then
-		-- Allocate BLOCK: 2 bytes
-		local BLOCK_START = Allocate(2)
-		local Elements_2 = 0
-		for Key_2, Element_2 in Value4 do
-			Elements_2 += 1
-			local Length = #Key_2
-			local OFFSET_0 = Allocate(2)
-			buffer.writeu16(SendBuffer, OFFSET_0, Length)
-			Allocate(Length)
-			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
-			local OFFSET_1 = Allocate(1)
-			buffer.writeu8(SendBuffer, OFFSET_1, Element_2 and 1 or 0)
-		end
-		buffer.writeu16(SendBuffer, BLOCK_START + 0, Elements_2)
-	end
 end
 
 local function Shatterbox_ReadEVENT_ClientInitComplete(): (nil)
@@ -4268,14 +4059,14 @@ local Returns = table.freeze({
 			end,
 		},
 		ReplicateState = {
-			Fire = function(Player: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+			Fire = function(Player: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 				Load(PlayersMap[Player])
-				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
+				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+			FireAll = function(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
+				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					Load(PlayersMap[Player])
@@ -4285,9 +4076,9 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+			FireList = function(List: {Player}, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
+				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in List do
 					Load(PlayersMap[Player])
@@ -4297,9 +4088,9 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: { { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? } }, Value5: {[string]: number}, Value6: {[string]: {[string]: boolean}}, Value7: {[string]: number}, Value8: {[string]: number}, Value9: {[string]: number}, Value10: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value11: number): ()
+			FireExcept = function(Except: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7, Value8, Value9, Value10, Value11)
+				Shatterbox_WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					if Player == Except then
@@ -4314,14 +4105,14 @@ local Returns = table.freeze({
 			end,
 		},
 		ReplicateDestruction = {
-			Fire = function(Player: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
+			Fire = function(Player: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 				Load(PlayersMap[Player])
-				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3, Value4)
+				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 				PlayersMap[Player] = Save()
 			end,
-			FireAll = function(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
+			FireAll = function(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3, Value4)
+				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					Load(PlayersMap[Player])
@@ -4331,9 +4122,9 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireList = function(List: {Player}, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
+			FireList = function(List: {Player}, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3, Value4)
+				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in List do
 					Load(PlayersMap[Player])
@@ -4343,9 +4134,9 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
-			FireExcept = function(Except: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value4: {[string]: boolean}?): ()
+			FireExcept = function(Except: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 				Load()
-				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3, Value4)
+				Shatterbox_WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 				for _, Player in Players:GetPlayers() do
 					if Player == Except then

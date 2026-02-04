@@ -186,13 +186,8 @@ event ReplicateState {
 			map{ [string]: PartInstance[] },
 			map{ [string]: boolean },
 
-			DestructionParamsType[],
-			map{ [string]: u32 },
-			map{ [string]: map{ [string]: boolean } },
-
 			map{ [string]: f32 },
 
-			map{ [string]: f32 },
 			map{ [string]: f32 },
 
 			map{ [u16]: PartInstance },
@@ -204,7 +199,7 @@ event ReplicateDestruction {
 	From: Server,
 	Type: Reliable,
 	Call: ManyAsync,
-	Data: (string, DestructionParamsType, map{ [string]: PartInstance }, map{ [string]: boolean }?)
+	Data: (string, DestructionParamsType, map{ [string]: PartInstance })
 }
 
 
