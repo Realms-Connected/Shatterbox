@@ -203,6 +203,7 @@ local OperationAffectedFallingGroups = {} :: { [string] : { [string] : boolean }
 
 -- Dirty groups waiting to be greedy meshed [DirtyGroupID] : GridSize
 local GreedyMeshingQueue = {} :: { [string] : number }
+local GreedyMeshedImaginaryParts = {} :: { Types.ImaginaryBox }
 
 local NewPlayerStateReplicationQueue = {} :: {Player}
 
@@ -518,6 +519,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 		-- define a cuboid using the start and end positions.
 		table.insert(meshed, {
+			DirtyGroupID = DirtyGroupID,
 			CFrame = ( groupMin + groupMin.XVector*VSX*((X + sx)*0.5 - 1) + groupMin.YVector*VSY*((Y + sy)*0.5 - 1) + groupMin.ZVector*VSZ*((Z + sz)*0.5 - 1) ):Orthonormalize(),
 			Size = VoxelSize * Vector3.new(NX, NY, NZ)
 		})
@@ -536,7 +538,8 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 			table.remove(OriginalParts, index)
 			ImaginaryDestroyQueue[found] = nil
 		else
-			InstantiatePart(DirtyGroupID, meshedInfo.CFrame, meshedInfo.Size)
+			--InstantiatePart(DirtyGroupID, meshedInfo.CFrame, meshedInfo.Size)
+			table.insert(GreedyMeshedImaginaryParts, meshedInfo)
 		end
 	end
 end
@@ -1845,10 +1848,15 @@ local function HeartbeatWorker(deltaTime)
 
 	if Settings.UseSmoothCleanup then coroutine.wrap(SmoothCleanupBehavior)(deltaTime) end
 
+	debug.profilebegin("Process ShatterQueue")
+
 	ProcessShatterQueue()
+
+	debug.profileend()
 
 	if #ImaginaryCreateQueue > 0 then
 		if Settings.UseGreedyMeshing then
+			debug.profilebegin("Process GreedyMesh")
 			local DirtyGroupImaginaryParts = {}
 
 			for _, toCreate in ipairs(ImaginaryCreateQueue) do
@@ -1862,9 +1870,16 @@ local function HeartbeatWorker(deltaTime)
 				table.insert(ImaginaryParts, toCreate)
 			end
 
-			for DirtyGroupID, ImaginaryParts in pairs(DirtyGroupImaginaryParts) do
-				GreedyMeshBehavior(DirtyGroupID, ImaginaryParts)
+			for DirtyGroupID, ImaginaryParts in pairs(DirtyGroupImaginaryParts) do GreedyMeshBehavior(DirtyGroupID, ImaginaryParts) end
+			debug.profileend()
+
+			debug.profilebegin("Display GreedyMesh")
+			for _, toCreate in ipairs(GreedyMeshedImaginaryParts) do
+				InstantiatePart(toCreate.DirtyGroupID, toCreate.CFrame, toCreate.Size)
 			end
+
+			GreedyMeshedImaginaryParts = {}
+			debug.profileend()
 		else
 			for _, toCreate in ipairs(ImaginaryCreateQueue) do
 				InstantiatePart(toCreate.DirtyGroupID, toCreate.CFrame, toCreate.Size)
@@ -1874,12 +1889,14 @@ local function HeartbeatWorker(deltaTime)
 		ImaginaryCreateQueue = {}
 	end
 
+	debug.profilebegin("Destroy old parts")
 	if next(ImaginaryDestroyQueue) then
 		for toDestroy in pairs(ImaginaryDestroyQueue) do
 			DestroyPart(toDestroy)
 		end
 		ImaginaryDestroyQueue = {}
 	end
+	debug.profileend()
 
 	if #NewPlayerStateReplicationQueue > 0 then
 		for _, plr in ipairs(NewPlayerStateReplicationQueue) do ReplicateStateToPlayer(plr) end
