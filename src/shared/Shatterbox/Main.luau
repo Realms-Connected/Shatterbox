@@ -345,17 +345,6 @@ local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 			end
 		end
 	end
-	--[[
-	local excessBits = NVZ % 32
-	local loopCount = NVZ // 32
-	for X = 1, NVX do
-		for Y = 1, NVY do
-			local IXYDZ = (X + DX)*DIMYDIMZ + (Y + DY)*DIMZ + DZ
-			for i = 0, loopCount - 1 do buffer.writebits(State, IXYDZ + i*32, 32, MAXU32) end
-			if excessBits > 0 then buffer.writebits(State, IXYDZ + loopCount*32, excessBits, bit32.lshift(1, excessBits) - 1) end
-		end
-	end
-	--]]
 
 	return NVX * NVY * NVZ
 end
@@ -377,9 +366,8 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 	-- local stateBitCount = DIMX*DIMYDIMZ
 
-	-- flat 3d state/visited array : index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
-	local Visited = {}
-	local State = {} -- buffer.create(math.ceil(stateBitCount / 8))
+	-- flat 3d state array : index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
+	local State = table.create(DIMX*DIMYDIMZ, false)
 
 	-- information about the original parts, used for smoothly displaying the output of greedy meshing
 	local OriginalParts = {} :: { Part }
@@ -414,19 +402,9 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 	local si = 1
 	while count > 0 do
 		-- find first unvisited and active state position
-		while Visited[si] or not State[si] do si += 1 end
-		--[[
-		while Visited[si] do
-			si += 1
-			local isState = buffer.readbits(State, si, math.min(stateBitCount - si, 32))
-			while isState == 0 do
-				si += 32
-				isState = buffer.readbits(State, si, math.min(stateBitCount - si, 32))
-			end
-			si += bit32.countrz(isState)
-		end
-		--]]
-		Visited[si] = true
+		while not State[si] do si += 1 end
+
+		State[si] = false
 
 		local X, rem = ((si - 1) // DIMYDIMZ) + 1, (si - 1) % DIMYDIMZ
 		local Y, Z = (rem // DIMZ) + 1, (rem % DIMZ) + 1
@@ -434,15 +412,14 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 		sx, sy, sz = X, Y, Z
 
 		local XINDEX = (X - 1)*DIMYDIMZ
-
+		local XYINDEX = si - Z
 		-- planar expansion along Z axis
-		local XYINDEX = XINDEX + (Y - 1)*DIMZ
 		for DZ = Z + 1, DIMZ do
 			local i = XYINDEX + DZ
 
-			if Visited[i] or not State[i] then break end
+			if not State[i] then break end
 
-			Visited[i] = true
+			State[i] = false
 
 			Z = DZ
 		end
@@ -457,7 +434,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 			for iz = sz, Z do
 				local i = XYINDEX + iz
 
-				if Visited[i] or not State[i] then
+				if not State[i] then
 					breakExpansion = true
 					break
 				end
@@ -467,7 +444,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 			if breakExpansion then break end
 
-			for index in pairs(indices) do Visited[index] = true end
+			for index in pairs(indices) do State[index] = false end
 
 			Y = DY
 		end
@@ -484,7 +461,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 				for iz = sz, Z do
 					local i = XYINDEX + iz
 
-					if Visited[i] or not State[i] then
+					if not State[i] then
 						breakExpansion = true
 						break
 					end
@@ -497,7 +474,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 			if breakExpansion then break end
 
-			for index in pairs(indices) do Visited[index] = true end
+			for index in pairs(indices) do State[index] = false end
 
 			X = DX
 		end
@@ -1860,7 +1837,18 @@ local function HeartbeatWorker(deltaTime)
 				table.insert(ImaginaryParts, toCreate)
 			end
 
-			for DirtyGroupID, ImaginaryParts in pairs(DirtyGroupImaginaryParts) do GreedyMeshBehavior(DirtyGroupID, ImaginaryParts) end
+			for DirtyGroupID, ImaginaryParts in pairs(DirtyGroupImaginaryParts) do
+				local countMembers = #ImaginaryParts
+				for _ in pairs(DirtyGroupMembers[DirtyGroupID]) do
+					countMembers += 1
+					if countMembers > 1 then break end
+				end
+				if countMembers <= 1 then
+					table.move(ImaginaryParts, 1, #ImaginaryParts, #GreedyMeshedImaginaryParts + 1, GreedyMeshedImaginaryParts)
+					continue
+				end
+				GreedyMeshBehavior(DirtyGroupID, ImaginaryParts)
+			end
 			debug.profileend()
 
 			debug.profilebegin("Display GreedyMesh")
