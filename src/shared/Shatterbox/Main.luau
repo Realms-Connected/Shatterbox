@@ -320,30 +320,20 @@ local function DestroyPart(part)
 	--debug.profileend()
 end
 
-
+local HalfVector = Vector3.one * 0.5
+local MAXU32 = 0xFFFFFFFF
 local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 
-	local minCFrame, _, S, _, _, _, NVX, NVY, NVZ = GridInfo(part.CFrame:Orthonormalize(), part.Size, GridSize)
+	local minCFrame, _, S, _, _, _, NVX, NVY, NVZ = GridInfo(part.CFrame--[[:Orthonormalize()]], part.Size, GridSize)
 
-	if not minCFrame.Rotation:FuzzyEq(groupMin.Rotation, EPSILON) then
-		return nil, 0
-	end
+	if not minCFrame.Rotation:FuzzyEq(groupMin.Rotation, EPSILON) then return nil end
 
-	local off = minCFrame.Position - groupMin.Position
+	local Offset = groupMin:PointToObjectSpace(minCFrame.Position) / S
+	local RoundedOffset = (Offset + HalfVector):Floor()
 
-	local ODX, ODY, ODZ = off:Dot(groupMin.XVector) / S.X,
-					      off:Dot(groupMin.YVector) / S.Y,
-					      off:Dot(groupMin.ZVector) / S.Z
-	local DX, DY, DZ = math.floor(ODX + 0.5),
-					   math.floor(ODY + 0.5),
-					   math.floor(ODZ + 0.5)
+	if not Offset:FuzzyEq(RoundedOffset, EPSILON) then return nil end
 
-	if math.abs(DX - ODX) > EPSILON or math.abs(DY - ODY) > EPSILON or math.abs(DZ - ODZ) > EPSILON then
-		return nil, 0
-	end
-
-	DX -= 1
-	DY -= 1
+	local DX, DY, DZ = RoundedOffset.X - 1, RoundedOffset.Y - 1, RoundedOffset.Z
 
 	-- Initialize the 3d state volume
 	for X = 1, NVX do
@@ -355,11 +345,19 @@ local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 			end
 		end
 	end
+	--[[
+	local excessBits = NVZ % 32
+	local loopCount = NVZ // 32
+	for X = 1, NVX do
+		for Y = 1, NVY do
+			local IXYDZ = (X + DX)*DIMYDIMZ + (Y + DY)*DIMZ + DZ
+			for i = 0, loopCount - 1 do buffer.writebits(State, IXYDZ + i*32, 32, MAXU32) end
+			if excessBits > 0 then buffer.writebits(State, IXYDZ + loopCount*32, excessBits, bit32.lshift(1, excessBits) - 1) end
+		end
+	end
+	--]]
 
-	DX += 1
-	DY += 1
-
-	return {1 + DX, 1 + DY, 1 + DZ, DX + NVX, DY + NVY, DZ + NVZ}, NVX * NVY * NVZ
+	return NVX * NVY * NVZ
 end
 
 
@@ -377,9 +375,11 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 	local DIMYDIMZ = DIMY*DIMZ
 	local VSX, VSY, VSZ = VoxelSize.X, VoxelSize.Y, VoxelSize.Z
 
+	-- local stateBitCount = DIMX*DIMYDIMZ
+
 	-- flat 3d state/visited array : index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
 	local Visited = {}
-	local State = {} -- buffer.create(math.ceil(DIMX*DIMYDIMZ / 8))
+	local State = {} -- buffer.create(math.ceil(stateBitCount / 8))
 
 	-- information about the original parts, used for smoothly displaying the output of greedy meshing
 	local OriginalParts = {} :: { Part }
@@ -394,18 +394,16 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 		if ImaginaryDestroyQueue[member] then continue end
 
-		local _, n = InitGreedyState(member, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
-		if n > 0 then
+		local n = InitGreedyState(member, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+		if n then
 			count += n
 			ImaginaryDestroyQueue[member] = true
 		end
 	end
 
 	for _, imaginaryMember in ipairs(ImaginaryParts) do
-		local _, n = InitGreedyState(imaginaryMember, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
-		if n > 0 then
-			count += n
-		end
+		local n = InitGreedyState(imaginaryMember, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+		if n then count += n end
 	end
 
 	if count == 0 then return end
@@ -413,91 +411,85 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 	local meshed = {}
 
 	local sx, sy, sz = 1, 1, 1
+	local si = 1
 	while count > 0 do
-		local X, Y, Z = sx, sy, sz
-		local si = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
 		-- find first unvisited and active state position
-		while Visited[si] or not State[si] do
-			if Z < DIMZ then
-				Z += 1
-			else
-				Z = 1
-				if Y < DIMY then
-					Y += 1
-				else
-					Y = 1
-					if X < DIMX then
-						X += 1
-					else
-						X = 1
-					end
-				end
+		while Visited[si] or not State[si] do si += 1 end
+		--[[
+		while Visited[si] do
+			si += 1
+			local isState = buffer.readbits(State, si, math.min(stateBitCount - si, 32))
+			while isState == 0 do
+				si += 32
+				isState = buffer.readbits(State, si, math.min(stateBitCount - si, 32))
 			end
-			si = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
+			si += bit32.countrz(isState)
 		end
-		sx, sy, sz = X, Y, Z
-
+		--]]
 		Visited[si] = true
 
+		local X, rem = ((si - 1) // DIMYDIMZ) + 1, (si - 1) % DIMYDIMZ
+		local Y, Z = (rem // DIMZ) + 1, (rem % DIMZ) + 1
+
+		sx, sy, sz = X, Y, Z
+
+		local XINDEX = (X - 1)*DIMYDIMZ
+
 		-- planar expansion along Z axis
-		while Z < DIMZ do
-			local DZ = Z + 1
+		local XYINDEX = XINDEX + (Y - 1)*DIMZ
+		for DZ = Z + 1, DIMZ do
+			local i = XYINDEX + DZ
 
-			local index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + DZ
-			if Visited[index] or not State[index] then break end
+			if Visited[i] or not State[i] then break end
 
-			Visited[index] = true
+			Visited[i] = true
 
 			Z = DZ
 		end
 
 		-- planar expansion along Y axis
-		while Y < DIMY do
-			local DY = Y + 1
+		for DY = Y + 1, DIMY do
 			local breakExpansion = false
 
 			local indices = {}
 
+			XYINDEX = XINDEX + (DY - 1)*DIMZ
 			for iz = sz, Z do
+				local i = XYINDEX + iz
 
-				local index = (X - 1)*DIMYDIMZ + (DY - 1)*DIMZ + iz
-
-				if Visited[index] or not State[index] then
+				if Visited[i] or not State[i] then
 					breakExpansion = true
 					break
 				end
 
-				indices[index] = true
+				indices[i] = true
 			end
 
 			if breakExpansion then break end
 
-			for index in pairs(indices) do
-				Visited[index] = true
-			end
+			for index in pairs(indices) do Visited[index] = true end
 
 			Y = DY
 		end
 
 		-- planar expansion along X axis
-		while X < DIMX do
-			local DX = X + 1
+		for DX = X + 1, DIMX do
 			local breakExpansion = false
 
 			local indices = {}
 
+			XINDEX = (DX - 1)*DIMYDIMZ
 			for iy = sy, Y do
-
+				XYINDEX = XINDEX + (iy - 1)*DIMZ
 				for iz = sz, Z do
+					local i = XYINDEX + iz
 
-					local index = (DX - 1)*DIMYDIMZ + (iy - 1)*DIMZ + iz
-
-					if Visited[index] or not State[index] then
+					if Visited[i] or not State[i] then
 						breakExpansion = true
 						break
 					end
 
-					indices[index] = true
+					indices[i] = true
 				end
 
 				if breakExpansion then break end
@@ -505,9 +497,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 			if breakExpansion then break end
 
-			for index in pairs(indices) do
-				Visited[index] = true
-			end
+			for index in pairs(indices) do Visited[index] = true end
 
 			X = DX
 		end
@@ -520,7 +510,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 		-- define a cuboid using the start and end positions.
 		table.insert(meshed, {
 			DirtyGroupID = DirtyGroupID,
-			CFrame = ( groupMin + groupMin.XVector*VSX*((X + sx)*0.5 - 1) + groupMin.YVector*VSY*((Y + sy)*0.5 - 1) + groupMin.ZVector*VSZ*((Z + sz)*0.5 - 1) ):Orthonormalize(),
+			CFrame = ( groupMin + groupMin.XVector*VSX*((X + sx)*0.5 - 1) + groupMin.YVector*VSY*((Y + sy)*0.5 - 1) + groupMin.ZVector*VSZ*((Z + sz)*0.5 - 1) )--[[:Orthonormalize()]],
 			Size = VoxelSize * Vector3.new(NX, NY, NZ)
 		})
 	end

@@ -402,8 +402,8 @@ local function GridInfo(PartCFrame : CFrame, PartSize : Vector3, GridSize : numb
 
 	local ExtentOffset = 0.5*( lsx*(NVX - 1) + lsy*(NVY - 1) + lsz*(NVZ - 1) )
 
-	return (PartCFrame - ExtentOffset):Orthonormalize(),
-		   (PartCFrame + ExtentOffset):Orthonormalize(),
+	return (PartCFrame - ExtentOffset)--[[:Orthonormalize()]],
+		   (PartCFrame + ExtentOffset)--[[:Orthonormalize()]],
 		   VoxelSize,
 		   lsx, lsy, lsz,
 		   NVX, NVY, NVZ
@@ -438,7 +438,7 @@ local function ImaginaryVoxelize(Part : PartType, GridSize : number?) : {PartTyp
 			for Z = 0, NVZ - 1 do
 				index += 1
 				imaginaryParts[index] = {
-					CFrame = (O + dx + dy + Z*lsz):Orthonormalize(),
+					CFrame = (O + dx + dy + Z*lsz)--[[:Orthonormalize()]],
 					Size = S
 				}
 			end
@@ -536,11 +536,11 @@ local function SubdivideOctree(Part : PartType, GridSize : number)
                 local hla = la * 0.5 * hs
                 local ps = Vector3.new( (ax and hs or size.X), (ay and hs or size.Y), (az and hs or size.Z) )
                 table.insert(tmpParts, {
-                    CFrame = (cframe + hla):Orthonormalize(),
+                    CFrame = (cframe + hla)--[[:Orthonormalize()]],
                     Size = ps
                 })
                 table.insert(tmpParts, {
-                    CFrame = (cframe - hla):Orthonormalize(),
+                    CFrame = (cframe - hla)--[[:Orthonormalize()]],
                     Size = ps
                 })
             else
@@ -549,7 +549,7 @@ local function SubdivideOctree(Part : PartType, GridSize : number)
 
                 local off = CHV * 0.5
                 table.insert(tmpParts, {
-                    CFrame = (cframe - off * la):Orthonormalize(),
+                    CFrame = (cframe - off * la)--[[:Orthonormalize()]],
                     Size = Vector3.new(
                         ax and FHV or size.X,
                         ay and FHV or size.Y,
@@ -558,7 +558,7 @@ local function SubdivideOctree(Part : PartType, GridSize : number)
                 })
                 off = FHV * 0.5
                 table.insert(tmpParts, {
-                    CFrame = (cframe + off * la):Orthonormalize(),
+                    CFrame = (cframe + off * la)--[[:Orthonormalize()]],
                     Size = Vector3.new(
                         ax and CHV or size.X,
                         ay and CHV or size.Y,
@@ -615,7 +615,7 @@ local function SubdivideKD(Part : PartType, GridSize : number)
             axis == "Z" and hs or PartSize.Z
         )
 
-        return { { CFrame = (cframe + hla):Orthonormalize(), Size = ps }, { CFrame = (cframe - hla):Orthonormalize(), Size = ps } }
+        return { { CFrame = (cframe + hla)--[[:Orthonormalize()]], Size = ps }, { CFrame = (cframe - hla)--[[:Orthonormalize()]], Size = ps } }
     else
         local AX, AY, AZ = axis == "X", axis == "Y", axis == "Z"
         local la = cframe[localAxisVectors[axis]]
@@ -627,7 +627,7 @@ local function SubdivideKD(Part : PartType, GridSize : number)
 
         local off = CHV * 0.5
         createdParts[1] = {
-            CFrame = (cframe - off * la):Orthonormalize(),
+            CFrame = (cframe - off * la)--[[:Orthonormalize()]],
             Size = Vector3.new(
                 AX and FHV or PartSize.X,
                 AY and FHV or PartSize.Y,
@@ -637,7 +637,7 @@ local function SubdivideKD(Part : PartType, GridSize : number)
 
         off = FHV * 0.5
         createdParts[2] = {
-            CFrame = (cframe + off * la):Orthonormalize(),
+            CFrame = (cframe + off * la)--[[:Orthonormalize()]],
             Size = Vector3.new(
                 AX and CHV or PartSize.X,
                 AY and CHV or PartSize.Y,
