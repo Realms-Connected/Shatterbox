@@ -322,7 +322,7 @@ end
 
 local HalfVector = Vector3.one * 0.5
 local MAXU32 = 0xFFFFFFFF
-local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+local function InitGreedyState(part, GridSize, groupMin, State, DIMYSTATEDIMZ, STATEDIMZ)
 
 	local minCFrame, _, S, _, _, _, NVX, NVY, NVZ = GridInfo(part.CFrame--[[:Orthonormalize()]], part.Size, GridSize)
 
@@ -333,16 +333,28 @@ local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
 
 	if not Offset:FuzzyEq(RoundedOffset, EPSILON) then return nil end
 
-	local DX, DY, DZ = RoundedOffset.X - 1, RoundedOffset.Y - 1, RoundedOffset.Z
+	local DX, DY, DZ = RoundedOffset.X, RoundedOffset.Y, RoundedOffset.Z
 
-	-- Initialize the 3d state volume
+	local ZBitOffset = DZ % 32
+	local ZLayerOffset = DZ // 32
+
+	local InitialWriteWidth = math.min(32 - ZBitOffset, NVZ)
+	local CountLeftAfterInitial = NVZ - InitialWriteWidth
+
+	local FullLayerSpanCount = CountLeftAfterInitial // 32
+	local FinalWriteWidth = CountLeftAfterInitial % 32
+
+	-- Initialize the 3d state volume.   index = (X - 1)*DIMY*STATE_DIMZ + (Y - 1)*STATE_DIMZ + STATE_Z
 	for X = 1, NVX do
-		local dixz = (X + DX)*DIMYDIMZ + DZ
+		local dixz = (X + DX - 1)*DIMYSTATEDIMZ
 		for Y = 1, NVY do
-			local di = dixz + (Y + DY)*DIMZ
-			for Z = 1, NVZ do
-				State[di + Z] = true
-			end
+			local di = dixz + (Y + DY - 1)*STATEDIMZ + ZLayerOffset + 1
+
+			if InitialWriteWidth > 0 then State[di] = bit32.bor(State[di], bit32.lshift(bit32.lshift(1, InitialWriteWidth) - 1, ZBitOffset)) end
+
+			for i = 1, FullLayerSpanCount do State[di + i] = MAXU32 end
+
+			if FinalWriteWidth > 0 then State[di + FullLayerSpanCount + 1] = bit32.bor(State[di + FullLayerSpanCount + 1], bit32.lshift(1, FinalWriteWidth) - 1) end
 		end
 	end
 
@@ -361,13 +373,14 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 	-- The bounding area of Greedy Meshing, defined by the original part before it was ever destroyed
 	local groupMin, _, VoxelSize, _, _, _, DIMX, DIMY, DIMZ = GridInfo(Original.CFrame, Original.Size, GridSize)
-	local DIMYDIMZ = DIMY*DIMZ
+	local STATEDIMZ = math.ceil(DIMZ / 32)
+	local DIMYSTATEDIMZ = DIMY*STATEDIMZ
 	local VSX, VSY, VSZ = VoxelSize.X, VoxelSize.Y, VoxelSize.Z
 
 	-- local stateBitCount = DIMX*DIMYDIMZ
 
-	-- flat 3d state array : index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
-	local State = table.create(DIMX*DIMYDIMZ, false)
+	-- flat 3d state array : index = (X - 1)*DIMY*STATE_DIMZ + (Y - 1)*STATE_DIMZ + STATE_Z
+	local State = table.create(DIMX*DIMYSTATEDIMZ, 0)
 
 	-- information about the original parts, used for smoothly displaying the output of greedy meshing
 	local OriginalParts = {} :: { Part }
@@ -382,7 +395,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 		if ImaginaryDestroyQueue[member] then continue end
 
-		local n = InitGreedyState(member, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+		local n = InitGreedyState(member, GridSize, groupMin, State, DIMYSTATEDIMZ, STATEDIMZ)
 		if n then
 			count += n
 			ImaginaryDestroyQueue[member] = true
@@ -390,7 +403,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 	end
 
 	for _, imaginaryMember in ipairs(ImaginaryParts) do
-		local n = InitGreedyState(imaginaryMember, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+		local n = InitGreedyState(imaginaryMember, GridSize, groupMin, State, DIMYSTATEDIMZ, STATEDIMZ)
 		if n then count += n end
 	end
 
@@ -398,75 +411,105 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 	local meshed = {}
 
-	local sx, sy, sz = 1, 1, 1
-	local si = 1
+	local searchIndex = 1
 	while count > 0 do
 		-- find first unvisited and active state position
-		while not State[si] do si += 1 end
+		while State[searchIndex] == 0 do searchIndex += 1 end
+		local startIndex = searchIndex
+		local state = State[searchIndex]
 
-		State[si] = false
+		local ZBitOffset = bit32.countrz(state)
 
-		local X, rem = ((si - 1) // DIMYDIMZ) + 1, (si - 1) % DIMYDIMZ
-		local Y, Z = (rem // DIMZ) + 1, (rem % DIMZ) + 1
+		local StartX, rem = ((searchIndex - 1) // DIMYSTATEDIMZ) + 1, (searchIndex - 1) % DIMYSTATEDIMZ
+		local StartY, StartLayerZ = (rem // STATEDIMZ) + 1, (rem % STATEDIMZ) + 1
+		local StartZ = 32*(StartLayerZ - 1) + ZBitOffset + 1
 
-		sx, sy, sz = X, Y, Z
-
-		local XINDEX = (X - 1)*DIMYDIMZ
-		local XYINDEX = si - Z
 		-- planar expansion along Z axis
-		for DZ = Z + 1, DIMZ do
-			local i = XYINDEX + DZ
+		local CountZ = bit32.countrz(bit32.bnot(bit32.rshift(state, ZBitOffset)))
+		local FirstLayerMask = bit32.lshift(bit32.lshift(1, CountZ) - 1, ZBitOffset)
+		-- mark these cells as visited
+		State[searchIndex] = bit32.bxor(state, FirstLayerMask)
 
-			if not State[i] then break end
+		local LastLayerMask
+		local EndZBit = ZBitOffset + CountZ - 1
+		local EndLayerZ = StartLayerZ
+		while EndZBit == 31 do
+			local nextIndex = searchIndex + 1
+			local nextLayer = State[nextIndex]
+			if not nextLayer or nextLayer == 0 then break end
 
-			State[i] = false
+			if nextLayer == MAXU32 then
+				EndLayerZ += 1
+				EndZBit = 31
+				searchIndex = nextIndex
+				CountZ += 32
+				-- mark these cells as visited
+				State[searchIndex] = 0
+				continue
+			end
 
-			Z = DZ
+			local countOnes = bit32.countrz(bit32.bnot(nextLayer))
+			if countOnes == 0 then break end
+
+			EndLayerZ += 1
+			EndZBit = countOnes - 1
+			searchIndex = nextIndex
+			CountZ += countOnes
+			LastLayerMask = bit32.lshift(1, countOnes) - 1
+			-- mark these cells as visited
+			State[searchIndex] = bit32.bxor(nextLayer, LastLayerMask)
+
+			break
 		end
 
+		local EndZ = 32*(EndLayerZ - 1) + EndZBit + 1
+		local EndLayerOffset = EndLayerZ - StartLayerZ
+
 		-- planar expansion along Y axis
-		for DY = Y + 1, DIMY do
+		local EndY = StartY
+		while EndY + 1 <= DIMY do
+			local index = startIndex + STATEDIMZ * (EndY - StartY + 1)
+
+			local EndLayerIndex = index + EndLayerOffset
+			if bit32.band(State[index], FirstLayerMask) ~= FirstLayerMask or (LastLayerMask and bit32.band(State[EndLayerIndex], LastLayerMask) ~= LastLayerMask) then break end
+
 			local breakExpansion = false
-
-			local indices = {}
-
-			XYINDEX = XINDEX + (DY - 1)*DIMZ
-			for iz = sz, Z do
-				local i = XYINDEX + iz
-
-				if not State[i] then
-					breakExpansion = true
-					break
-				end
-
-				indices[i] = true
+			for i = 1, EndLayerOffset - 1 do
+				if State[index + i] == MAXU32 then continue end
+				breakExpansion = true
+				break
 			end
 
 			if breakExpansion then break end
 
-			for index in pairs(indices) do State[index] = false end
+			State[index] = bit32.bxor(State[index], FirstLayerMask)
+			if LastLayerMask then State[EndLayerIndex] = bit32.bxor(State[EndLayerIndex], LastLayerMask) end
 
-			Y = DY
+			for i = 1, EndLayerOffset - 1 do State[index + i] = 0 end
+
+			EndY += 1
 		end
 
+
 		-- planar expansion along X axis
-		for DX = X + 1, DIMX do
+		local EndX = StartX
+		while EndX + 1 <= DIMX do
+			local index = startIndex + DIMYSTATEDIMZ * (EndX - StartX + 1)
+
 			local breakExpansion = false
+			for Y = StartY, EndY do
+				local I = index + STATEDIMZ * (Y - StartY)
 
-			local indices = {}
+				local EndLayerIndex = I + EndLayerOffset
+				if bit32.band(State[I], FirstLayerMask) ~= FirstLayerMask or (LastLayerMask and bit32.band(State[EndLayerIndex], LastLayerMask) ~= LastLayerMask) then
+					breakExpansion = true
+					break
+				end
 
-			XINDEX = (DX - 1)*DIMYDIMZ
-			for iy = sy, Y do
-				XYINDEX = XINDEX + (iy - 1)*DIMZ
-				for iz = sz, Z do
-					local i = XYINDEX + iz
-
-					if not State[i] then
-						breakExpansion = true
-						break
-					end
-
-					indices[i] = true
+				for i = 1, EndLayerOffset - 1 do
+					if State[I + i] == MAXU32 then continue end
+					breakExpansion = true
+					break
 				end
 
 				if breakExpansion then break end
@@ -474,20 +517,29 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 
 			if breakExpansion then break end
 
-			for index in pairs(indices) do State[index] = false end
+			for Y = StartY, EndY do
+				local I = index + STATEDIMZ * (Y - StartY)
+				local EndLayerIndex = I + EndLayerOffset
 
-			X = DX
+				State[I] = bit32.bxor(State[I], FirstLayerMask)
+				if LastLayerMask then State[EndLayerIndex] = bit32.bxor(State[EndLayerIndex], LastLayerMask) end
+
+				for i = 1, EndLayerOffset - 1 do State[I + i] = 0 end
+			end
+
+			EndX += 1
 		end
 
+
 		-- the number of voxels in the meshed span on every axis
-		local NX, NY, NZ = X - sx + 1, Y - sy + 1, Z - sz + 1
+		local NX, NY, NZ = EndX - StartX + 1, EndY - StartY + 1, EndZ - StartZ + 1
 		-- subtract the total number of voxels in the meshed span
 		count -= NX * NY * NZ
 
 		-- define a cuboid using the start and end positions.
 		table.insert(meshed, {
 			DirtyGroupID = DirtyGroupID,
-			CFrame = ( groupMin + groupMin.XVector*VSX*((X + sx)*0.5 - 1) + groupMin.YVector*VSY*((Y + sy)*0.5 - 1) + groupMin.ZVector*VSZ*((Z + sz)*0.5 - 1) )--[[:Orthonormalize()]],
+			CFrame = ( groupMin + groupMin.XVector*VSX*((StartX + EndX)*0.5 - 1) + groupMin.YVector*VSY*((StartY + EndY)*0.5 - 1) + groupMin.ZVector*VSZ*((StartZ + EndZ)*0.5 - 1) ),
 			Size = VoxelSize * Vector3.new(NX, NY, NZ)
 		})
 	end
@@ -505,7 +557,6 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 			table.remove(OriginalParts, index)
 			ImaginaryDestroyQueue[found] = nil
 		else
-			--InstantiatePart(DirtyGroupID, meshedInfo.CFrame, meshedInfo.Size)
 			table.insert(GreedyMeshedImaginaryParts, meshedInfo)
 		end
 	end
