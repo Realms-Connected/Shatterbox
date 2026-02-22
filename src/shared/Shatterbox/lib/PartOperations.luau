@@ -141,7 +141,10 @@ local function PartFromTemplate(template, cframe, provider)
 	for _, tag in ipairs(template:GetTags()) do part:AddTag(tag) end
 
 	-- copy attributes
-	for k, v in pairs(template:GetAttributes()) do part:SetAttribute(k, v) end
+	for k, v in pairs(template:GetAttributes()) do
+		if k:sub(1, 3) == "RBX" then continue end
+		part:SetAttribute(k, v)
+	end
 
 	-- copy textures
 	for _, child in ipairs(template:GetChildren()) do
@@ -273,9 +276,15 @@ end
 ]]
 local function SerializedPartInstance(p, ignoreWorldState)
 	local serial = {
-		Tags = p:GetTags(),
-		Attributes = p:GetAttributes()
+		Tags = p:GetTags()
 	}
+
+	local Attributes = {}
+	for k, v in pairs(p:GetAttributes()) do
+		if k:sub(1, 3) == "RBX" then continue end -- seriously Roblox why do I have to check for this? Become better.
+		Attributes[k] = v
+	end
+	serial.Attributes = Attributes
 
 	-- serialize properties if they are not their defaults
 	local prop

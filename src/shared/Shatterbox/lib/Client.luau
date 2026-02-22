@@ -9,7 +9,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local BASE_EVENT_NAME = "BLINK"
+local BASE_EVENT_NAME = "SHATTERBOX_BLINK"
 local Invocations = 0
 
 local SendSize = 64
@@ -170,29 +170,29 @@ Events.Reliable[8] = {}
 Queue.Reliable[8] = table.create(256)
 Events.Reliable[10] = {}
 Queue.Reliable[10] = table.create(256)
-export type Shatterbox_Vec2 = { number }
-export type Shatterbox_Decal = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? }
-export type Shatterbox_Texture = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? }
-export type Shatterbox_Light = { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? }
-export type Shatterbox_PartProperties = { Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_Box = { CFrame: CFrame, Size: Vector3 }
-export type Shatterbox_Hitbox = { CFrame: CFrame, Size: Vector3, Shape: number }
-export type Shatterbox_PartInstance = { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
-export type Shatterbox_DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }
-export type Shatterbox_PuppetState = { GUID: string, CFrame: CFrame }
-local function Shatterbox_ReadEVENT_SignalClearQueue(): (nil)
+export type Vec2 = { number }
+export type Decal = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? }
+export type Texture = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? }
+export type Light = { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? }
+export type PartProperties = { Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
+export type Box = { CFrame: CFrame, Size: Vector3 }
+export type Hitbox = { CFrame: CFrame, Size: Vector3, Shape: number }
+export type PartInstance = { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
+export type Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
+export type DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }
+export type PuppetState = { GUID: string, CFrame: CFrame }
+local function ReadEVENT_SignalClearQueue(): (nil)
 	return nil
 end
 
-local function Shatterbox_ReadEVENT_SignalReset(): (boolean)
+local function ReadEVENT_SignalReset(): (boolean)
 	-- Read BLOCK: 1 bytes
 	local BLOCK_START = Read(1)
 	local Value = (buffer.readu8(RecieveBuffer, BLOCK_START + 0) == 1)
 	return Value
 end
 
-local function Shatterbox_ReadEVENT_SignalResetArea(): (CFrame, Vector3)
+local function ReadEVENT_SignalResetArea(): (CFrame, Vector3)
 	-- Read BLOCK: 36 bytes
 	local BLOCK_START = Read(36)
 	local X = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
@@ -210,7 +210,7 @@ local function Shatterbox_ReadEVENT_SignalResetArea(): (CFrame, Vector3)
 	return Value1, Value2
 end
 
-local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } })
+local function ReadEVENT_CreatePuppets(): ({ { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } })
 	-- Read BLOCK: 2 bytes
 	local BLOCK_START = Read(2)
 	-- START ARRAY
@@ -763,7 +763,7 @@ local function Shatterbox_ReadEVENT_CreatePuppets(): ({ { CFrame: CFrame, Size: 
 	return Value
 end
 
-local function Shatterbox_ReadEVENT_ReplicatePuppetStates(): (buffer, number)
+local function ReadEVENT_ReplicatePuppetStates(): (buffer, number)
 	-- Read BLOCK: 4 bytes
 	local BLOCK_START = Read(4)
 	local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
@@ -775,14 +775,14 @@ local function Shatterbox_ReadEVENT_ReplicatePuppetStates(): (buffer, number)
 	return Value1, Value2
 end
 
-local function Shatterbox_ReadEVENT_DestroyPuppet(): (number)
+local function ReadEVENT_DestroyPuppet(): (number)
 	-- Read BLOCK: 2 bytes
 	local BLOCK_START = Read(2)
 	local Value = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 	return Value
 end
 
-local function Shatterbox_WriteEVENT_CreateDirtyGroupsFromClient(Value: {[string]: Part}): ()
+local function WriteEVENT_CreateDirtyGroupsFromClient(Value: {[string]: Part}): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 5)
@@ -799,7 +799,7 @@ local function Shatterbox_WriteEVENT_CreateDirtyGroupsFromClient(Value: {[string
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Elements_1)
 end
 
-local function Shatterbox_ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }})
+local function ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }})
 	-- Read BLOCK: 2 bytes
 	local BLOCK_START = Read(2)
 	local Value = {}
@@ -1295,7 +1295,7 @@ local function Shatterbox_ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: {
 	return Value
 end
 
-local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, {[string]: boolean}, {[string]: number}, {[string]: number}, {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, number)
+local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, {[string]: boolean}, {[string]: number}, {[string]: number}, {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, number)
 	-- Read BLOCK: 14 bytes
 	local BLOCK_START = Read(14)
 	local Value1 = {}
@@ -2867,7 +2867,7 @@ local function Shatterbox_ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFra
 	return Value1, Value2, Value3, Value4, Value5, Value6, Value7
 end
 
-local function Shatterbox_ReadEVENT_ReplicateDestruction(): (string, { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }})
+local function ReadEVENT_ReplicateDestruction(): (string, { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }})
 	-- Read BLOCK: 51 bytes
 	local BLOCK_START = Read(51)
 	local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
@@ -3439,56 +3439,54 @@ local function Shatterbox_ReadEVENT_ReplicateDestruction(): (string, { ID: strin
 	return Value1, Value2, Value3
 end
 
-local function Shatterbox_WriteEVENT_ClientInitComplete(Value: nil): ()
+local function WriteEVENT_ClientInitComplete(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 9)
 end
 
-local function Shatterbox_ReadEVENT_SignalPrintState(): (nil)
+local function ReadEVENT_SignalPrintState(): (nil)
 	return nil
 end
 
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
-	Shatterbox = {
-		SignalClearQueue = {
-			On = NOOP
-		},
-		SignalReset = {
-			On = NOOP
-		},
-		SignalResetArea = {
-			On = NOOP
-		},
-		CreatePuppets = {
-			On = NOOP
-		},
-		ReplicatePuppetStates = {
-			On = NOOP
-		},
-		DestroyPuppet = {
-			On = NOOP
-		},
-		CreateDirtyGroupsFromClient = {
-			Fire = NOOP
-		},
-		CreateDirtyGroupsFromServer = {
-			On = NOOP
-		},
-		ReplicateState = {
-			On = NOOP
-		},
-		ReplicateDestruction = {
-			On = NOOP
-		},
-		ClientInitComplete = {
-			Fire = NOOP
-		},
-		SignalPrintState = {
-			On = NOOP
-		},
+	SignalClearQueue = {
+		On = NOOP
+	},
+	SignalReset = {
+		On = NOOP
+	},
+	SignalResetArea = {
+		On = NOOP
+	},
+	CreatePuppets = {
+		On = NOOP
+	},
+	ReplicatePuppetStates = {
+		On = NOOP
+	},
+	DestroyPuppet = {
+		On = NOOP
+	},
+	CreateDirtyGroupsFromClient = {
+		Fire = NOOP
+	},
+	CreateDirtyGroupsFromServer = {
+		On = NOOP
+	},
+	ReplicateState = {
+		On = NOOP
+	},
+	ReplicateDestruction = {
+		On = NOOP
+	},
+	ClientInitComplete = {
+		Fire = NOOP
+	},
+	SignalPrintState = {
+		On = NOOP
 	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
@@ -3516,7 +3514,6 @@ local function StepReplication()
     SendBuffer = buffer.create(64)
     table.clear(SendInstances)
 end
-RunService.Heartbeat:Connect(StepReplication)
 Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 	RecieveCursor = 0
 	RecieveBuffer = Buffer
@@ -3528,7 +3525,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 		local BLOCK_START = Read(1)
 		local Index = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
 		if Index == 0 then
-			local Value: nil = Shatterbox_ReadEVENT_SignalClearQueue()
+			local Value: nil = ReadEVENT_SignalClearQueue()
 			if #Events.Reliable[0] > 0 then
 				for _, Listener in Events.Reliable[0] do
 					task.spawn(Listener, Value)
@@ -3540,7 +3537,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[0], {Value} :: {any})
 			end
 		elseif Index == 1 then
-			local Value: boolean = Shatterbox_ReadEVENT_SignalReset()
+			local Value: boolean = ReadEVENT_SignalReset()
 			if #Events.Reliable[1] > 0 then
 				for _, Listener in Events.Reliable[1] do
 					task.spawn(Listener, Value)
@@ -3552,7 +3549,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[1], {Value} :: {any})
 			end
 		elseif Index == 2 then
-			local Value1: CFrame, Value2: Vector3 = Shatterbox_ReadEVENT_SignalResetArea()
+			local Value1: CFrame, Value2: Vector3 = ReadEVENT_SignalResetArea()
 			if #Events.Reliable[2] > 0 then
 				for _, Listener in Events.Reliable[2] do
 					task.spawn(Listener, Value1, Value2)
@@ -3564,7 +3561,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[2], {Value1, Value2} :: {any})
 			end
 		elseif Index == 3 then
-			local Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } } = Shatterbox_ReadEVENT_CreatePuppets()
+			local Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } } = ReadEVENT_CreatePuppets()
 			if #Events.Reliable[3] > 0 then
 				for _, Listener in Events.Reliable[3] do
 					task.spawn(Listener, Value)
@@ -3576,7 +3573,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[3], {Value} :: {any})
 			end
 		elseif Index == 4 then
-			local Value: number = Shatterbox_ReadEVENT_DestroyPuppet()
+			local Value: number = ReadEVENT_DestroyPuppet()
 			if #Events.Reliable[4] > 0 then
 				for _, Listener in Events.Reliable[4] do
 					task.spawn(Listener, Value)
@@ -3588,7 +3585,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[4], {Value} :: {any})
 			end
 		elseif Index == 6 then
-			local Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }} = Shatterbox_ReadEVENT_CreateDirtyGroupsFromServer()
+			local Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }} = ReadEVENT_CreateDirtyGroupsFromServer()
 			if #Events.Reliable[6] > 0 then
 				for _, Listener in Events.Reliable[6] do
 					task.spawn(Listener, Value)
@@ -3600,7 +3597,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[6], {Value} :: {any})
 			end
 		elseif Index == 7 then
-			local Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number = Shatterbox_ReadEVENT_ReplicateState()
+			local Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number = ReadEVENT_ReplicateState()
 			if #Events.Reliable[7] > 0 then
 				for _, Listener in Events.Reliable[7] do
 					task.spawn(Listener, Value1, Value2, Value3, Value4, Value5, Value6, Value7)
@@ -3612,7 +3609,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[7], {Value1, Value2, Value3, Value4, Value5, Value6, Value7} :: {any})
 			end
 		elseif Index == 8 then
-			local Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }} = Shatterbox_ReadEVENT_ReplicateDestruction()
+			local Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }} = ReadEVENT_ReplicateDestruction()
 			if #Events.Reliable[8] > 0 then
 				for _, Listener in Events.Reliable[8] do
 					task.spawn(Listener, Value1, Value2, Value3)
@@ -3624,7 +3621,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[8], {Value1, Value2, Value3} :: {any})
 			end
 		elseif Index == 10 then
-			local Value: nil = Shatterbox_ReadEVENT_SignalPrintState()
+			local Value: nil = ReadEVENT_SignalPrintState()
 			if #Events.Reliable[10] > 0 then
 				for _, Listener in Events.Reliable[10] do
 					task.spawn(Listener, Value)
@@ -3649,7 +3646,7 @@ Unreliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 		local BLOCK_START = Read(1)
 		local Index = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
 		if Index == 0 then
-			local Value1: buffer, Value2: number = Shatterbox_ReadEVENT_ReplicatePuppetStates()
+			local Value1: buffer, Value2: number = ReadEVENT_ReplicatePuppetStates()
 			for _, Listener in Events.Unreliable[0] do
 				task.spawn(Listener, Value1, Value2)
 			end
@@ -3661,163 +3658,161 @@ end)
 local Returns = table.freeze({
 	StepReplication = StepReplication,
 
-	Shatterbox = {
-		SignalClearQueue = {
-			On = function(Listener: (Value: nil) -> ()): () -> ()
-				table.insert(Events.Reliable[0], Listener)
-				for Index, Arguments in Queue.Reliable[0] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[0] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[0], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[0], Index)
-					end
+	SignalClearQueue = {
+		On = function(Listener: (Value: nil) -> ()): () -> ()
+			table.insert(Events.Reliable[0], Listener)
+			for Index, Arguments in Queue.Reliable[0] do
+				task.spawn(Listener, table.unpack(Arguments))
+			end
+			Queue.Reliable[0] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[0], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[0], Index)
 				end
 			end
-		},
-		SignalReset = {
-			On = function(Listener: (Value: boolean) -> ()): () -> ()
-				table.insert(Events.Reliable[1], Listener)
-				for Index, Arguments in Queue.Reliable[1] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[1] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[1], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[1], Index)
-					end
+		end
+	},
+	SignalReset = {
+		On = function(Listener: (Value: boolean) -> ()): () -> ()
+			table.insert(Events.Reliable[1], Listener)
+			for Index, Arguments in Queue.Reliable[1] do
+				task.spawn(Listener, table.unpack(Arguments))
+			end
+			Queue.Reliable[1] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[1], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[1], Index)
 				end
 			end
-		},
-		SignalResetArea = {
-			On = function(Listener: (Value1: CFrame, Value2: Vector3) -> ()): () -> ()
-				table.insert(Events.Reliable[2], Listener)
-				for Index, Arguments in Queue.Reliable[2] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[2] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[2], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[2], Index)
-					end
+		end
+	},
+	SignalResetArea = {
+		On = function(Listener: (Value1: CFrame, Value2: Vector3) -> ()): () -> ()
+			table.insert(Events.Reliable[2], Listener)
+			for Index, Arguments in Queue.Reliable[2] do
+				task.spawn(Listener, table.unpack(Arguments))
+			end
+			Queue.Reliable[2] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[2], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[2], Index)
 				end
 			end
-		},
-		CreatePuppets = {
-			On = function(Listener: (Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }) -> ()): () -> ()
-				table.insert(Events.Reliable[3], Listener)
-				for Index, Arguments in Queue.Reliable[3] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[3] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[3], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[3], Index)
-					end
+		end
+	},
+	CreatePuppets = {
+		On = function(Listener: (Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }) -> ()): () -> ()
+			table.insert(Events.Reliable[3], Listener)
+			for Index, Arguments in Queue.Reliable[3] do
+				task.spawn(Listener, table.unpack(Arguments))
+			end
+			Queue.Reliable[3] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[3], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[3], Index)
 				end
 			end
-		},
-		ReplicatePuppetStates = {
-			On = function(Listener: (Value1: buffer, Value2: number) -> ()): () -> ()
-				table.insert(Events.Unreliable[0], Listener)
-				return function (): ()
-					local Index = table.find(Events.Unreliable[0], Listener)
-					if Index ~= nil then
-						table.remove(Events.Unreliable[0], Index)
-					end
+		end
+	},
+	ReplicatePuppetStates = {
+		On = function(Listener: (Value1: buffer, Value2: number) -> ()): () -> ()
+			table.insert(Events.Unreliable[0], Listener)
+			return function (): ()
+				local Index = table.find(Events.Unreliable[0], Listener)
+				if Index ~= nil then
+					table.remove(Events.Unreliable[0], Index)
 				end
 			end
-		},
-		DestroyPuppet = {
-			On = function(Listener: (Value: number) -> ()): () -> ()
-				table.insert(Events.Reliable[4], Listener)
-				for Index, Arguments in Queue.Reliable[4] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[4] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[4], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[4], Index)
-					end
+		end
+	},
+	DestroyPuppet = {
+		On = function(Listener: (Value: number) -> ()): () -> ()
+			table.insert(Events.Reliable[4], Listener)
+			for Index, Arguments in Queue.Reliable[4] do
+				task.spawn(Listener, table.unpack(Arguments))
+			end
+			Queue.Reliable[4] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[4], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[4], Index)
 				end
 			end
-		},
-		CreateDirtyGroupsFromClient = {
-			Fire = function(Value: {[string]: Part}): ()
-				Shatterbox_WriteEVENT_CreateDirtyGroupsFromClient(Value)
+		end
+	},
+	CreateDirtyGroupsFromClient = {
+		Fire = function(Value: {[string]: Part}): ()
+			WriteEVENT_CreateDirtyGroupsFromClient(Value)
+		end
+	},
+	CreateDirtyGroupsFromServer = {
+		On = function(Listener: (Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}) -> ()): () -> ()
+			table.insert(Events.Reliable[6], Listener)
+			for Index, Arguments in Queue.Reliable[6] do
+				task.spawn(Listener, table.unpack(Arguments))
 			end
-		},
-		CreateDirtyGroupsFromServer = {
-			On = function(Listener: (Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}) -> ()): () -> ()
-				table.insert(Events.Reliable[6], Listener)
-				for Index, Arguments in Queue.Reliable[6] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[6] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[6], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[6], Index)
-					end
-				end
-			end
-		},
-		ReplicateState = {
-			On = function(Listener: (Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number) -> ()): () -> ()
-				table.insert(Events.Reliable[7], Listener)
-				for Index, Arguments in Queue.Reliable[7] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[7] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[7], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[7], Index)
-					end
+			Queue.Reliable[6] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[6], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[6], Index)
 				end
 			end
-		},
-		ReplicateDestruction = {
-			On = function(Listener: (Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}) -> ()): () -> ()
-				table.insert(Events.Reliable[8], Listener)
-				for Index, Arguments in Queue.Reliable[8] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[8] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[8], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[8], Index)
-					end
+		end
+	},
+	ReplicateState = {
+		On = function(Listener: (Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number) -> ()): () -> ()
+			table.insert(Events.Reliable[7], Listener)
+			for Index, Arguments in Queue.Reliable[7] do
+				task.spawn(Listener, table.unpack(Arguments))
+			end
+			Queue.Reliable[7] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[7], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[7], Index)
 				end
 			end
-		},
-		ClientInitComplete = {
-			Fire = function(Value: nil): ()
-				Shatterbox_WriteEVENT_ClientInitComplete(Value)
+		end
+	},
+	ReplicateDestruction = {
+		On = function(Listener: (Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}) -> ()): () -> ()
+			table.insert(Events.Reliable[8], Listener)
+			for Index, Arguments in Queue.Reliable[8] do
+				task.spawn(Listener, table.unpack(Arguments))
 			end
-		},
-		SignalPrintState = {
-			On = function(Listener: (Value: nil) -> ()): () -> ()
-				table.insert(Events.Reliable[10], Listener)
-				for Index, Arguments in Queue.Reliable[10] do
-					task.spawn(Listener, table.unpack(Arguments))
-				end
-				Queue.Reliable[10] = {}
-				return function (): ()
-					local Index = table.find(Events.Reliable[10], Listener)
-					if Index ~= nil then
-						table.remove(Events.Reliable[10], Index)
-					end
+			Queue.Reliable[8] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[8], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[8], Index)
 				end
 			end
-		},
+		end
+	},
+	ClientInitComplete = {
+		Fire = function(Value: nil): ()
+			WriteEVENT_ClientInitComplete(Value)
+		end
+	},
+	SignalPrintState = {
+		On = function(Listener: (Value: nil) -> ()): () -> ()
+			table.insert(Events.Reliable[10], Listener)
+			for Index, Arguments in Queue.Reliable[10] do
+				task.spawn(Listener, table.unpack(Arguments))
+			end
+			Queue.Reliable[10] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[10], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[10], Index)
+				end
+			end
+		end
 	},
 })
 type BLINK_EVENTS_SYMBOL = typeof(Returns)

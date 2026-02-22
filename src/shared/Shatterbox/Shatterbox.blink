@@ -1,3 +1,11 @@
+option ServerOutput = "./lib/Server.luau"
+option ClientOutput = "./lib/Client.luau"
+
+option ManualReplication = true
+
+option RemoteScope = "SHATTERBOX"
+
+
 type Vec2 = f32[2]
 
 struct Decal {

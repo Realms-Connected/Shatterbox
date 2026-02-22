@@ -113,9 +113,10 @@ local OnVoxelDestructRegistry = setmetatable({}, {
 	__index = function(tbl, k) return (k and rawget(tbl, k:lower())) end -- or rawget(tbl, "default") end
 }) :: { [string] : Types.OnVoxelDestruct }
 
-local ClientEvents, ServerEvents, mapContainer
+local StepReplication, ClientEvents, ServerEvents, mapContainer
 if isServer then
-	ServerEvents = require(PathToServer).Shatterbox
+	ServerEvents = require(PathToServer)
+	StepReplication = ServerEvents.StepReplication
 
 	mapContainer = workspace.CurrentCamera
 
@@ -124,7 +125,8 @@ if isServer then
 	serverEffects.SetReference = nil
 	for name, func in pairs(serverEffects) do OnVoxelDestructRegistry[name:lower()] = func end
 elseif isClient then
-	ClientEvents = require(PathToClient).Shatterbox
+	ClientEvents = require(PathToClient)
+	StepReplication = ClientEvents.StepReplication
 
 	mapContainer = workspace:FindFirstChild("ClientMap")
 	if not mapContainer then
@@ -361,8 +363,6 @@ local function InitGreedyState(part, GridSize, groupMin, State, DIMYSTATEDIMZ, S
 	return NVX * NVY * NVZ
 end
 
-
--- coroutine based greedy meshing with smooth display of results
 local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Types.ImaginaryBox })
 	local GridSize = GreedyMeshingQueue[DirtyGroupID]
 
@@ -947,7 +947,7 @@ local function MarkDirty(Part : Part, destructionParams : Types.InternalImaginar
 		FallingGroupMembers[CreatedFallingGroupID] = fallingGroupMembers
 
 	elseif not PartDirtyGroupID and (PartIsDivisible or NonDivisibleInteraction ~= "NONE") then
-		PartDirtyGroupID = PopulateDirtyGroup(Part, nil)
+		PartDirtyGroupID = PopulateDirtyGroup(Part)
 
 		if PartIsDivisible then
 			CreatedDirtyGroups[PartDirtyGroupID] = true
@@ -1032,28 +1032,17 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 			table.insert(partsInPart, part)
 
 			local DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute)
-			local groupData = DirtyGroupData[DirtyGroupID]
+			if Settings.UseGreedyMeshing then
+				local groupData = DirtyGroupData[DirtyGroupID]
 
-			local newGridSize = ParameterGridSize or groupData.GridSize or Settings.DefaultGridSize
-			local oldGridSize = GreedyMeshingQueue[DirtyGroupID]
+				local newGridSize = ParameterGridSize or groupData.GridSize or Settings.DefaultGridSize
+				local oldGridSize = GreedyMeshingQueue[DirtyGroupID]
 
-			GreedyMeshingQueue[DirtyGroupID] = oldGridSize and math.min(oldGridSize, newGridSize) or newGridSize
+				GreedyMeshingQueue[DirtyGroupID] = oldGridSize and math.min(oldGridSize, newGridSize) or newGridSize
+			end
 
 			AffectedDirtyGroups[DirtyGroupID] = true
 		end
-	end
-
-	if USE_CLIENT_SERVER and not replicated and isClient then
-		local ToSendToServer = {}
-		for DirtyGroupID in pairs(createdDirtyGroups) do
-			local groupData = DirtyGroupData[DirtyGroupID]
-			local PartToSend = groupData.OriginalPart
-			ToSendToServer[DirtyGroupID] = PartToSend
-			PartToSend.Parent = nil
-			groupData.OriginalPart = PartFromTemplate(PartToSend, PartToSend.CFrame)
-			groupData.OriginalPart.Parent = mapContainer
-		end
-		ClientEvents.CreateDirtyGroupsFromClient.Fire(ToSendToServer)
 	end
 
 	OperationAffectedFallingGroups[destructionParams.ID] = AffectedFallingGroups
@@ -1227,6 +1216,7 @@ local function ImaginaryVoxels(params, destructibleParts, dirtyGroups)
 
 			-- use Subdivide (either KD or MOT to subdivide toDivide)
 			for _, created in ipairs(SubdivideFunctions[(maxsize > 2 * minsize) and "KD" or "MOT"](toDivide, gridSize)) do
+				--[[
 				-- early encapsulation check on the children parts because encapsulation checks are faster than intersection checks
 				if PartContainsAllVerts(cuttingPart, BlockVerts(created.CFrame, created.Size)) then
 
@@ -1246,6 +1236,7 @@ local function ImaginaryVoxels(params, destructibleParts, dirtyGroups)
 
 					continue
 				end
+				--]]
 
 				created.GridSize = gridSize
 				created.DirtyGroupID = DirtyGroupID
@@ -1397,6 +1388,23 @@ local function CreateDirtyGroupsFromClient(plr, DirtyGroups)
 	ServerEvents.CreateDirtyGroupsFromServer.FireExcept(plr, SerialDirtyGroups)
 end
 
+local function SendDirtyGroupsToServer(DirtyGroups)
+	if not next(DirtyGroups) then return end
+
+	local ToSendToServer = {}
+	for DirtyGroupID in pairs(DirtyGroups) do
+		local groupData = DirtyGroupData[DirtyGroupID]
+		local PartToSend = groupData.OriginalPart
+		local newClientPart = PartFromTemplate(PartToSend, PartToSend.CFrame)
+		groupData.OriginalPart = newClientPart
+		PartToSend.Parent = nil
+		newClientPart.Parent = mapContainer
+		ToSendToServer[DirtyGroupID] = PartToSend
+	end
+	ClientEvents.CreateDirtyGroupsFromClient.Fire(ToSendToServer)
+	StepReplication()
+end
+
 
 local function ReplicateDestructionToClients(destructionType : DestructionTypes, destructionParams : Types.DestructionParams, createdDirtyGroups : { [string] : boolean })
 
@@ -1420,7 +1428,6 @@ local function ReplicateDestructionToClients(destructionType : DestructionTypes,
 end
 
 local function ReplicateDestructionFromServer(destructionType, serialParams, serialNewDirtyGroups)
-	if not clientInitComplete then return end
 
 	local destructionParams = DeserializedDestructionParams(serialParams)
 
@@ -1866,15 +1873,15 @@ local function HeartbeatWorker(deltaTime)
 
 	if Settings.UseSmoothCleanup then coroutine.wrap(SmoothCleanupBehavior)(deltaTime) end
 
-	debug.profilebegin("Process ShatterQueue")
+	--debug.profilebegin("Process ShatterQueue")
 
 	ProcessShatterQueue()
 
-	debug.profileend()
+	--debug.profileend()
 
 	if #ImaginaryCreateQueue > 0 then
 		if Settings.UseGreedyMeshing then
-			debug.profilebegin("Process GreedyMesh")
+			--debug.profilebegin("Process GreedyMesh")
 			local DirtyGroupImaginaryParts = {}
 
 			for _, toCreate in ipairs(ImaginaryCreateQueue) do
@@ -1900,32 +1907,34 @@ local function HeartbeatWorker(deltaTime)
 				end
 				GreedyMeshBehavior(DirtyGroupID, ImaginaryParts)
 			end
-			debug.profileend()
+			--debug.profileend()
 
-			debug.profilebegin("Display GreedyMesh")
+			--debug.profilebegin("Display GreedyMesh")
 			for _, toCreate in ipairs(GreedyMeshedImaginaryParts) do
 				InstantiatePart(toCreate.DirtyGroupID, toCreate.CFrame, toCreate.Size)
 			end
 
 			GreedyMeshedImaginaryParts = {}
-			debug.profileend()
+			--debug.profileend()
 		else
+			--debug.profilebegin("Create New Parts")
 			for _, toCreate in ipairs(ImaginaryCreateQueue) do
 				InstantiatePart(toCreate.DirtyGroupID, toCreate.CFrame, toCreate.Size)
 			end
+			--debug.profileend()
 		end
 
 		ImaginaryCreateQueue = {}
 	end
 
-	debug.profilebegin("Destroy old parts")
+	--debug.profilebegin("Destroy old parts")
 	if next(ImaginaryDestroyQueue) then
 		for toDestroy in pairs(ImaginaryDestroyQueue) do
 			DestroyPart(toDestroy)
 		end
 		ImaginaryDestroyQueue = {}
 	end
-	debug.profileend()
+	--debug.profileend()
 
 	if #NewPlayerStateReplicationQueue > 0 then
 		for _, plr in ipairs(NewPlayerStateReplicationQueue) do ReplicateStateToPlayer(plr) end
@@ -1933,6 +1942,8 @@ local function HeartbeatWorker(deltaTime)
 	end
 
 	if isServer then PuppeteerBehavior(deltaTime) end
+
+	StepReplication()
 end
 
 
@@ -2036,20 +2047,23 @@ end
 --
 -- if no FilterTagged is given, everything except IndestructibleTag tagged Block parts are considered for destruction.
 function Shatterbox.Destroy(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : {Player}?, SkipFloors : boolean?, SkipWalls : boolean?)
-	coroutine.wrap(function()
-		if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls) then
-			return
-		end
+	if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls) then
+		return
+	end
 
-		local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
+	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
 
-		if USE_CLIENT_SERVER and isServer then
-			local _, createdDirtyGroups = GetDestructibleParts(params)
+	if USE_CLIENT_SERVER then
+		local _, createdDirtyGroups = GetDestructibleParts(params)
+
+		if isServer then
 			ReplicateDestructionToClients(NORMAL, params, createdDirtyGroups)
+		else
+			SendDirtyGroupsToServer(createdDirtyGroups)
 		end
+	end
 
-		table.insert(ShatterQueue, params)
-	end)()
+	table.insert(ShatterQueue, params)
 end
 
 
@@ -2067,8 +2081,12 @@ function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.Worl
 
 	local destructibleParts, createdDirtyGroups, _, affectedIDs = GetDestructibleParts(params)
 
-	if USE_CLIENT_SERVER and isServer then
-		ReplicateDestructionToClients(IMAGINARY, params, createdDirtyGroups)
+	if USE_CLIENT_SERVER then
+		if isServer then
+			ReplicateDestructionToClients(IMAGINARY, params, createdDirtyGroups)
+		else
+			SendDirtyGroupsToServer(createdDirtyGroups)
+		end
 	end
 
 	voxels, existingDebris = ImaginaryVoxels(params, destructibleParts, affectedIDs)
@@ -2434,20 +2452,44 @@ elseif isClient then
 	if USE_CLIENT_SERVER then
 		ClientEvents.ReplicateState.On(ReplicateStateFromServer)
 
-		ClientEvents.ReplicateDestruction.On(ReplicateDestructionFromServer)
+		ClientEvents.ReplicateDestruction.On(function(destructionType, serialParams, serialNewDirtyGroups)
+			if not clientInitComplete then return end
+			ReplicateDestructionFromServer(destructionType, serialParams, serialNewDirtyGroups)
+		end)
 
-		ClientEvents.CreateDirtyGroupsFromServer.On(CreateSerialDirtyGroups)
+		ClientEvents.CreateDirtyGroupsFromServer.On(function(SerialDirtyGroups)
+			if not clientInitComplete then return end
+			CreateSerialDirtyGroups(SerialDirtyGroups)
+		end)
 
 		ClientEvents.ClientInitComplete.Fire()
 	end
 
-	ClientEvents.SignalClearQueue.On(Shatterbox.ClearQueue)
-	ClientEvents.SignalReset.On(function(doNotRevertOwnership) Shatterbox.Reset(doNotRevertOwnership, true) end)
-	ClientEvents.SignalResetArea.On(function(cframe, size) Shatterbox.ResetArea({ CFrame = cframe, Size = size }) end)
+	ClientEvents.SignalClearQueue.On(function()
+		if USE_CLIENT_SERVER and not clientInitComplete then return end
+		Shatterbox.ClearQueue()
+	end)
+	ClientEvents.SignalReset.On(function(doNotRevertOwnership)
+		if USE_CLIENT_SERVER and not clientInitComplete then return end
+		Shatterbox.Reset(doNotRevertOwnership, true)
+	end)
+	ClientEvents.SignalResetArea.On(function(cframe, size)
+		if USE_CLIENT_SERVER and not clientInitComplete then return end
+		Shatterbox.ResetArea({ CFrame = cframe, Size = size })
+	end)
 
-	ClientEvents.CreatePuppets.On(CreatePuppets)
-	ClientEvents.ReplicatePuppetStates.On(ReplicatePuppetStates)
-	ClientEvents.DestroyPuppet.On(DestroyPuppet)
+	ClientEvents.CreatePuppets.On(function(serialPuppets)
+		if USE_CLIENT_SERVER and not clientInitComplete then return end
+		CreatePuppets(serialPuppets)
+	end)
+	ClientEvents.ReplicatePuppetStates.On(function(puppetStates, stepDelta)
+		if USE_CLIENT_SERVER and not clientInitComplete then return end
+		ReplicatePuppetStates(puppetStates, stepDelta)
+	end)
+	ClientEvents.DestroyPuppet.On(function(index)
+		if USE_CLIENT_SERVER and not clientInitComplete then return end
+		DestroyPuppet(index)
+	end)
 
 	ClientEvents.SignalPrintState.On(PrintState)
 end
