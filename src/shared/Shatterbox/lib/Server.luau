@@ -154,6 +154,9 @@ local Queue: any = {
 Events.Reliable[5] = {}
 Queue.Reliable[5] = table.create(256)
 Queue.Reliable[9] = table.create(256)
+Events.Reliable[10] = {}
+Queue.Reliable[10] = table.create(256)
+export type GUID = string
 export type Vec2 = { number }
 export type Decal = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? }
 export type Texture = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? }
@@ -162,9 +165,7 @@ export type PartProperties = { Anchored: boolean, Color: Color3?, Material: numb
 export type Box = { CFrame: CFrame, Size: Vector3 }
 export type Hitbox = { CFrame: CFrame, Size: Vector3, Shape: number }
 export type PartInstance = { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
-export type Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
-export type DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }
-export type PuppetState = { GUID: string, CFrame: CFrame }
+export type DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }
 local function WriteEVENT_SignalClearQueue(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
@@ -788,9 +789,9 @@ local function ReadEVENT_CreateDirtyGroupsFromClient(): ({[string]: Part})
 	local Value = {}
 	local Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 	for _ = 1, Elements_1 do
-		local OFFSET_0 = Read(2)
-		local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
-		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		local OFFSET_0 = Read(32)
+		local Key_1 = buffer.readstring(RecieveBuffer, OFFSET_0, 32)
+		if #Key_1 ~= 32 then error(`Expected length of "Key_1" to equal to 32, got {#Key_1} instead.`) end
 		RecieveInstanceCursor += 1
 		local Element_1 = RecieveInstances[RecieveInstanceCursor]
 		if typeof(Element_1) ~= "Instance" then error(`Expected an Instance, got {typeof(Element_1)} instead.`) end
@@ -807,11 +808,8 @@ local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value do
 		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_0 = Allocate(32)
+		buffer.writestring(SendBuffer, OFFSET_0, Key_1, 32)
 		local Vector = Element_1.CFrame.Position
 		local OFFSET_1 = Allocate(4)
 		buffer.writef32(SendBuffer, OFFSET_1, Vector.X)
@@ -1323,11 +1321,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value1 do
 		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_0 = Allocate(32)
+		buffer.writestring(SendBuffer, OFFSET_0, Key_1, 32)
 		local Vector = Element_1.CFrame.Position
 		local OFFSET_1 = Allocate(4)
 		buffer.writef32(SendBuffer, OFFSET_1, Vector.X)
@@ -1833,11 +1828,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value2 do
 		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_0 = Allocate(32)
+		buffer.writestring(SendBuffer, OFFSET_0, Key_1, 32)
 		-- START ARRAY
 		local OFFSET_1 = Allocate(2)
 		buffer.writeu16(SendBuffer, OFFSET_1, #Element_1)
@@ -2406,11 +2398,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value3 do
 		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_0 = Allocate(32)
+		buffer.writestring(SendBuffer, OFFSET_0, Key_1, 32)
 		local OFFSET_1 = Allocate(1)
 		buffer.writeu8(SendBuffer, OFFSET_1, Element_1 and 1 or 0)
 	end
@@ -2418,11 +2407,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value4 do
 		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_0 = Allocate(32)
+		buffer.writestring(SendBuffer, OFFSET_0, Key_1, 32)
 		local OFFSET_1 = Allocate(4)
 		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
 	end
@@ -2430,11 +2416,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value5 do
 		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_0 = Allocate(32)
+		buffer.writestring(SendBuffer, OFFSET_0, Key_1, 32)
 		local OFFSET_1 = Allocate(4)
 		buffer.writef32(SendBuffer, OFFSET_1, Element_1)
 	end
@@ -2949,32 +2932,35 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 	buffer.writeu16(SendBuffer, BLOCK_START + 13, Value7)
 end
 
-local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
-	-- Allocate BLOCK: 52 bytes
-	local BLOCK_START = Allocate(52)
+local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+	-- Allocate BLOCK: 83 bytes
+	local BLOCK_START = Allocate(83)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 8)
 	local Length = #Value1
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
 	Allocate(Length)
 	buffer.writestring(SendBuffer, SendOffset, Value1, Length)
-	local Length = #Value2.ID
-	buffer.writeu16(SendBuffer, BLOCK_START + 3, Length)
-	Allocate(Length)
-	buffer.writestring(SendBuffer, SendOffset, Value2.ID, Length)
+	buffer.writestring(SendBuffer, BLOCK_START + 3, Value2.ID, 32)
 	local Vector = Value2.CuttingPart.CFrame.Position
-	buffer.writef32(SendBuffer, BLOCK_START + 5, Vector.X)
-	buffer.writef32(SendBuffer, BLOCK_START + 9, Vector.Y)
-	buffer.writef32(SendBuffer, BLOCK_START + 13, Vector.Z)
+	buffer.writef32(SendBuffer, BLOCK_START + 35, Vector.X)
+	buffer.writef32(SendBuffer, BLOCK_START + 39, Vector.Y)
+	buffer.writef32(SendBuffer, BLOCK_START + 43, Vector.Z)
 	local rX, rY, rZ = Value2.CuttingPart.CFrame:ToOrientation()
-	buffer.writef32(SendBuffer, BLOCK_START + 17, rX)
-	buffer.writef32(SendBuffer, BLOCK_START + 21, rY)
-	buffer.writef32(SendBuffer, BLOCK_START + 25, rZ)
+	buffer.writef32(SendBuffer, BLOCK_START + 47, rX)
+	buffer.writef32(SendBuffer, BLOCK_START + 51, rY)
+	buffer.writef32(SendBuffer, BLOCK_START + 55, rZ)
 	local Vector = Value2.CuttingPart.Size
-	buffer.writef32(SendBuffer, BLOCK_START + 29, Vector.X)
-	buffer.writef32(SendBuffer, BLOCK_START + 33, Vector.Y)
-	buffer.writef32(SendBuffer, BLOCK_START + 37, Vector.Z)
-	buffer.writeu8(SendBuffer, BLOCK_START + 41, Value2.CuttingPart.Shape)
-	buffer.writeu8(SendBuffer, BLOCK_START + 42, Value2.FilterTagged ~= nil and 1 or 0)
+	buffer.writef32(SendBuffer, BLOCK_START + 59, Vector.X)
+	buffer.writef32(SendBuffer, BLOCK_START + 63, Vector.Y)
+	buffer.writef32(SendBuffer, BLOCK_START + 67, Vector.Z)
+	buffer.writeu8(SendBuffer, BLOCK_START + 71, Value2.CuttingPart.Shape)
+	buffer.writeu8(SendBuffer, BLOCK_START + 72, Value2.WaitForClientTimeout ~= nil and 1 or 0)
+	if Value2.WaitForClientTimeout ~= nil then
+		-- Allocate BLOCK: 4 bytes
+		local BLOCK_START = Allocate(4)
+		buffer.writef32(SendBuffer, BLOCK_START + 0, Value2.WaitForClientTimeout)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 73, Value2.FilterTagged ~= nil and 1 or 0)
 	if Value2.FilterTagged ~= nil then
 		-- Allocate BLOCK: 2 bytes
 		local BLOCK_START = Allocate(2)
@@ -2994,37 +2980,37 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 		end
 		-- END ARRAY
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 43, Value2.GridSize ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 74, Value2.GridSize ~= nil and 1 or 0)
 	if Value2.GridSize ~= nil then
 		-- Allocate BLOCK: 4 bytes
 		local BLOCK_START = Allocate(4)
 		buffer.writef32(SendBuffer, BLOCK_START + 0, Value2.GridSize)
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 44, Value2.CleanupDelay ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 75, Value2.CleanupDelay ~= nil and 1 or 0)
 	if Value2.CleanupDelay ~= nil then
 		-- Allocate BLOCK: 4 bytes
 		local BLOCK_START = Allocate(4)
 		buffer.writef32(SendBuffer, BLOCK_START + 0, Value2.CleanupDelay)
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 45, Value2.SkipWalls ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 76, Value2.SkipWalls ~= nil and 1 or 0)
 	if Value2.SkipWalls ~= nil then
 		-- Allocate BLOCK: 1 bytes
 		local BLOCK_START = Allocate(1)
 		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value2.SkipWalls and 1 or 0)
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 46, Value2.SkipFloors ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 77, Value2.SkipFloors ~= nil and 1 or 0)
 	if Value2.SkipFloors ~= nil then
 		-- Allocate BLOCK: 1 bytes
 		local BLOCK_START = Allocate(1)
 		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value2.SkipFloors and 1 or 0)
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 47, Value2.SkipEncapsulatedVoxels ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 78, Value2.SkipEncapsulatedVoxels ~= nil and 1 or 0)
 	if Value2.SkipEncapsulatedVoxels ~= nil then
 		-- Allocate BLOCK: 1 bytes
 		local BLOCK_START = Allocate(1)
 		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value2.SkipEncapsulatedVoxels and 1 or 0)
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 48, Value2.OnVoxelDestruct ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 79, Value2.OnVoxelDestruct ~= nil and 1 or 0)
 	if Value2.OnVoxelDestruct ~= nil then
 		-- Allocate BLOCK: 2 bytes
 		local BLOCK_START = Allocate(2)
@@ -3033,18 +3019,15 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 		Allocate(Length)
 		buffer.writestring(SendBuffer, SendOffset, Value2.OnVoxelDestruct, Length)
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 49, Value2.UserData ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 80, Value2.UserData ~= nil and 1 or 0)
 	if Value2.UserData ~= nil then
 		table.insert(SendInstances, if Value2.UserData == nil then Null else Value2.UserData)
 	end
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value3 do
 		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_0 = Allocate(32)
+		buffer.writestring(SendBuffer, OFFSET_0, Key_1, 32)
 		local Vector = Element_1.CFrame.Position
 		local OFFSET_1 = Allocate(4)
 		buffer.writef32(SendBuffer, OFFSET_1, Vector.X)
@@ -3546,17 +3529,25 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 		end
 		-- END ARRAY
 	end
-	buffer.writeu16(SendBuffer, BLOCK_START + 50, Elements_1)
+	buffer.writeu16(SendBuffer, BLOCK_START + 81, Elements_1)
 end
 
 local function ReadEVENT_ClientInitComplete(): (nil)
 	return nil
 end
 
+local function ReadEVENT_ClientRecievedMapParts(): (string)
+	-- Read BLOCK: 32 bytes
+	local BLOCK_START = Read(32)
+	local Value = buffer.readstring(RecieveBuffer, BLOCK_START + 0, 32)
+	if #Value ~= 32 then error(`Expected length of "Value" to equal to 32, got {#Value} instead.`) end
+	return Value
+end
+
 local function WriteEVENT_SignalPrintState(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
-	buffer.writeu8(SendBuffer, BLOCK_START + 0, 10)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 11)
 end
 
 if not RunService:IsRunning() then
@@ -3620,6 +3611,9 @@ if not RunService:IsRunning() then
 		FireExcept = NOOP
 	},
 	ClientInitComplete = {
+		On = NOOP
+	},
+	ClientRecievedMapParts = {
 		On = NOOP
 	},
 	SignalPrintState = {
@@ -3705,6 +3699,18 @@ Reliable.OnServerEvent:Connect(function(Player: Player, Buffer: buffer, Instance
 					warn("[Blink]: Event queue of \"ClientInitComplete\" exceeded 256, did you forget to implement a listener?")
 				end
 				table.insert(Queue.Reliable[9], {Player, Value} :: {any})
+			end
+		elseif Index == 10 then
+			local Value: string = ReadEVENT_ClientRecievedMapParts()
+			if #Events.Reliable[10] > 0 then
+				for _, Listener in Events.Reliable[10] do
+					task.spawn(Listener, Player, Value)
+				end
+			else
+				if #Queue.Reliable[10] > 256 then
+					warn("[Blink]: Event queue of \"ClientRecievedMapParts\" exceeded 256, did you forget to implement a listener?")
+				end
+				table.insert(Queue.Reliable[10], {Player, Value} :: {any})
 			end
 		end
 	end
@@ -4101,12 +4107,12 @@ local Returns = table.freeze({
 		end,
 	},
 	ReplicateDestruction = {
-		Fire = function(Player: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		Fire = function(Player: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load(PlayersMap[Player])
 			WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 			PlayersMap[Player] = Save()
 		end,
-		FireAll = function(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireAll = function(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4118,7 +4124,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireList = function(List: {Player}, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireList = function(List: {Player}, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4130,7 +4136,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireExcept = function(Except: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireExcept = function(Except: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4156,6 +4162,21 @@ local Returns = table.freeze({
 			return function (): ()
 				if Events.Reliable[9] == Listener then
 					Events.Reliable[9] = nil
+				end
+			end
+		end
+	},
+	ClientRecievedMapParts = {
+		On = function(Listener: (Player: Player, Value: string) -> ()): () -> ()
+			table.insert(Events.Reliable[10], Listener)
+			for Index, Arguments in Queue.Reliable[10] do
+				task.spawn(Listener, table.unpack(Arguments))
+			end
+			Queue.Reliable[10] = {}
+			return function (): ()
+				local Index = table.find(Events.Reliable[10], Listener)
+				if Index ~= nil then
+					table.remove(Events.Reliable[10], Index)
 				end
 			end
 		end

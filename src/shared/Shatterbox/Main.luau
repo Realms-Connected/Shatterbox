@@ -323,10 +323,11 @@ local function DestroyPart(part)
 end
 
 local HalfVector = Vector3.one * 0.5
+--[[
 local MAXU32 = 0xFFFFFFFF
 local function InitGreedyState(part, GridSize, groupMin, State, DIMYSTATEDIMZ, STATEDIMZ)
 
-	local minCFrame, _, S, _, _, _, NVX, NVY, NVZ = GridInfo(part.CFrame--[[:Orthonormalize()]], part.Size, GridSize)
+	local minCFrame, _, S, _, _, _, NVX, NVY, NVZ = GridInfo(part.CFrame, part.Size, GridSize)
 
 	if not minCFrame.Rotation:FuzzyEq(groupMin.Rotation, EPSILON) then return nil end
 
@@ -561,6 +562,196 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 		end
 	end
 end
+--]]
+--
+local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+
+	local minCFrame, _, S, _, _, _, NVX, NVY, NVZ = GridInfo(part.CFrame, part.Size, GridSize)
+
+	if not minCFrame.Rotation:FuzzyEq(groupMin.Rotation, EPSILON) then return nil end
+
+	local Offset = groupMin:PointToObjectSpace(minCFrame.Position) / S
+	local RoundedOffset = (Offset + HalfVector):Floor()
+
+	if not Offset:FuzzyEq(RoundedOffset, EPSILON) then return nil end
+
+	local DX, DY, DZ = RoundedOffset.X - 1, RoundedOffset.Y - 1, RoundedOffset.Z
+
+	-- Initialize the 3d state volume
+	for X = 1, NVX do
+		local dixz = (X + DX)*DIMYDIMZ + DZ
+		for Y = 1, NVY do
+			local di = dixz + (Y + DY)*DIMZ
+			for Z = 1, NVZ do
+				State[di + Z] = true
+			end
+		end
+	end
+
+	return NVX * NVY * NVZ
+end
+
+-- coroutine based greedy meshing with smooth display of results
+local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Types.ImaginaryBox })
+	local GridSize = GreedyMeshingQueue[DirtyGroupID]
+
+	local dirtyGroupData = DirtyGroupData[DirtyGroupID]
+	local dirtyGroupMembers = DirtyGroupMembers[DirtyGroupID]
+
+	local Original = dirtyGroupData.OriginalPart
+
+	-- The bounding area of Greedy Meshing, defined by the original part before it was ever destroyed
+	local groupMin, _, VoxelSize, _, _, _, DIMX, DIMY, DIMZ = GridInfo(Original.CFrame, Original.Size, GridSize)
+	local DIMYDIMZ = DIMY*DIMZ
+	local VSX, VSY, VSZ = VoxelSize.X, VoxelSize.Y, VoxelSize.Z
+
+	-- local stateBitCount = DIMX*DIMYDIMZ
+
+	-- flat 3d state array : index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
+	local State = table.create(DIMX*DIMYDIMZ, false)
+
+	-- information about the original parts, used for smoothly displaying the output of greedy meshing
+	local OriginalParts = {} :: { Part }
+
+	-- the total number of voxels in the State array
+	local count = 0
+
+	for member in pairs(dirtyGroupMembers) do
+		if member:HasTag(DebrisTag) then continue end
+
+		table.insert(OriginalParts, member)
+
+		if ImaginaryDestroyQueue[member] then continue end
+
+		local n = InitGreedyState(member, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+		if n then
+			count += n
+			ImaginaryDestroyQueue[member] = true
+		end
+	end
+
+	for _, imaginaryMember in ipairs(ImaginaryParts) do
+		local n = InitGreedyState(imaginaryMember, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
+		if n then count += n end
+	end
+
+	if count == 0 then return end
+
+	local meshed = {}
+
+	local sx, sy, sz = 1, 1, 1
+	local si = 1
+	while count > 0 do
+		-- find first unvisited and active state position
+		while not State[si] do si += 1 end
+
+		State[si] = false
+
+		local X, rem = ((si - 1) // DIMYDIMZ) + 1, (si - 1) % DIMYDIMZ
+		local Y, Z = (rem // DIMZ) + 1, (rem % DIMZ) + 1
+
+		sx, sy, sz = X, Y, Z
+
+		local XINDEX = (X - 1)*DIMYDIMZ
+		local XYINDEX = si - Z
+		-- planar expansion along Z axis
+		for DZ = Z + 1, DIMZ do
+			local i = XYINDEX + DZ
+
+			if not State[i] then break end
+
+			State[i] = false
+
+			Z = DZ
+		end
+
+		-- planar expansion along Y axis
+		for DY = Y + 1, DIMY do
+			local breakExpansion = false
+
+			local indices = {}
+
+			XYINDEX = XINDEX + (DY - 1)*DIMZ
+			for iz = sz, Z do
+				local i = XYINDEX + iz
+
+				if not State[i] then
+					breakExpansion = true
+					break
+				end
+
+				indices[i] = true
+			end
+
+			if breakExpansion then break end
+
+			for index in pairs(indices) do State[index] = false end
+
+			Y = DY
+		end
+
+		-- planar expansion along X axis
+		for DX = X + 1, DIMX do
+			local breakExpansion = false
+
+			local indices = {}
+
+			XINDEX = (DX - 1)*DIMYDIMZ
+			for iy = sy, Y do
+				XYINDEX = XINDEX + (iy - 1)*DIMZ
+				for iz = sz, Z do
+					local i = XYINDEX + iz
+
+					if not State[i] then
+						breakExpansion = true
+						break
+					end
+
+					indices[i] = true
+				end
+
+				if breakExpansion then break end
+			end
+
+			if breakExpansion then break end
+
+			for index in pairs(indices) do State[index] = false end
+
+			X = DX
+		end
+
+		-- the number of voxels in the meshed span on every axis
+		local NX, NY, NZ = X - sx + 1, Y - sy + 1, Z - sz + 1
+		-- subtract the total number of voxels in the meshed span
+		count -= NX * NY * NZ
+
+		-- define a cuboid using the start and end positions.
+		table.insert(meshed, {
+			DirtyGroupID = DirtyGroupID,
+			CFrame = ( groupMin + groupMin.XVector*VSX*((X + sx)*0.5 - 1) + groupMin.YVector*VSY*((Y + sy)*0.5 - 1) + groupMin.ZVector*VSZ*((Z + sz)*0.5 - 1) ),
+			Size = VoxelSize * Vector3.new(NX, NY, NZ)
+		})
+	end
+
+	for _, meshedInfo in ipairs(meshed) do
+		local index, found = nil, nil
+		for i, original in ipairs(OriginalParts) do
+			if original.CFrame:FuzzyEq(meshedInfo.CFrame, 0.001) and original.Size:FuzzyEq(meshedInfo.Size, 0.001) then
+				index, found = i, original
+				break
+			end
+		end
+
+		if index then
+			table.remove(OriginalParts, index)
+			ImaginaryDestroyQueue[found] = nil
+		else
+			--InstantiatePart(DirtyGroupID, meshedInfo.CFrame, meshedInfo.Size)
+			table.insert(GreedyMeshedImaginaryParts, meshedInfo)
+		end
+	end
+end
+--]]
 
 
 -- Returns the first occurance of an ancestor that is a Folder or a Model
@@ -632,13 +823,13 @@ end
 
 
 -- What happens when a model is passed in as the `CuttingPart`
-local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
+local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls, WaitForClientTimeout)
 	local cuttingPart = if typeof(intersectingPart) == "table" then intersectingPart.CuttingPart else intersectingPart
 	local retA, retB = {}, {}
 	if cuttingPart and typeof(cuttingPart) == "Instance" and cuttingPart:IsA("Model") then
 		for _, desc in ipairs(cuttingPart:GetDescendants()) do
 			if not desc:IsA("Part") then continue end
-			local rA, rB = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
+			local rA, rB = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls, WaitForClientTimeout)
 			if rA then
 				table.move(rA, 1, #rA, #retA + 1, retA)
 			end
@@ -651,8 +842,13 @@ local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, Cle
 	return false, retA, retB
 end
 
+
+local function GetCondensedGUID()
+	return string.gsub(HttpService:GenerateGUID(false), '-', '')
+end
+
 -- Validates destruction parameters
-local function ValidateDestructionParams(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : (Player | {Player})?, SkipFloors : boolean?, SkipWalls : boolean?)
+local function ValidateDestructionParams(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : (Player | {Player})?, SkipFloors : boolean?, SkipWalls : boolean?, WaitForClientTimeout : number?)
 
 	local CuttingPart = {} :: Types.Hitbox
 	local params = {} :: Types.InternalDestructionParams | Types.InternalImaginaryParams
@@ -714,8 +910,9 @@ local function ValidateDestructionParams(intersectingPart : Part | Model | Types
 				    params.SkipWalls = tbl.SkipWalls 				 or SkipWalls
 		  params.OnDestructCompleted = tbl.OnDestructCompleted       or OnDestructCompleted
 					 params.UserData = tbl.UserData    		         or UserData or {}
+		 params.WaitForClientTimeout = tbl.WaitForClientTimeout		 or WaitForClientTimeout
 	params.ExcludePlayersReplication = playerExclusions or {}
-		                   params.ID = tbl.ID 					     or HttpService:GenerateGUID(false)
+		                   params.ID = tbl.ID 					     or GetCondensedGUID()
 
 	assert(not params.CleanupDelay or typeof(params.CleanupDelay) == "number", "CleanupDelay must be a number if it is set.")
 	assert(not params.OnVoxelDestruct or typeof(params.OnVoxelDestruct) == "string", "OnVoxelDestruct must be a string indicating the name of the OnVoxelDestruct callback.")
@@ -881,7 +1078,7 @@ end
 
 local function PopulateDirtyGroup(Part : Part, DirtyGroupID : string?)
 	-- populate the initial dirty group information if there is no group associated with this part
-	DirtyGroupID = DirtyGroupID or HttpService:GenerateGUID(false)
+	DirtyGroupID = DirtyGroupID or GetCondensedGUID()
 	Part:SetAttribute(DirtyGroupIDAttribute, DirtyGroupID)
 	DirtyGroupData[DirtyGroupID] = {
 		OriginalPart = Part,
@@ -925,7 +1122,7 @@ local function MarkDirty(Part : Part, destructionParams : Types.InternalImaginar
 
 	if not Part:GetAttribute(FallingGroupIDAttribute) and fallingGroupContainer then
 
-		CreatedFallingGroupID = HttpService:GenerateGUID(false)
+		CreatedFallingGroupID = GetCondensedGUID()
 		local fallingGroupMembers = {}
 
 		for _, part in ipairs(fallingGroupContainer:GetDescendants()) do
@@ -1406,25 +1603,47 @@ local function SendDirtyGroupsToServer(DirtyGroups)
 end
 
 
-local function ReplicateDestructionToClients(destructionType : DestructionTypes, destructionParams : Types.DestructionParams, createdDirtyGroups : { [string] : boolean })
+local function ReplicateDestructionToClients(destructionType : DestructionTypes, destructionParams : Types.DestructionParams, createdDirtyGroups : { [string] : boolean }, skipClientWaiting : boolean?)
 
 	local serialNewDirtyGroups = {}
 	for DirtyGroupID in pairs(createdDirtyGroups) do
 		serialNewDirtyGroups[DirtyGroupID] = SerializedPartInstance(DirtyGroupData[DirtyGroupID].OriginalPart)
 	end
 
+	local PlayerList = Players:GetPlayers()
 	local exclusions = destructionParams.ExcludePlayersReplication
 	if #exclusions > 0 then
-		local PlayerList = Players:GetPlayers()
 		for _, plr in ipairs(exclusions) do
 			local found = table.find(PlayerList, plr)
 			if found then table.remove(PlayerList, found) end
 		end
 
+		if #PlayerList == 0 then return end
+
 		ServerEvents.ReplicateDestruction.FireList(PlayerList, destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups)
 	else
 		ServerEvents.ReplicateDestruction.FireAll(destructionType, SerializedDestructionParams(destructionParams), serialNewDirtyGroups)
 	end
+
+	if not destructionParams.WaitForClientTimeout or destructionType == IMAGINARY then return end
+
+	local disconnect
+	disconnect = ServerEvents.ClientRecievedMapParts.On(function(fromPlr, DestructionID)
+		if destructionParams.ID ~= DestructionID then return end
+		local found = table.find(PlayerList, fromPlr)
+		if found then table.remove(PlayerList, found) end
+	end)
+	local elapsed = 0
+	local waitingOnPlayersConnection
+	waitingOnPlayersConnection = RunService.Heartbeat:Connect(function(deltaTime)
+		elapsed += deltaTime
+		if elapsed >= destructionParams.WaitForClientTimeout or #PlayerList == 0 then
+			waitingOnPlayersConnection:Disconnect()
+			waitingOnPlayersConnection = nil
+			disconnect()
+		end
+	end)
+	while waitingOnPlayersConnection do RunService.Heartbeat:Wait() end
 end
 
 local function ReplicateDestructionFromServer(destructionType, serialParams, serialNewDirtyGroups)
@@ -1439,6 +1658,9 @@ local function ReplicateDestructionFromServer(destructionType, serialParams, ser
 		ImaginaryVoxels(destructionParams)
 
 	elseif destructionType == NORMAL then
+		if destructionParams.WaitForClientTimeout and destructionParams.WaitForClientTimeout > 0 then
+			ClientEvents.ClientRecievedMapParts.Fire(destructionParams.ID)
+		end
 
 		table.insert(ShatterQueue, destructionParams)
 	end
@@ -1446,7 +1668,12 @@ end
 
 
 
-
+local function IsPuppet(instance : Instance) : boolean
+	for _, puppetData in pairs(Puppets) do
+		if puppetData[1] == instance then return true end
+	end
+	return false
+end
 
 local function GetActivePuppets()
 
@@ -1961,6 +2188,8 @@ Shatterbox.Settings = Settings
 function Shatterbox.Puppeteer(voxel : Part)
 	assert(isServer, "This function can only be called from the server")
 
+	if IsPuppet(voxel) then return end
+
 	voxel.Anchored = false
 
 	voxel.Parent = mapContainer
@@ -2022,6 +2251,7 @@ function Shatterbox.Puppeteer(voxel : Part)
 		PuppetNextIndex = 1
 	end
 end
+Shatterbox.IsPuppet = IsPuppet
 
 
 function Shatterbox.FakeClientPuppets(fakePuppets : { Part })
@@ -2046,12 +2276,12 @@ end
 -- Performs voxel destruction around the 'intersectingPart' according to the FilterTagged supplied.
 --
 -- if no FilterTagged is given, everything except IndestructibleTag tagged Block parts are considered for destruction.
-function Shatterbox.Destroy(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : {Player}?, SkipFloors : boolean?, SkipWalls : boolean?)
-	if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls) then
+function Shatterbox.Destroy(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : {Player}?, SkipFloors : boolean?, SkipWalls : boolean?, WaitForClientTimeout : number?)
+	if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls, WaitForClientTimeout) then
 		return
 	end
 
-	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls)
+	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls, WaitForClientTimeout)
 
 	if USE_CLIENT_SERVER then
 		local _, createdDirtyGroups = GetDestructibleParts(params)
@@ -2229,6 +2459,8 @@ function Shatterbox.CreateHitbox()
 	hitbox.Shape = Enum.PartType.Ball :: Enum.PartType
 
 	hitbox.DestructDelay = nil :: number?
+
+	hitbox.WaitForClientTimeout = nil :: number?
 
 	hitbox.FilterTagged = nil :: (string | {string})?
 

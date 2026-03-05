@@ -168,8 +168,9 @@ Events.Reliable[7] = {}
 Queue.Reliable[7] = table.create(256)
 Events.Reliable[8] = {}
 Queue.Reliable[8] = table.create(256)
-Events.Reliable[10] = {}
-Queue.Reliable[10] = table.create(256)
+Events.Reliable[11] = {}
+Queue.Reliable[11] = table.create(256)
+export type GUID = string
 export type Vec2 = { number }
 export type Decal = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? }
 export type Texture = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? }
@@ -178,9 +179,7 @@ export type PartProperties = { Anchored: boolean, Color: Color3?, Material: numb
 export type Box = { CFrame: CFrame, Size: Vector3 }
 export type Hitbox = { CFrame: CFrame, Size: Vector3, Shape: number }
 export type PartInstance = { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
-export type Puppet = { GUID: string, CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
-export type DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }
-export type PuppetState = { GUID: string, CFrame: CFrame }
+export type DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }
 local function ReadEVENT_SignalClearQueue(): (nil)
 	return nil
 end
@@ -789,11 +788,8 @@ local function WriteEVENT_CreateDirtyGroupsFromClient(Value: {[string]: Part}): 
 	local Elements_1 = 0
 	for Key_1, Element_1 in Value do
 		Elements_1 += 1
-		local Length = #Key_1
-		local OFFSET_0 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_0, Length)
-		Allocate(Length)
-		buffer.writestring(SendBuffer, SendOffset, Key_1, Length)
+		local OFFSET_0 = Allocate(32)
+		buffer.writestring(SendBuffer, OFFSET_0, Key_1, 32)
 		table.insert(SendInstances, Element_1 or Null)
 	end
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Elements_1)
@@ -805,9 +801,9 @@ local function ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CF
 	local Value = {}
 	local Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 	for _ = 1, Elements_1 do
-		local OFFSET_0 = Read(2)
-		local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
-		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		local OFFSET_0 = Read(32)
+		local Key_1 = buffer.readstring(RecieveBuffer, OFFSET_0, 32)
+		if #Key_1 ~= 32 then error(`Expected length of "Key_1" to equal to 32, got {#Key_1} instead.`) end
 		local Element_1 = {} :: any
 		local OFFSET_1 = Read(4)
 		local X = buffer.readf32(RecieveBuffer, OFFSET_1)
@@ -908,14 +904,14 @@ local function ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CF
 		if buffer.readu8(RecieveBuffer, OFFSET_15) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			Element_1.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
 		end
 		local OFFSET_16 = Read(1)
 		if buffer.readu8(RecieveBuffer, OFFSET_16) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			Element_1.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
 		end
 		local OFFSET_17 = Read(1)
@@ -971,7 +967,7 @@ local function ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CF
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Element_1.Textures = table.create(Length)
@@ -1099,7 +1095,7 @@ local function ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CF
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Element_1.Lights = table.create(Length)
@@ -1171,7 +1167,7 @@ local function ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CF
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Element_1.Decals = table.create(Length)
@@ -1267,7 +1263,7 @@ local function ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CF
 		local Elements_2 = buffer.readu16(RecieveBuffer, OFFSET_26)
 		for _ = 1, Elements_2 do
 			local OFFSET_0 = Read(2)
-			Length = buffer.readu16(RecieveBuffer, OFFSET_0)
+			local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
 			local Key_2 = buffer.readstring(RecieveBuffer, Read(Length), Length)
 			RecieveInstanceCursor += 1
 			local Element_2 = RecieveInstances[RecieveInstanceCursor]
@@ -1275,7 +1271,7 @@ local function ReadEVENT_CreateDirtyGroupsFromServer(): ({[string]: { CFrame: CF
 		end
 		-- START ARRAY
 		local OFFSET_27 = Read(2)
-		Length = buffer.readu16(RecieveBuffer, OFFSET_27)
+		local Length = buffer.readu16(RecieveBuffer, OFFSET_27)
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 		Element_1.Tags = table.create(Length)
@@ -1301,9 +1297,9 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 	local Value1 = {}
 	local Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 	for _ = 1, Elements_1 do
-		local OFFSET_0 = Read(2)
-		local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
-		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		local OFFSET_0 = Read(32)
+		local Key_1 = buffer.readstring(RecieveBuffer, OFFSET_0, 32)
+		if #Key_1 ~= 32 then error(`Expected length of "Key_1" to equal to 32, got {#Key_1} instead.`) end
 		local Element_1 = {} :: any
 		local OFFSET_1 = Read(4)
 		local X = buffer.readf32(RecieveBuffer, OFFSET_1)
@@ -1404,14 +1400,14 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 		if buffer.readu8(RecieveBuffer, OFFSET_15) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			Element_1.MaterialVariant = buffer.readstring(RecieveBuffer, Read(Length), Length)
 		end
 		local OFFSET_16 = Read(1)
 		if buffer.readu8(RecieveBuffer, OFFSET_16) == 1 then
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			Element_1.CollisionGroup = buffer.readstring(RecieveBuffer, Read(Length), Length)
 		end
 		local OFFSET_17 = Read(1)
@@ -1467,7 +1463,7 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Element_1.Textures = table.create(Length)
@@ -1595,7 +1591,7 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Element_1.Lights = table.create(Length)
@@ -1667,7 +1663,7 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 			-- Read BLOCK: 2 bytes
 			local BLOCK_START = Read(2)
 			-- START ARRAY
-			Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
+			local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 			if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 			if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 			Element_1.Decals = table.create(Length)
@@ -1763,7 +1759,7 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 		local Elements_2 = buffer.readu16(RecieveBuffer, OFFSET_26)
 		for _ = 1, Elements_2 do
 			local OFFSET_0 = Read(2)
-			Length = buffer.readu16(RecieveBuffer, OFFSET_0)
+			local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
 			local Key_2 = buffer.readstring(RecieveBuffer, Read(Length), Length)
 			RecieveInstanceCursor += 1
 			local Element_2 = RecieveInstances[RecieveInstanceCursor]
@@ -1771,7 +1767,7 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 		end
 		-- START ARRAY
 		local OFFSET_27 = Read(2)
-		Length = buffer.readu16(RecieveBuffer, OFFSET_27)
+		local Length = buffer.readu16(RecieveBuffer, OFFSET_27)
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 		Element_1.Tags = table.create(Length)
@@ -1791,12 +1787,12 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 	local Value2 = {}
 	Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 2)
 	for _ = 1, Elements_1 do
-		local OFFSET_0 = Read(2)
-		local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
-		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		local OFFSET_0 = Read(32)
+		local Key_1 = buffer.readstring(RecieveBuffer, OFFSET_0, 32)
+		if #Key_1 ~= 32 then error(`Expected length of "Key_1" to equal to 32, got {#Key_1} instead.`) end
 		-- START ARRAY
 		local OFFSET_1 = Read(2)
-		Length = buffer.readu16(RecieveBuffer, OFFSET_1)
+		local Length = buffer.readu16(RecieveBuffer, OFFSET_1)
 		if Length < 0 then error(`Expected "Length" to be larger than 0, got {Length} instead.`) end
 		if Length > 65535 then error(`Expected "Length" to be smaller than 65535, got {Length} instead.`) end
 		local Element_1 = table.create(Length)
@@ -2347,9 +2343,9 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 	local Value3 = {}
 	Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 4)
 	for _ = 1, Elements_1 do
-		local OFFSET_0 = Read(2)
-		local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
-		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		local OFFSET_0 = Read(32)
+		local Key_1 = buffer.readstring(RecieveBuffer, OFFSET_0, 32)
+		if #Key_1 ~= 32 then error(`Expected length of "Key_1" to equal to 32, got {#Key_1} instead.`) end
 		local OFFSET_1 = Read(1)
 		local Element_1 = (buffer.readu8(RecieveBuffer, OFFSET_1) == 1)
 		Value3[Key_1] = Element_1
@@ -2357,9 +2353,9 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 	local Value4 = {}
 	Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 6)
 	for _ = 1, Elements_1 do
-		local OFFSET_0 = Read(2)
-		local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
-		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		local OFFSET_0 = Read(32)
+		local Key_1 = buffer.readstring(RecieveBuffer, OFFSET_0, 32)
+		if #Key_1 ~= 32 then error(`Expected length of "Key_1" to equal to 32, got {#Key_1} instead.`) end
 		local OFFSET_1 = Read(4)
 		local Element_1 = buffer.readf32(RecieveBuffer, OFFSET_1)
 		Value4[Key_1] = Element_1
@@ -2367,9 +2363,9 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 	local Value5 = {}
 	Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 8)
 	for _ = 1, Elements_1 do
-		local OFFSET_0 = Read(2)
-		local Length = buffer.readu16(RecieveBuffer, OFFSET_0)
-		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		local OFFSET_0 = Read(32)
+		local Key_1 = buffer.readstring(RecieveBuffer, OFFSET_0, 32)
+		if #Key_1 ~= 32 then error(`Expected length of "Key_1" to equal to 32, got {#Key_1} instead.`) end
 		local OFFSET_1 = Read(4)
 		local Element_1 = buffer.readf32(RecieveBuffer, OFFSET_1)
 		Value5[Key_1] = Element_1
@@ -2867,31 +2863,36 @@ local function ReadEVENT_ReplicateState(): ({[string]: { CFrame: CFrame, Size: V
 	return Value1, Value2, Value3, Value4, Value5, Value6, Value7
 end
 
-local function ReadEVENT_ReplicateDestruction(): (string, { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }})
-	-- Read BLOCK: 51 bytes
-	local BLOCK_START = Read(51)
+local function ReadEVENT_ReplicateDestruction(): (string, { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }})
+	-- Read BLOCK: 82 bytes
+	local BLOCK_START = Read(82)
 	local Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 	local Value1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
 	local Value2 = {} :: any
-	Length = buffer.readu16(RecieveBuffer, BLOCK_START + 2)
-	Value2.ID = buffer.readstring(RecieveBuffer, Read(Length), Length)
+	Value2.ID = buffer.readstring(RecieveBuffer, BLOCK_START + 2, 32)
+	if #Value2.ID ~= 32 then error(`Expected length of "Value2.ID" to equal to 32, got {#Value2.ID} instead.`) end
 	Value2.CuttingPart = {} :: any
-	local X = buffer.readf32(RecieveBuffer, BLOCK_START + 4)
-	local Y = buffer.readf32(RecieveBuffer, BLOCK_START + 8)
-	local Z = buffer.readf32(RecieveBuffer, BLOCK_START + 12)
+	local X = buffer.readf32(RecieveBuffer, BLOCK_START + 34)
+	local Y = buffer.readf32(RecieveBuffer, BLOCK_START + 38)
+	local Z = buffer.readf32(RecieveBuffer, BLOCK_START + 42)
 	local Position = Vector3.new(X, Y, Z)
-	local rX = buffer.readf32(RecieveBuffer, BLOCK_START + 16)
-	local rY = buffer.readf32(RecieveBuffer, BLOCK_START + 20)
-	local rZ = buffer.readf32(RecieveBuffer, BLOCK_START + 24)
+	local rX = buffer.readf32(RecieveBuffer, BLOCK_START + 46)
+	local rY = buffer.readf32(RecieveBuffer, BLOCK_START + 50)
+	local rZ = buffer.readf32(RecieveBuffer, BLOCK_START + 54)
 	Value2.CuttingPart.CFrame = CFrame.new(Position) * CFrame.fromOrientation(rX, rY, rZ)
-	X = buffer.readf32(RecieveBuffer, BLOCK_START + 28)
-	Y = buffer.readf32(RecieveBuffer, BLOCK_START + 32)
-	Z = buffer.readf32(RecieveBuffer, BLOCK_START + 36)
+	X = buffer.readf32(RecieveBuffer, BLOCK_START + 58)
+	Y = buffer.readf32(RecieveBuffer, BLOCK_START + 62)
+	Z = buffer.readf32(RecieveBuffer, BLOCK_START + 66)
 	Value2.CuttingPart.Size = Vector3.new(X, Y, Z)
-	Value2.CuttingPart.Shape = buffer.readu8(RecieveBuffer, BLOCK_START + 40)
+	Value2.CuttingPart.Shape = buffer.readu8(RecieveBuffer, BLOCK_START + 70)
 	if Value2.CuttingPart.Shape < 0 then error(`Expected "Value2.CuttingPart.Shape" to be larger than 0, got {Value2.CuttingPart.Shape} instead.`) end
 	if Value2.CuttingPart.Shape > 4 then error(`Expected "Value2.CuttingPart.Shape" to be smaller than 4, got {Value2.CuttingPart.Shape} instead.`) end
-	if buffer.readu8(RecieveBuffer, BLOCK_START + 41) == 1 then
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 71) == 1 then
+		-- Read BLOCK: 4 bytes
+		local BLOCK_START = Read(4)
+		Value2.WaitForClientTimeout = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
+	end
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 72) == 1 then
 		-- Read BLOCK: 2 bytes
 		local BLOCK_START = Read(2)
 		-- START ARRAY
@@ -2911,47 +2912,47 @@ local function ReadEVENT_ReplicateDestruction(): (string, { ID: string, CuttingP
 		end
 		-- END ARRAY
 	end
-	if buffer.readu8(RecieveBuffer, BLOCK_START + 42) == 1 then
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 73) == 1 then
 		-- Read BLOCK: 4 bytes
 		local BLOCK_START = Read(4)
 		Value2.GridSize = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
 	end
-	if buffer.readu8(RecieveBuffer, BLOCK_START + 43) == 1 then
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 74) == 1 then
 		-- Read BLOCK: 4 bytes
 		local BLOCK_START = Read(4)
 		Value2.CleanupDelay = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
 	end
-	if buffer.readu8(RecieveBuffer, BLOCK_START + 44) == 1 then
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 75) == 1 then
 		-- Read BLOCK: 1 bytes
 		local BLOCK_START = Read(1)
 		Value2.SkipWalls = (buffer.readu8(RecieveBuffer, BLOCK_START + 0) == 1)
 	end
-	if buffer.readu8(RecieveBuffer, BLOCK_START + 45) == 1 then
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 76) == 1 then
 		-- Read BLOCK: 1 bytes
 		local BLOCK_START = Read(1)
 		Value2.SkipFloors = (buffer.readu8(RecieveBuffer, BLOCK_START + 0) == 1)
 	end
-	if buffer.readu8(RecieveBuffer, BLOCK_START + 46) == 1 then
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 77) == 1 then
 		-- Read BLOCK: 1 bytes
 		local BLOCK_START = Read(1)
 		Value2.SkipEncapsulatedVoxels = (buffer.readu8(RecieveBuffer, BLOCK_START + 0) == 1)
 	end
-	if buffer.readu8(RecieveBuffer, BLOCK_START + 47) == 1 then
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 78) == 1 then
 		-- Read BLOCK: 2 bytes
 		local BLOCK_START = Read(2)
 		Length = buffer.readu16(RecieveBuffer, BLOCK_START + 0)
 		Value2.OnVoxelDestruct = buffer.readstring(RecieveBuffer, Read(Length), Length)
 	end
-	if buffer.readu8(RecieveBuffer, BLOCK_START + 48) == 1 then
+	if buffer.readu8(RecieveBuffer, BLOCK_START + 79) == 1 then
 		RecieveInstanceCursor += 1
 		Value2.UserData = RecieveInstances[RecieveInstanceCursor]
 	end
 	local Value3 = {}
-	local Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 49)
+	local Elements_1 = buffer.readu16(RecieveBuffer, BLOCK_START + 80)
 	for _ = 1, Elements_1 do
-		local OFFSET_0 = Read(2)
-		Length = buffer.readu16(RecieveBuffer, OFFSET_0)
-		local Key_1 = buffer.readstring(RecieveBuffer, Read(Length), Length)
+		local OFFSET_0 = Read(32)
+		local Key_1 = buffer.readstring(RecieveBuffer, OFFSET_0, 32)
+		if #Key_1 ~= 32 then error(`Expected length of "Key_1" to equal to 32, got {#Key_1} instead.`) end
 		local Element_1 = {} :: any
 		local OFFSET_1 = Read(4)
 		X = buffer.readf32(RecieveBuffer, OFFSET_1)
@@ -3445,6 +3446,13 @@ local function WriteEVENT_ClientInitComplete(Value: nil): ()
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 9)
 end
 
+local function WriteEVENT_ClientRecievedMapParts(Value: string): ()
+	-- Allocate BLOCK: 33 bytes
+	local BLOCK_START = Allocate(33)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 10)
+	buffer.writestring(SendBuffer, BLOCK_START + 1, Value, 32)
+end
+
 local function ReadEVENT_SignalPrintState(): (nil)
 	return nil
 end
@@ -3483,6 +3491,9 @@ if not RunService:IsRunning() then
 		On = NOOP
 	},
 	ClientInitComplete = {
+		Fire = NOOP
+	},
+	ClientRecievedMapParts = {
 		Fire = NOOP
 	},
 	SignalPrintState = {
@@ -3609,7 +3620,7 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				table.insert(Queue.Reliable[7], {Value1, Value2, Value3, Value4, Value5, Value6, Value7} :: {any})
 			end
 		elseif Index == 8 then
-			local Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }} = ReadEVENT_ReplicateDestruction()
+			local Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }} = ReadEVENT_ReplicateDestruction()
 			if #Events.Reliable[8] > 0 then
 				for _, Listener in Events.Reliable[8] do
 					task.spawn(Listener, Value1, Value2, Value3)
@@ -3620,17 +3631,17 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 				end
 				table.insert(Queue.Reliable[8], {Value1, Value2, Value3} :: {any})
 			end
-		elseif Index == 10 then
+		elseif Index == 11 then
 			local Value: nil = ReadEVENT_SignalPrintState()
-			if #Events.Reliable[10] > 0 then
-				for _, Listener in Events.Reliable[10] do
+			if #Events.Reliable[11] > 0 then
+				for _, Listener in Events.Reliable[11] do
 					task.spawn(Listener, Value)
 				end
 			else
-				if #Queue.Reliable[10] > 256 then
+				if #Queue.Reliable[11] > 256 then
 					warn("[Blink]: Event queue of \"SignalPrintState\" exceeded 256, did you forget to implement a listener?")
 				end
-				table.insert(Queue.Reliable[10], {Value} :: {any})
+				table.insert(Queue.Reliable[11], {Value} :: {any})
 			end
 		end
 	end
@@ -3780,7 +3791,7 @@ local Returns = table.freeze({
 		end
 	},
 	ReplicateDestruction = {
-		On = function(Listener: (Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}) -> ()): () -> ()
+		On = function(Listener: (Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}) -> ()): () -> ()
 			table.insert(Events.Reliable[8], Listener)
 			for Index, Arguments in Queue.Reliable[8] do
 				task.spawn(Listener, table.unpack(Arguments))
@@ -3799,17 +3810,22 @@ local Returns = table.freeze({
 			WriteEVENT_ClientInitComplete(Value)
 		end
 	},
+	ClientRecievedMapParts = {
+		Fire = function(Value: string): ()
+			WriteEVENT_ClientRecievedMapParts(Value)
+		end
+	},
 	SignalPrintState = {
 		On = function(Listener: (Value: nil) -> ()): () -> ()
-			table.insert(Events.Reliable[10], Listener)
-			for Index, Arguments in Queue.Reliable[10] do
+			table.insert(Events.Reliable[11], Listener)
+			for Index, Arguments in Queue.Reliable[11] do
 				task.spawn(Listener, table.unpack(Arguments))
 			end
-			Queue.Reliable[10] = {}
+			Queue.Reliable[11] = {}
 			return function (): ()
-				local Index = table.find(Events.Reliable[10], Listener)
+				local Index = table.find(Events.Reliable[11], Listener)
 				if Index ~= nil then
-					table.remove(Events.Reliable[10], Index)
+					table.remove(Events.Reliable[11], Index)
 				end
 			end
 		end

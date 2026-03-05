@@ -48,6 +48,8 @@ type UsesOnVoxelDestruct = {
 	OnVoxelDestruct : string?,
 	DestructParameters : { any },
 
+	WaitForClientTimeout : number?,
+
 	OnDestructCompleted : OnDestructCompleted?
 }
 
