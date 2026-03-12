@@ -1,61 +1,172 @@
 --#selene: allow(unused_variable)
 
+--[=[
+	@class Settings
+
+	Contains all configurable module settings.
+
+	:::warning
+	Settings that have all-caps names cannot be changed at runtime.
+	:::
+]=]
 local Settings = {}
 
--- These all-caps named settings cannot be changed at runtime. The rest are okay to do so.
+--[=[
+	Set this to false if you don't want to use client-server functionality (false = fully server side destructions).
 
-Settings.USE_CLIENT_SERVER = true -- Set this to false if you don't want to use client-server functionality (false = fully server side destructions)
+	@prop USE_CLIENT_SERVER boolean
+	@within Settings
+	@readonly
+]=]
+Settings.USE_CLIENT_SERVER = true
 
 --Settings.USE_OBJECTCACHE = false -- whether or not to use ObjectCache (not fully implemented)
 --	Settings.CACHE_INITIAL_SIZE = 10000 -- The initial size of the part Caches
 
 
 
-Settings.SkipInstanceCheck = function(i : Instance)
+--[=[
+	A function that you can use to skip instances with code. Return true to skip the instance "i".
+
+	@tag PartDivision
+]=]
+function Settings.SkipInstanceCheck(i : Instance) : boolean
 
 	-- return true if you want to skip the instance "i"
 
 	return false
 end
 
+--[=[
+	The default GridSize to use if none is provided through a GridSize number attribute.
 
+	:::tip
+	It is reccomended to set the GridSize property on parts according to their size so that your performance is the most consistent.
 
+	Larger parts should have larger GridSize, especially when using Greedy Meshing.
+	:::
+	@prop DefaultGridSize number
+	@within Settings
+	@tag PartDivision
+]=]
+Settings.DefaultGridSize = 1
+
+--[=[
+	Whether or not to use [Greedy Meshing](https://devforum.roblox.com/t/consume-everything-how-greedy-meshing-works/452717).
+
+	:::note
+	Keep in mind that Greedy Meshing is an O(n^3) algorithm, so designing your map for voxel destruction is critical.
+	:::
+	@prop UseGreedyMeshing boolean
+	@within Settings
+	@tag PartDivision
+]=]
+Settings.UseGreedyMeshing = true
+
+--[=[
+	What happens to destructible parts that cannot be divided by Shatterbox.
+
+	@prop NonDivisibleInteraction "FALL"|"DESTROY"|"NONE"
+	@within Settings
+	@tag PartDivision
+]=]
 Settings.NonDivisibleInteraction = "FALL" :: "FALL"|"DESTROY"|"NONE" -- What happens to destructible parts that cannot be divided by Shatterbox
 
 
 
--- Smooth cleanup settings
-
-Settings.UseSmoothCleanup = true -- If false, the CleanupDelay will be ignored and no smooth cleanups will happen at all.
-
-Settings.DefaultSmoothCleanupDelay = 60 -- the default smooth cleanup delay if none is provided. Setting the CleanupDelay to 0 or a negative number disables smooth cleanup for that destruction.
-
-
--- Part division settings
-
-Settings.DefaultGridSize = 1
 
 
 
--- Greedy meshing settings
+--[=[
+	If false, the CleanupDelay will be ignored and no smooth cleanups will happen at all.
 
-Settings.UseGreedyMeshing = true
+	@prop UseSmoothCleanup boolean
+	@within Settings
+	@tag SmoothCleanup
+]=]
+Settings.UseSmoothCleanup = true
+
+--[=[
+	The default smooth cleanup delay if none is provided.
+
+	:::tip
+	Setting the CleanupDelay to 0 or a negative number disables smooth cleanup for that destruction.
+
+	So you can set this to 0 to make smooth cleanups opt-in per destruction.
+	:::
+	@prop DefaultSmoothCleanupDelay number
+	@within Settings
+	@tag SmoothCleanup
+]=]
+Settings.DefaultSmoothCleanupDelay = 60
+
 
 
 
 -- Puppet voxel settings
+--[=[
+	The maximum number of puppets allowed in existence before old ones start getting replaced by new ones.
 
-Settings.PuppetMaxCount = 8191 -- HARD CAP 8191
+	:::danger
+	This setting has a hard cap of 8191.
+	:::
+	@prop PuppetMaxCount number
+	@within Settings
+	@tag Puppeteer
+]=]
+Settings.PuppetMaxCount = 8191
 
-Settings.PuppetSleepVelocity = 0.1 -- How slow a puppet has to be moving to not get replicated (and eventually become anchored)
+--[=[
+	How slow a puppet has to be moving to not get replicated (and eventually become anchored)
 
-Settings.PuppetAnchorTimeout = 1 -- How long a puppet master moving slower than PuppetSleepVelocity has before becoming anchored (seconds)
+	@prop PuppetSleepVelocity number
+	@within Settings
+	@tag Puppeteer
+]=]
+Settings.PuppetSleepVelocity = 0.1
 
-Settings.PuppetReplicationFrequency = 20 -- How frequently puppet CFrames are sent to each client (default 20 fps/Hz target replication frequency)
+--[=[
+	How long a puppet moving slower than PuppetSleepVelocity has before becoming anchored (seconds)
 
-Settings.ClientTweenPuppets = true -- If true, the client will tween between puppet CFrame replications (Client-side only setting)
+	@prop PuppetAnchorTimeout number
+	@within Settings
+	@tag Puppeteer
+]=]
+Settings.PuppetAnchorTimeout = 1
 
-Settings.ClientTweenDistanceLimit = 300 -- Voxels farther than 100 studs away don't get interpolated
+--[=[
+	How frequently puppet CFrames are sent to each client (default 20 fps target replication frequency)
+
+	:::tip
+	This setting effectively limits the maximum Recv of Puppets.
+
+	You can consider this setting to be the target in kilobytes/second (20KB/s max by default)
+	:::
+	@prop PuppetReplicationFrequency number
+	@within Settings
+	@tag Puppeteer
+]=]
+Settings.PuppetReplicationFrequency = 20
+
+--[=[
+	If true, the client will tween between puppet CFrame replications (Client-side only setting)
+
+	@prop ClientTweenPuppets boolean
+	@within Settings
+	@tag Puppeteer
+	@client
+]=]
+Settings.ClientTweenPuppets = true
+
+--[=[
+	Voxels farther than this many studs away don't get interpolated (Client-side only setting)
+
+	@prop ClientTweenDistanceLimit number
+	@within Settings
+	@tag Puppeteer
+	@client
+]=]
+Settings.ClientTweenDistanceLimit = 300
 
 
 

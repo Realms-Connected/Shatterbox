@@ -1,3 +1,0 @@
-<h1>CleanupDelay : number</h1>
-
-<p>CleanupDelay is the amount of time until the modified destruction parts are cleaned by smooth cleanup if it is enabled.</p>

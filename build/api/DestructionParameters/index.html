@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.7.0">
+<title data-rh="true">DestructionParameters | Shatterbox Reference</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://azavier-a.github.io/Shatterbox/api/DestructionParameters"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="DestructionParameters | Shatterbox Reference"><meta data-rh="true" name="description" content="A table that specifies information needed for destruction to happen, as well as all of the optional per-destruction parameters.
+
+:::warning
+If you do not supply `params.CuttingPart` then you must assign `params.CFrame`, `params.Size`, and `params.Shape` (and vice-versa).
+:::"><meta data-rh="true" property="og:description" content="A table that specifies information needed for destruction to happen, as well as all of the optional per-destruction parameters.
+
+:::warning
+If you do not supply `params.CuttingPart` then you must assign `params.CFrame`, `params.Size`, and `params.Shape` (and vice-versa).
+:::"><link data-rh="true" rel="canonical" href="https://azavier-a.github.io/Shatterbox/api/DestructionParameters"><link data-rh="true" rel="alternate" href="https://azavier-a.github.io/Shatterbox/api/DestructionParameters" hreflang="en"><link data-rh="true" rel="alternate" href="https://azavier-a.github.io/Shatterbox/api/DestructionParameters" hreflang="x-default"><link rel="stylesheet" href="/Shatterbox/assets/css/styles.b9f2c64d.css">
+<script src="/Shatterbox/assets/js/runtime~main.3ca225bb.js" defer="defer"></script>
+<script src="/Shatterbox/assets/js/main.3f0b9222.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();null!==e?t(e):window.matchMedia("(prefers-color-scheme: dark)").matches?t("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,t("light"))}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="navbar navbar--fixed-top"><div class="navbar__inner"><div class="navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Shatterbox/"><b class="navbar__title text--truncate">Shatterbox Reference</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Shatterbox/api/">API</a></div><div class="navbar__items navbar__items--right"><a href="https://discord.gg/WRfz79uRTy" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Discord<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a><a href="https://devforum.roblox.com/t/shatterbox-client-server-voxel-destruction-simple-and-optimized-release-77/3674163" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">DevForum<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a><a href="https://github.com/azavier-a/Shatterbox" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="Switch between dark and light mode (currently light mode)" aria-label="Switch between dark and light mode (currently light mode)" aria-live="polite" aria-pressed="false"><svg viewBox="0 0 24 24" width="24" height="24" class="lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" class="darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Shatterbox/api/Shatterbox">​Shatterbox</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Shatterbox/api/Hitbox">​Hitbox</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/Shatterbox/api/DestructionParameters">​Destruction​Parameters</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Shatterbox/api/Settings">​Settings</a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Destruction</span><span style="display:inline-block">Parameters</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>A table that specifies information needed for destruction to happen, as well as all of the optional per-destruction parameters.</p>
+
+  
+    
+    
+      <div class="admonition admonition-warning alert alert--warning">
+        <div class="admonition-heading">
+          <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                <path d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path>
+              </svg></span><span class="admonition-title">WARNING</span></h5>
+        </div>
+        <div class="admonition-content">
+          <p>If you do not supply <code>params.CuttingPart</code> then you must assign <code>params.CFrame</code>, <code>params.Size</code>, and <code>params.Shape</code> (and vice-versa).</p>
+        </div>
+      </div>
+    
+  
+
+</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="properties">Properties<a href="#properties" class="hash-link" aria-label="Direct link to Properties" title="Direct link to Properties">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="CuttingPart"><code style="text-decoration:none">CuttingPart</code><a href="#CuttingPart" class="hash-link" aria-label="Direct link to CuttingPart" title="Direct link to CuttingPart">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L874"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->CuttingPart<!-- -->:<!-- --> </code> <code class="purple_ieR2">(</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Shatterbox/api/Shatterbox#ImaginaryPart">ImaginaryPart</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Part" target="_blank" rel="noopener noreferrer">Part<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Model" target="_blank" rel="noopener noreferrer">Model<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="purple_ieR2">)</code><code class="blue_P4bS">?</code></div><div>
+<p>The virtual/physical hitbox that the destruction will use.</p>
+<p>If this is not provided, <a href="#CFrame">CFrame</a>, <a href="#Size">Size</a>, and <a href="#Shape">Shape</a>, will be used. <em>You must provide one or the other.</em></p>
+<p>If this is a Model, a destruction will be queued for every Part descendant of that Model</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="CFrame"><code style="text-decoration:none">CFrame</code><a href="#CFrame" class="hash-link" aria-label="Direct link to CFrame" title="Direct link to CFrame">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L880"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->CFrame<!-- -->:<!-- --> </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/CFrame" target="_blank" rel="noopener noreferrer">CFrame?<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Size"><code style="text-decoration:none">Size</code><a href="#Size" class="hash-link" aria-label="Direct link to Size" title="Direct link to Size">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L886"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->Size<!-- -->:<!-- --> </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/Vector3" target="_blank" rel="noopener noreferrer">Vector3?<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Shape"><code style="text-decoration:none">Shape</code><a href="#Shape" class="hash-link" aria-label="Direct link to Shape" title="Direct link to Shape">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L892"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->Shape<!-- -->:<!-- --> </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/enum/PartType" target="_blank" rel="noopener noreferrer">PartType?<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="FilterTagged"><code style="text-decoration:none">FilterTagged</code><a href="#FilterTagged" class="hash-link" aria-label="Direct link to FilterTagged" title="Direct link to FilterTagged">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L902"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->FilterTagged<!-- -->:<!-- --> </code> <code class="purple_ieR2">(</code><code class="blue_P4bS">string</code><code class="op_lSLc"> | </code><code class="green_DgR4">{</code><code class="blue_P4bS">string</code><code class="green_DgR4">}</code><code class="purple_ieR2">)</code><code class="blue_P4bS">?</code></div><div>
+<p>Only instances with the given tag(s) are considered for voxel destruction.</p>
+<p>If this is not passed, every BasePart without the <code>"Indestructible"</code> tag is considered.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="CleanupDelay"><code style="text-decoration:none">CleanupDelay</code><a href="#CleanupDelay" class="hash-link" aria-label="Direct link to CleanupDelay" title="Direct link to CleanupDelay">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L924"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->CleanupDelay<!-- -->:<!-- --> </code> <code class="blue_P4bS">number?</code></div><div>
+<p>The amount of time in seconds before this destruction is cleaned up.</p>
+
+  
+    
+    
+      <div class="admonition admonition-note alert alert--secondary">
+        <div class="admonition-heading">
+          <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16">
+                <path d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path>
+              </svg></span><span class="admonition-title">NOTE</span></h5>
+        </div>
+        <div class="admonition-content">
+          <p>Set this to 0 to disable cleanups per-destruction</p>
+        </div>
+      </div>
+    
+  
+
+
+  
+    
+    
+      <div class="admonition admonition-note alert alert--secondary">
+        <div class="admonition-heading">
+          <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16">
+                <path d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path>
+              </svg></span><span class="admonition-title">NOTE</span></h5>
+        </div>
+        <div class="admonition-content">
+          <p>New destructions can reset the cleanup timer of existing dirty groups, <em>only if the new reset time would extend the time until cleanup.</em></p>
+          <h4>Example</h4>
+          <p>You destroy with a <code>CleanupDelay</code> of 10, wait 4 seconds, and then with a <code>CleanupDelay</code> of 2 in the same spot. You will have to wait 6 seconds for it to come back because 6 is greater than 2.</p>
+          <p>If you instead waited 9 seconds, the time until cleanup would get extended to 2 seconds because 1 is less than 2.</p>
+        </div>
+      </div>
+    
+  
+
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="SkipEncapsulatedVoxels"><code style="text-decoration:none">SkipEncapsulatedVoxels</code><a href="#SkipEncapsulatedVoxels" class="hash-link" aria-label="Direct link to SkipEncapsulatedVoxels" title="Direct link to SkipEncapsulatedVoxels">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L955"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->SkipEncapsulatedVoxels<!-- -->:<!-- --> </code> <code class="blue_P4bS">boolean?</code></div><div>
+<p><em>This makes larger destructions an entire <strong>order of magnitude</strong> faster.</em></p>
+<p>Whether or not to intelligently skip voxels fully contained by the hitbox.</p>
+<p>If this is false, these fully contained parts are Voxelized entirely using math.</p>
+<p>Otherwise, they are directly deleted.</p>
+
+  
+    
+    
+      <div class="admonition admonition-note alert alert--secondary">
+        <div class="admonition-heading">
+          <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16">
+                <path d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path>
+              </svg></span><span class="admonition-title">NOTE</span></h5>
+        </div>
+        <div class="admonition-content">
+          <p>If you use this parameter you will only recieve "edge" voxels.</p>
+        </div>
+      </div>
+    
+  
+
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="SkipFloors"><code style="text-decoration:none">SkipFloors</code><a href="#SkipFloors" class="hash-link" aria-label="Direct link to SkipFloors" title="Direct link to SkipFloors">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L961"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->SkipFloors<!-- -->:<!-- --> </code> <code class="blue_P4bS">boolean?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="SkipWalls"><code style="text-decoration:none">SkipWalls</code><a href="#SkipWalls" class="hash-link" aria-label="Direct link to SkipWalls" title="Direct link to SkipWalls">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L967"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->SkipWalls<!-- -->:<!-- --> </code> <code class="blue_P4bS">boolean?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnVoxelDestruct"><code style="text-decoration:none">OnVoxelDestruct</code><a href="#OnVoxelDestruct" class="hash-link" aria-label="Direct link to OnVoxelDestruct" title="Direct link to OnVoxelDestruct">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L993"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->OnVoxelDestruct<!-- -->:<!-- --> </code> <code class="blue_P4bS">string?</code></div><div>
+<p>The name of the OnVoxelDestruct effect you want to use for this destruction.</p>
+<p>You can register these effects either with <a href="Shatterbox#RegisterOnVoxelDestruct">RegisterOnVoxelDestruct</a> or by making an entry in the desired <code>Shatterbox/effects</code> module.</p>
+<p>Client side effects should be registered on the client side, while server side effects should be registered on the server side. Client side effects only work with Client-Server enabled.</p>
+<p><em>You should register any given effect only once in a static context, which you are then free to use anywhere else - even in other scripts.</em></p>
+<pre class="language-lua"><code class="language-lua">Shatterbox<span class="token punctuation">.</span><span class="token function">RegisterOnVoxelDestruct</span><span class="token punctuation">(</span><span class="token string">"SomeName"</span><span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>voxel<span class="token punctuation">,</span> info<span class="token punctuation">)</span>
+
+	voxel<span class="token punctuation">.</span>Anchored <span class="token operator">=</span> <span class="token keyword">false</span>
+
+	<span class="token keyword">return</span>
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- later or in another script</span>
+hb<span class="token punctuation">.</span>OnVoxelDestruct <span class="token operator">=</span> <span class="token string">"SomeName"</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnDestructCompleted"><code style="text-decoration:none">OnDestructCompleted</code><a href="#OnDestructCompleted" class="hash-link" aria-label="Direct link to OnDestructCompleted" title="Direct link to OnDestructCompleted">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L1006"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->OnDestructCompleted<!-- -->:<!-- --> </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Shatterbox/api/Shatterbox#OnDestructCompleted">OnDestructCompleted?</a></code></div><div>
+<p>A callback that runs when the destruction is finished processing</p>
+
+  
+    
+    
+      <div class="admonition admonition-warning alert alert--warning">
+        <div class="admonition-heading">
+          <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                <path d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path>
+              </svg></span><span class="admonition-title">WARNING</span></h5>
+        </div>
+        <div class="admonition-content">
+          <p>This only works with <code>Shatterbox.Destroy</code> or <code>hitbox:Destroy()</code>.</p>
+          <p>For ImaginaryVoxels, you can use the array of imaginary voxels to obtain the same information.</p>
+        </div>
+      </div>
+    
+  
+
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="UserData"><code style="text-decoration:none">UserData</code><a href="#UserData" class="hash-link" aria-label="Direct link to UserData" title="Direct link to UserData">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L1016"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->UserData<!-- -->:<!-- --> </code> <code class="purple_ieR2">{</code><code class="blue_P4bS">any</code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code></div><div>
+<p>A table that is passed to the OnVoxelDestruct effect as <code>info.UserData</code>.</p>
+<p>You can put variables in this table that are to be used in your effect.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="WaitForClientTimeout"><code style="text-decoration:none">WaitForClientTimeout</code><a href="#WaitForClientTimeout" class="hash-link" aria-label="Direct link to WaitForClientTimeout" title="Direct link to WaitForClientTimeout">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L1031"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->WaitForClientTimeout<!-- -->:<!-- --> </code> <code class="blue_P4bS">number?</code></div><div>
+<p>If set, how many seconds the server will wait at max for each client to recieve their static map parts.</p>
+<p>This only works with Client-Server enabled.</p>
+<p>Use this if you see the ground flashing due to the size of your destruction.</p>
+
+  
+    
+    
+      <div class="admonition admonition-danger alert alert--danger">
+        <div class="admonition-heading">
+          <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
+                <path d="M5.05.31c.81 2.17.41 3.38-.52 4.31C3.55 5.67 1.98 6.45.9 7.98c-1.45 2.05-1.7 6.53 3.53 7.7-2.2-1.16-2.67-4.52-.3-6.61-.61 2.03.53 3.33 1.94 2.86 1.39-.47 2.3.53 2.27 1.67-.02.78-.31 1.44-1.13 1.81 3.42-.59 4.78-3.42 4.78-5.56 0-2.84-2.53-3.22-1.25-5.61-1.52.13-2.03 1.13-1.89 2.75.09 1.08-1.02 1.8-1.86 1.33-.67-.41-.66-1.19-.06-1.78C8.18 5.31 8.68 2.45 5.05.32L5.03.3l.02.01z"></path>
+              </svg></span><span class="admonition-title">DANGER</span></h5>
+        </div>
+        <div class="admonition-content">
+          <p>If you use it, be sure to keep this set to a low value like 0.1 or 0.2, as exploiters/laggy players can force every destruction to take this maximum amount of time.</p>
+        </div>
+      </div>
+    
+  
+
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="ExcludePlayersReplication"><code style="text-decoration:none">ExcludePlayersReplication</code><a href="#ExcludePlayersReplication" class="hash-link" aria-label="Direct link to ExcludePlayersReplication" title="Direct link to ExcludePlayersReplication">​</a></h3><span class="badge_Ba2I" style="color:#00CC67"><span class="badgeTooltip_cWXP">This item only works when running on the server.</span><span class="badgeToolTipTail_H9D_"><svg fill="#00CC67" xmlns="http://www.w3.org/2000/svg" version="1.1" x="0px" y="0px" viewBox="0 0 90 90" role="img" aria-label="This item only works when running on the server."><polygon points="6.125,72.421 58.544,88.523 58.544,24.372 6.125,8.269 "></polygon><polygon points="79.818,15.77 79.868,15.755 29.615,1.453 10.328,6.318 60.102,21.609 "></polygon><path d="M61.643,78.738l22.232-6.582V17.801l-22.232,6.584V78.738z M73.811,69.257c-1.174,0-2.125-1.19-2.125-2.659  c0-1.468,0.951-2.658,2.125-2.658c1.172,0,2.123,1.19,2.123,2.658C75.934,68.066,74.982,69.257,73.811,69.257z M64.898,32.121  l16.336-4.41v7.117l-16.336,4.409V32.121z M64.898,41.292l16.336-4.41v7.116l-16.336,4.409V41.292z M64.898,50.463l16.336-4.411  v7.116l-16.336,4.411V50.463z"></path><polygon points="83.875,74.893 61.643,81.477 61.643,88.547 83.875,81.963 "></polygon></svg> <!-- -->Server</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L1065"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->ExcludePlayersReplication<!-- -->:<!-- --> </code> <code class="purple_ieR2">(</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="op_lSLc"> | </code><code class="green_DgR4">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="green_DgR4">}</code><code class="purple_ieR2">)</code><code class="blue_P4bS">?</code></div><div>
+<p>A player or a list of players that will not recieve the destruction.</p>
+<p>This only works with Client-Server enabled.</p>
+<p>Use this on the server side if you have a client-initiated destruction, so the originating player doesn't recieve the same destruction they started.</p>
+<p>Server:</p>
+<pre class="language-lua"><code class="language-lua">SomeEvent<span class="token punctuation">.</span>OnServerEvent<span class="token punctuation">:</span><span class="token function">Connect</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span>plr<span class="token punctuation">,</span> destructionCFrame<span class="token punctuation">)</span>
+	<span class="token comment">-- make sure you add sanity checks so you don't get hacked.</span>
+
+	hitbox<span class="token punctuation">.</span>CFrame <span class="token operator">=</span> destructionCFrame
+
+	<span class="token comment">-- do not replicate the destruction back to "plr"</span>
+	hitbox<span class="token punctuation">.</span>ExcludePlayersReplication <span class="token operator">=</span> plr
+
+	<span class="token comment">-- make sure the server side hitbox and the client side hitbox are identical when you do this. Otherwise the destructon won't be synchronized.</span>
+	hitbox<span class="token punctuation">:</span><span class="token function">Destroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Client:</p>
+<pre class="language-lua"><code class="language-lua">hitbox<span class="token punctuation">:</span><span class="token function">Destroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+SomeEvent<span class="token punctuation">:</span><span class="token function">FireServer</span><span class="token punctuation">(</span>hitbox<span class="token punctuation">.</span>CFrame<span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="GridSize"><code style="text-decoration:line-through">GridSize</code><a href="#GridSize" class="hash-link" aria-label="Direct link to GridSize" title="Direct link to GridSize">​</a></h3><div class="repositoryDetailsContainer_BPdw"><span class="releaseVersion_EonW">deprecated in <!-- -->Release 7</span><a class="sourceButton_sEho" href="https://github.com/azavier-a/Shatterbox/blob/master/src/shared/Shatterbox/Main.luau#L937"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="admonition admonition-caution alert alert--warning"><div class="admonition-heading"><h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span><span class="admonition-title">This was deprecated in Release 7</span></h5></div><div class="admonition-content">This item is deprecated. Do not use it for new work. </div></div><div class="memberString_GwaU"><code>DestructionParameters<!-- -->.<!-- -->GridSize<!-- -->:<!-- --> </code> <code class="blue_P4bS">number?</code></div><div>
+<p>What GridSize this hitbox will divide parts down to.</p>
+<p>This can cause issues with greedy meshing if you destroy a part using multiple grid sizes.</p>
+<p>You should instead give parts a GridSize number attribute so each Part only has one GridSize.</p>
+</div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [],
+    &quot;properties&quot;: [
+        {
+            &quot;name&quot;: &quot;CuttingPart&quot;,
+            &quot;desc&quot;: &quot;The virtual/physical hitbox that the destruction will use.\n\nIf this is not provided, [CFrame](#CFrame), [Size](#Size), and [Shape](#Shape), will be used. *You must provide one or the other.*\n\nIf this is a Model, a destruction will be queued for every Part descendant of that Model&quot;,
+            &quot;lua_type&quot;: &quot;(ImaginaryPart|Part|Model)?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 874,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;CFrame&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;lua_type&quot;: &quot;CFrame?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 880,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Size&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;lua_type&quot;: &quot;Vector3?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 886,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Shape&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;lua_type&quot;: &quot;PartType?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 892,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;FilterTagged&quot;,
+            &quot;desc&quot;: &quot;Only instances with the given tag(s) are considered for voxel destruction.\n\nIf this is not passed, every BasePart without the `\&quot;Indestructible\&quot;` tag is considered.&quot;,
+            &quot;lua_type&quot;: &quot;(string | {string})?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 902,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;CleanupDelay&quot;,
+            &quot;desc&quot;: &quot;The amount of time in seconds before this destruction is cleaned up.\n\n:::note\nSet this to 0 to disable cleanups per-destruction\n:::\n\n:::note\nNew destructions can reset the cleanup timer of existing dirty groups, *only if the new reset time would extend the time until cleanup.*\n\n#### Example\n\nYou destroy with a `CleanupDelay` of 10, wait 4 seconds, and then with a `CleanupDelay` of 2 in the same spot. You will have to wait 6 seconds for it to come back because 6 is greater than 2.\n\nIf you instead waited 9 seconds, the time until cleanup would get extended to 2 seconds because 1 is less than 2.\n:::&quot;,
+            &quot;lua_type&quot;: &quot;number?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 924,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GridSize&quot;,
+            &quot;desc&quot;: &quot;What GridSize this hitbox will divide parts down to.\n\nThis can cause issues with greedy meshing if you destroy a part using multiple grid sizes.\n\nYou should instead give parts a GridSize number attribute so each Part only has one GridSize.&quot;,
+            &quot;lua_type&quot;: &quot;number?&quot;,
+            &quot;deprecated&quot;: {
+                &quot;version&quot;: &quot;Release 7&quot;,
+                &quot;desc&quot;: null
+            },
+            &quot;source&quot;: {
+                &quot;line&quot;: 937,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;SkipEncapsulatedVoxels&quot;,
+            &quot;desc&quot;: &quot;*This makes larger destructions an entire **order of magnitude** faster.*\n\nWhether or not to intelligently skip voxels fully contained by the hitbox.\n\nIf this is false, these fully contained parts are Voxelized entirely using math.\n\nOtherwise, they are directly deleted.\n\n:::note\nIf you use this parameter you will only recieve \&quot;edge\&quot; voxels.\n:::&quot;,
+            &quot;lua_type&quot;: &quot;boolean?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 955,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;SkipFloors&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;lua_type&quot;: &quot;boolean?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 961,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;SkipWalls&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;lua_type&quot;: &quot;boolean?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 967,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;OnVoxelDestruct&quot;,
+            &quot;desc&quot;: &quot;The name of the OnVoxelDestruct effect you want to use for this destruction.\n\nYou can register these effects either with [RegisterOnVoxelDestruct](Shatterbox#RegisterOnVoxelDestruct) or by making an entry in the desired `Shatterbox/effects` module.\n\nClient side effects should be registered on the client side, while server side effects should be registered on the server side. Client side effects only work with Client-Server enabled.\n\n*You should register any given effect only once in a static context, which you are then free to use anywhere else - even in other scripts.*\n\n```lua\nShatterbox.RegisterOnVoxelDestruct(\&quot;SomeName\&quot;, function(voxel, info)\n\n\tvoxel.Anchored = false\n\n\treturn\nend)\n\n-- later or in another script\nhb.OnVoxelDestruct = \&quot;SomeName\&quot;\n```&quot;,
+            &quot;lua_type&quot;: &quot;string?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 993,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;OnDestructCompleted&quot;,
+            &quot;desc&quot;: &quot;A callback that runs when the destruction is finished processing \n\n:::warning\nThis only works with `Shatterbox.Destroy` or `hitbox:Destroy()`.\n\nFor ImaginaryVoxels, you can use the array of imaginary voxels to obtain the same information.\n:::&quot;,
+            &quot;lua_type&quot;: &quot;OnDestructCompleted?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 1006,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;UserData&quot;,
+            &quot;desc&quot;: &quot;A table that is passed to the OnVoxelDestruct effect as `info.UserData`.\n\nYou can put variables in this table that are to be used in your effect.&quot;,
+            &quot;lua_type&quot;: &quot;{any}?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 1016,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;WaitForClientTimeout&quot;,
+            &quot;desc&quot;: &quot;If set, how many seconds the server will wait at max for each client to recieve their static map parts.\n\nThis only works with Client-Server enabled.\n\nUse this if you see the ground flashing due to the size of your destruction.\n\n:::danger\nIf you use it, be sure to keep this set to a low value like 0.1 or 0.2, as exploiters/laggy players can force every destruction to take this maximum amount of time.\n:::&quot;,
+            &quot;lua_type&quot;: &quot;number?&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 1031,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;ExcludePlayersReplication&quot;,
+            &quot;desc&quot;: &quot;A player or a list of players that will not recieve the destruction.\n\nThis only works with Client-Server enabled.\n\nUse this on the server side if you have a client-initiated destruction, so the originating player doesn&#x27;t recieve the same destruction they started.\n\nServer:\n```lua\nSomeEvent.OnServerEvent:Connect(function(plr, destructionCFrame)\n\t-- make sure you add sanity checks so you don&#x27;t get hacked.\n\n\thitbox.CFrame = destructionCFrame\n\n\t-- do not replicate the destruction back to \&quot;plr\&quot;\n\thitbox.ExcludePlayersReplication = plr\n\n\t-- make sure the server side hitbox and the client side hitbox are identical when you do this. Otherwise the destructon won&#x27;t be synchronized.\n\thitbox:Destroy()\nend)\n```\n\nClient:\n```lua\nhitbox:Destroy()\nSomeEvent:FireServer(hitbox.CFrame)\n```&quot;,
+            &quot;lua_type&quot;: &quot;(Player | {Player})?&quot;,
+            &quot;realm&quot;: [
+                &quot;Server&quot;
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 1065,
+                &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+            }
+        }
+    ],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;DestructionParameters&quot;,
+    &quot;desc&quot;: &quot;A table that specifies information needed for destruction to happen, as well as all of the optional per-destruction parameters.\n\n:::warning\nIf you do not supply `params.CuttingPart` then you must assign `params.CFrame`, `params.Size`, and `params.Shape` (and vice-versa).\n:::&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 861,
+        &quot;path&quot;: &quot;src/shared/Shatterbox/Main.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a><ul><li><a href="#CFrame" class="table-of-contents__link toc-highlight">CFrame</a></li><li><a href="#CleanupDelay" class="table-of-contents__link toc-highlight">CleanupDelay</a></li><li><a href="#CuttingPart" class="table-of-contents__link toc-highlight">CuttingPart</a></li><li><a href="#ExcludePlayersReplication" class="table-of-contents__link toc-highlight">ExcludePlayersReplication</a></li><li><a href="#FilterTagged" class="table-of-contents__link toc-highlight">FilterTagged</a></li><li><a href="#GridSize" class="table-of-contents__link toc-highlight">GridSize</a></li><li><a href="#OnDestructCompleted" class="table-of-contents__link toc-highlight">OnDestructCompleted</a></li><li><a href="#OnVoxelDestruct" class="table-of-contents__link toc-highlight">OnVoxelDestruct</a></li><li><a href="#Shape" class="table-of-contents__link toc-highlight">Shape</a></li><li><a href="#Size" class="table-of-contents__link toc-highlight">Size</a></li><li><a href="#SkipEncapsulatedVoxels" class="table-of-contents__link toc-highlight">SkipEncapsulatedVoxels</a></li><li><a href="#SkipFloors" class="table-of-contents__link toc-highlight">SkipFloors</a></li><li><a href="#SkipWalls" class="table-of-contents__link toc-highlight">SkipWalls</a></li><li><a href="#UserData" class="table-of-contents__link toc-highlight">UserData</a></li><li><a href="#WaitForClientTimeout" class="table-of-contents__link toc-highlight">WaitForClientTimeout</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 azavier-a. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

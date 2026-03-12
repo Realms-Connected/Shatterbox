@@ -106,7 +106,7 @@ type DestructionTypes = ("IMAGINARY"|"NORMAL")
 
 local EPSILON = 1e-3
 
-
+--- @class Shatterbox
 local Shatterbox = {}
 
 local OnVoxelDestructRegistry = setmetatable({}, {
@@ -823,13 +823,14 @@ end
 
 
 -- What happens when a model is passed in as the `CuttingPart`
-local function ModelQueueBehavior(funcToUse, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls, WaitForClientTimeout)
-	local cuttingPart = if typeof(intersectingPart) == "table" then intersectingPart.CuttingPart else intersectingPart
+local function ModelQueueBehavior(funcToUse, params)
+	local cuttingPart = params.CuttingPart or params
 	local retA, retB = {}, {}
 	if cuttingPart and typeof(cuttingPart) == "Instance" and cuttingPart:IsA("Model") then
 		for _, desc in ipairs(cuttingPart:GetDescendants()) do
 			if not desc:IsA("Part") then continue end
-			local rA, rB = funcToUse(desc, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls, WaitForClientTimeout)
+			params.CuttingPart = desc
+			local rA, rB = funcToUse(desc, params)
 			if rA then
 				table.move(rA, 1, #rA, #retA + 1, retA)
 			end
@@ -847,36 +848,254 @@ local function GetCondensedGUID()
 	return string.gsub(HttpService:GenerateGUID(false), '-', '')
 end
 
+
+--[=[
+	@class DestructionParameters
+
+	A table that specifies information needed for destruction to happen, as well as all of the optional per-destruction parameters.
+
+	:::warning
+	If you do not supply `params.CuttingPart` then you must assign `params.CFrame`, `params.Size`, and `params.Shape` (and vice-versa).
+	:::
+]=]
+local DestructionParamsMT = {}
+DestructionParamsMT.__index = DestructionParamsMT
+
+--[=[
+	The virtual/physical hitbox that the destruction will use.
+
+	If this is not provided, [CFrame](#CFrame), [Size](#Size), and [Shape](#Shape), will be used. *You must provide one or the other.*
+
+	If this is a Model, a destruction will be queued for every Part descendant of that Model
+
+	@prop CuttingPart (ImaginaryPart|Part|Model)?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.CuttingPart = nil :: (Types.WorldInfo | Part | Model)?
+
+--[=[
+	@prop CFrame CFrame?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.CFrame = CFrame.identity :: CFrame?
+
+--[=[
+	@prop Size Vector3?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.Size = Vector3.zero :: Vector3?
+
+--[=[
+	@prop Shape PartType?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.Shape = Enum.PartType.Ball :: Enum.PartType?
+
+--[=[
+	Only instances with the given tag(s) are considered for voxel destruction.
+
+	If this is not passed, every BasePart without the `"Indestructible"` tag is considered.
+
+	@prop FilterTagged (string | {string})?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.FilterTagged = nil :: (string | {string})?
+
+--[=[
+	The amount of time in seconds before this destruction is cleaned up.
+
+	:::note
+	Set this to 0 to disable cleanups per-destruction
+	:::
+
+	:::note
+	New destructions can reset the cleanup timer of existing dirty groups, *only if the new reset time would extend the time until cleanup.*
+
+	#### Example
+
+	You destroy with a `CleanupDelay` of 10, wait 4 seconds, and then with a `CleanupDelay` of 2 in the same spot. You will have to wait 6 seconds for it to come back because 6 is greater than 2.
+
+	If you instead waited 9 seconds, the time until cleanup would get extended to 2 seconds because 1 is less than 2.
+	:::
+
+	@prop CleanupDelay number?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.CleanupDelay = nil :: number?
+
+--[=[
+	What GridSize this hitbox will divide parts down to.
+
+	This can cause issues with greedy meshing if you destroy a part using multiple grid sizes.
+
+	You should instead give parts a GridSize number attribute so each Part only has one GridSize.
+
+	@prop GridSize number?
+	@within DestructionParameters
+	@deprecated Release 7
+]=]
+DestructionParamsMT.GridSize = nil :: number?
+
+--[=[
+	*This makes larger destructions an entire **order of magnitude** faster.*
+
+	Whether or not to intelligently skip voxels fully contained by the hitbox.
+
+	If this is false, these fully contained parts are Voxelized entirely using math.
+
+	Otherwise, they are directly deleted.
+
+	:::note
+	If you use this parameter you will only recieve "edge" voxels.
+	:::
+
+	@prop SkipEncapsulatedVoxels boolean?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.SkipEncapsulatedVoxels = nil :: boolean?
+
+--[=[
+	@prop SkipFloors boolean?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.SkipFloors = nil :: boolean?
+
+--[=[
+	@prop SkipWalls boolean?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.SkipWalls = nil :: boolean?
+
+--[=[
+	The name of the OnVoxelDestruct effect you want to use for this destruction.
+
+	You can register these effects either with [RegisterOnVoxelDestruct](Shatterbox#RegisterOnVoxelDestruct) or by making an entry in the desired `Shatterbox/effects` module.
+
+	Client side effects should be registered on the client side, while server side effects should be registered on the server side. Client side effects only work with Client-Server enabled.
+
+	*You should register any given effect only once in a static context, which you are then free to use anywhere else - even in other scripts.*
+
+	```lua
+	Shatterbox.RegisterOnVoxelDestruct("SomeName", function(voxel, info)
+
+		voxel.Anchored = false
+
+		return
+	end)
+
+	-- later or in another script
+	hb.OnVoxelDestruct = "SomeName"
+	```
+
+	@prop OnVoxelDestruct string?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.OnVoxelDestruct = nil :: string?
+
+--[=[
+	A callback that runs when the destruction is finished processing 
+
+	:::warning
+	This only works with `Shatterbox.Destroy` or `hitbox:Destroy()`.
+
+	For ImaginaryVoxels, you can use the array of imaginary voxels to obtain the same information.
+	:::
+	@prop OnDestructCompleted OnDestructCompleted?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.OnDestructCompleted = nil :: Types.OnDestructCompleted?
+
+--[=[
+	A table that is passed to the OnVoxelDestruct effect as `info.UserData`.
+
+	You can put variables in this table that are to be used in your effect.
+
+	@prop UserData {any}?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.UserData = nil :: {any}?
+
+--[=[
+	If set, how many seconds the server will wait at max for each client to recieve their static map parts.
+
+	This only works with Client-Server enabled.
+
+	Use this if you see the ground flashing due to the size of your destruction.
+
+	:::danger
+	If you use it, be sure to keep this set to a low value like 0.1 or 0.2, as exploiters/laggy players can force every destruction to take this maximum amount of time.
+	:::
+	@prop WaitForClientTimeout number?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.WaitForClientTimeout = nil :: number?
+
+--[=[
+	A player or a list of players that will not recieve the destruction.
+
+	This only works with Client-Server enabled.
+
+	Use this on the server side if you have a client-initiated destruction, so the originating player doesn't recieve the same destruction they started.
+
+	Server:
+	```lua
+	SomeEvent.OnServerEvent:Connect(function(plr, destructionCFrame)
+		-- make sure you add sanity checks so you don't get hacked.
+
+		hitbox.CFrame = destructionCFrame
+
+		-- do not replicate the destruction back to "plr"
+		hitbox.ExcludePlayersReplication = plr
+
+		-- make sure the server side hitbox and the client side hitbox are identical when you do this. Otherwise the destructon won't be synchronized.
+		hitbox:Destroy()
+	end)
+	```
+
+	Client:
+	```lua
+	hitbox:Destroy()
+	SomeEvent:FireServer(hitbox.CFrame)
+	```
+
+	@prop ExcludePlayersReplication (Player | {Player})?
+	@within DestructionParameters
+	@server
+]=]
+DestructionParamsMT.ExcludePlayersReplication = nil :: (Player | {Player})?
+
+
+
 -- Validates destruction parameters
-local function ValidateDestructionParams(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : (Player | {Player})?, SkipFloors : boolean?, SkipWalls : boolean?, WaitForClientTimeout : number?)
+local function ValidateDestructionParams(Parameters : Types.DestructionParams | Types.ImaginaryDestructionParams)
 
 	local CuttingPart = {} :: Types.Hitbox
 	local params = {} :: Types.InternalDestructionParams | Types.InternalImaginaryParams
 	local tbl = {} :: Types.DestructionParams | Types.ImaginaryDestructionParams
 
-	if typeof(intersectingPart) == "table" then
-		tbl = intersectingPart
+	assert(typeof(Parameters) == "table" or (typeof(Parameters) == "Instance" and Parameters:IsA("Part")), "Parameters must be a table or a Part")
+	if typeof(Parameters) == "table" then
+		tbl = Parameters
 		if tbl.CuttingPart then
 			local cp = tbl.CuttingPart
-			if typeof(cp) == "table" or (typeof(cp) == "Instance" and cp:IsA("Part")) then
-				assert(cp.CFrame and cp.Size and cp.Shape, "You must provide a CFrame, Size, and Shape for the '{ CuttingPart : { CFrame : CFrame, Size : Vector3, Shape : Enum.PartType } }' syntax.")
-				CuttingPart.CFrame = cp.CFrame
-				CuttingPart.Size = cp.Size
-				CuttingPart.Shape = cp.Shape
-			end
+			assert(typeof(cp) == "table" or (typeof(cp) == "Instance" and cp:IsA("Part")), "Parameters.CuttingPart must be a table or a Part.")
+			assert(cp.CFrame and cp.Size and cp.Shape, "You must provide a CFrame, Size, and Shape for the 'Parameters.CuttingPart : { CFrame : CFrame, Size : Vector3, Shape : Enum.PartType }' syntax.")
+			CuttingPart.CFrame = cp.CFrame
+			CuttingPart.Size = cp.Size
+			CuttingPart.Shape = cp.Shape
 		else
-			assert(tbl.CFrame and tbl.Size and tbl.Shape, "You must provide a CFrame, Size, and Shape for the '{ CFrame : CFrame, Size : Vector3, Shape : Enum.PartType }' syntax.")
+			assert(tbl.CFrame and tbl.Size and tbl.Shape, "You must provide a CFrame, Size, and Shape for the 'Parameters.CFrame : CFrame, Parameters.Size : Vector3, Parameters.Shape : Enum.PartType' syntax.")
 			CuttingPart.CFrame = tbl.CFrame
 			CuttingPart.Size = tbl.Size
 			CuttingPart.Shape = tbl.Shape
 		end
-	elseif intersectingPart:IsA("Part") then
-		CuttingPart.CFrame = intersectingPart.CFrame
-		CuttingPart.Size = intersectingPart.Size
-		CuttingPart.Shape = intersectingPart.Shape
+	elseif Parameters:IsA("Part") then
+		CuttingPart.CFrame = Parameters.CFrame
+		CuttingPart.Size = Parameters.Size
+		CuttingPart.Shape = Parameters.Shape
 	end
 
-	local filterTagged = tbl.FilterTagged or FilterTagged
+	local filterTagged = tbl.FilterTagged
 	if filterTagged then
 		if typeof(filterTagged) == "table" then
 			for _, k in pairs(filterTagged) do
@@ -888,7 +1107,7 @@ local function ValidateDestructionParams(intersectingPart : Part | Model | Types
 		end
 	end
 
-	local playerExclusions = tbl.ExcludePlayersReplication or ExcludePlayersReplication
+	local playerExclusions = tbl.ExcludePlayersReplication
 	if playerExclusions then
 		if typeof(playerExclusions) == "table" then
 			for _, plr in ipairs(playerExclusions) do
@@ -902,16 +1121,16 @@ local function ValidateDestructionParams(intersectingPart : Part | Model | Types
 
 				  params.CuttingPart = CuttingPart
 				 params.FilterTagged = filterTagged
-				 params.CleanupDelay = tbl.CleanupDelay		         or CleanupDelay or Settings.DefaultSmoothCleanupDelay
-			  params.OnVoxelDestruct = tbl.OnVoxelDestruct 	         or OnVoxelDestruct
-					 params.GridSize = tbl.GridSize 			     or GridSize
-	   params.SkipEncapsulatedVoxels = tbl.SkipEncapsulatedVoxels    or SkipEncapsulatedVoxels
-				   params.SkipFloors = tbl.SkipFloors 				 or SkipFloors
-				    params.SkipWalls = tbl.SkipWalls 				 or SkipWalls
-		  params.OnDestructCompleted = tbl.OnDestructCompleted       or OnDestructCompleted
-					 params.UserData = tbl.UserData    		         or UserData or {}
-		 params.WaitForClientTimeout = tbl.WaitForClientTimeout		 or WaitForClientTimeout
-	params.ExcludePlayersReplication = playerExclusions or {}
+				 params.CleanupDelay = tbl.CleanupDelay		         or Settings.DefaultSmoothCleanupDelay
+			  params.OnVoxelDestruct = tbl.OnVoxelDestruct
+					 params.GridSize = tbl.GridSize
+	   params.SkipEncapsulatedVoxels = tbl.SkipEncapsulatedVoxels
+				   params.SkipFloors = tbl.SkipFloors
+				    params.SkipWalls = tbl.SkipWalls
+		  params.OnDestructCompleted = tbl.OnDestructCompleted
+					 params.UserData = tbl.UserData    		         or {}
+		 params.WaitForClientTimeout = tbl.WaitForClientTimeout
+	params.ExcludePlayersReplication = playerExclusions 			 or {}
 		                   params.ID = tbl.ID 					     or GetCondensedGUID()
 
 	assert(not params.CleanupDelay or typeof(params.CleanupDelay) == "number", "CleanupDelay must be a number if it is set.")
@@ -1723,9 +1942,29 @@ local function DeserializedPuppet(serialPuppet)
 	return Part
 end
 
+local WorldAnchor = Instance.new("Part")
+WorldAnchor.CanCollide = false
+WorldAnchor.CanTouch = false
+WorldAnchor.CanQuery = false
+WorldAnchor.Anchored = true
+WorldAnchor.Transparency = 1
+WorldAnchor.CFrame = CFrame.identity
+WorldAnchor.Parent = workspace
+
 local function CreatePuppets(puppets)
+	--debug.profilebegin("Create Puppets")
 	for _, serialPuppet in ipairs(puppets) do
 		local Part = DeserializedPuppet(serialPuppet)
+
+		--[[
+		local Motor6D = Instance.new("Motor6D")
+		Motor6D.Transform = serialPuppet.CFrame
+		Motor6D.Part0 = WorldAnchor
+		Motor6D.Part1 = Part
+		Motor6D.Parent = Part
+
+		Part.Anchored = false
+		--]]
 
 		local OldPuppetData = Puppets[PuppetNextIndex]
 		if OldPuppetData then
@@ -1741,6 +1980,7 @@ local function CreatePuppets(puppets)
 		end
 	end
 	FakePuppetOverrideIndex = PuppetNextIndex
+	--debug.profileend()
 end
 
 
@@ -1815,12 +2055,15 @@ local function ReplicatePuppetStates(puppetStatesBuffer, stepDelta)
 		bitOffset += 112
 	end
 
+	--debug.profilebegin("BulkMoveTo Puppets")
 	if i > 1 then workspace:BulkMoveTo(updatedPuppets, updatedStates, Enum.BulkMoveMode.FireCFrameChanged) end
+	--debug.profileend()
 end
 if isClient then -- Client side interpolation loop that "tweens" every puppet voxel and moves them in bulk
 	RunService.PreRender:Connect(function(deltaTime)
 		if not next(PuppetsLerpData) then return end
 
+		--debug.profilebegin("Direct set CFrame Puppets")
 		local P = ClientPuppetStepDelta / Settings.PuppetReplicationFrequency
 
 		--local i = 1
@@ -1831,9 +2074,11 @@ if isClient then -- Client side interpolation loop that "tweens" every puppet vo
 				table.insert(finishedLerps, index)
 				--interpolatedPositions[i] = lerpData[2]
 				Puppets[index][1].CFrame = lerpData[2]
+				--Motor6D.Transform = lerpData[2]
 			else
 				--interpolatedPositions[i] = lerpData[1]:Lerp(lerpData[2], d / P)
 				Puppets[index][1].CFrame = lerpData[1]:Lerp(lerpData[2], d / P)
+				--Motor6D.Transform = lerpData[1]:Lerp(lerpData[2], d / P)
 				lerpData[3] = d
 			end
 
@@ -1844,6 +2089,7 @@ if isClient then -- Client side interpolation loop that "tweens" every puppet vo
 		for _, index in ipairs(finishedLerps) do PuppetsLerpData[index] = nil end
 
 		--workspace:BulkMoveTo(puppets, interpolatedPositions, Enum.BulkMoveMode.FireCFrameChanged)
+		--debug.profileend()
 	end)
 end
 
@@ -2176,15 +2422,133 @@ end
 
 
 
+--[=[
+	A function that defines behavior to happen after a destruction is finished processing.
+
+	### voxelCount
+
+	A number that dictates how many voxels this destruction destroyed. This number is identical whether or not [params.SkipEncapsulatedVoxels](DestructionParameters#SkipEncapsulatedVoxels) is true.
+
+	### affectedIDs
+
+	An array that contains every DirtyGroupID encountered during this destruction.
+
+	Use this to obtain information such as the materials this destruction encountered.
+
+	```lua
+	hb.OnDestructCompleted = function(count, affectedIDs)
+		local materials = {}
+
+		for DirtyGroupID in pairs(affectedIDs) do
+			local original = Shatterbox.GetOriginalPart(DirtyGroupID)
+			materials[original.Material] = true
+		end
+
+		for material in pairs(materials) do
+			-- do something once for every material the destruction encountered
+		end
+	end
+	```
+
+	@type OnDestructCompleted (voxelCount : number, affectedIDs : { [string] : boolean }) -> ()
+	@within Shatterbox
+]=]
 
 
+--[=[
+	A function that is run for every voxel the destruction encounters.
+
+	see [DestructionParameters.OnVoxelDestruct](DestructionParameters#OnVoxelDestruct) for a brief explanation on how to use it.
+
+	@type OnVoxelDestructType (voxel : Part, info : VoxelInfo) -> ()
+	@within Shatterbox
+]=]
+
+
+--[=[
+	@interface VoxelInfo
+
+	A table that contains information about the destroyed voxel
+
+	### DirtyGroupID
+
+	The ID of the dirty group this voxel is a part of.
+
+	A dirty group is a group of parts that all originated from the same part.
+
+	### CuttingPart
+
+	The state of the hitbox as it was when the destruction was queued.
+
+	### IsEdge
+
+	Whether or not this voxel lies along the edge of the destruction.
+
+	### IsAlreadyDebris
+
+	Whether or not this voxel was already debris before this destruction destroyed it again.
+
+	### UserData
+
+	User supplied information to use in the OnVoxelDestruct effect.
+
+	Equivalent to [DestructionParameters.UserData](DestructionParameters#UserData).
+
+	.DirtyGroupID string
+	.CuttingPart ImaginaryPart
+	.IsEdge boolean
+	.IsAlreadyDebris boolean
+	.UserData {any}
+
+	@within Shatterbox
+]=]
+
+--[=[
+	@interface ImaginaryPart
+
+	A table that represents a physical object
+
+	.CFrame CFrame
+	.Size Vector3
+	.Shape PartType
+
+	@within Shatterbox
+]=]
+
+--[=[
+	@interface ImaginaryVoxel
+
+	Represents a voxel that might be created.
+
+	These are to be instantiated using [InstantiateImaginaryVoxel](Shatterbox#InstantiateImaginaryVoxel)
+
+	See [VoxelInfo](Shatterbox#VoxelInfo) for an explanation on these properties.
+
+	.CFrame CFrame
+	.Size Vector3
+	.Shape PartType
+
+	.DirtyGroupID string
+	.IsEdge boolean
+	.UserData {any}
+
+	@within Shatterbox
+]=]
 
 
 
 
 Shatterbox.Settings = Settings
 
+--[=[
+	Server side function. Begins controlled replication of `voxel` to the clients according to the Puppeteer settings.
 
+	When the part stops moving, it will become anchored to allow for a larger number of ground debris while still having good motion.
+
+	It is safe to un-anchor these parts again in your destruction effects to have them start replicating again, they will still anchor themselves when they stop moving.
+
+	@server
+]=]
 function Shatterbox.Puppeteer(voxel : Part)
 	assert(isServer, "This function can only be called from the server")
 
@@ -2272,62 +2636,87 @@ function Shatterbox.FakeClientPuppets(fakePuppets : { Part })
 end
 
 
+--[=[
+	Queues voxel destruction to be performed around the hitbox according to the `params` supplied.
 
--- Performs voxel destruction around the 'intersectingPart' according to the FilterTagged supplied.
---
--- if no FilterTagged is given, everything except IndestructibleTag tagged Block parts are considered for destruction.
-function Shatterbox.Destroy(intersectingPart : Part | Model | Types.WorldInfo | Types.DestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, OnVoxelDestruct : string?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, OnDestructCompleted : (() -> ())?, UserData : {any}?, ExcludePlayersReplication : {Player}?, SkipFloors : boolean?, SkipWalls : boolean?, WaitForClientTimeout : number?)
-	if ModelQueueBehavior(Shatterbox.Destroy, intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls, WaitForClientTimeout) then
-		return
-	end
+	@param params DestructionParameters | Hitbox
+]=]
+function Shatterbox.Destroy(params : Types.DestructionParams)
+	if ModelQueueBehavior(Shatterbox.Destroy, params) then return end
 
-	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, OnVoxelDestruct, GridSize, SkipEncapsulatedVoxels, OnDestructCompleted, UserData, ExcludePlayersReplication, SkipFloors, SkipWalls, WaitForClientTimeout)
+	local Parameters = ValidateDestructionParams(params)
 
 	if USE_CLIENT_SERVER then
-		local _, createdDirtyGroups = GetDestructibleParts(params)
+		local _, createdDirtyGroups = GetDestructibleParts(Parameters)
 
 		if isServer then
-			ReplicateDestructionToClients(NORMAL, params, createdDirtyGroups)
+			ReplicateDestructionToClients(NORMAL, Parameters, createdDirtyGroups)
 		else
 			SendDirtyGroupsToServer(createdDirtyGroups)
 		end
 	end
 
-	table.insert(ShatterQueue, params)
+	table.insert(ShatterQueue, Parameters)
 end
 
 
---*Yields until the NEXT Heartbeat to perform instant destruction.* <br>
---
---Performs voxel destruction around 'intersectingPart', skipping as many intermediate parts as possible. <br>
---
--- Returns an array of imaginary voxels for you to optionally create as debris, as well as any existing debris as a second returned array.
-function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.WorldInfo | Types.ImaginaryDestructionParams, FilterTagged : (string | {string})?, CleanupDelay : number?, GridSize : number?, SkipEncapsulatedVoxels : boolean?, ExcludePlayersReplication : {Player}?, SkipFloors : boolean?, SkipWalls : boolean?) : {Types.ImaginaryVoxel}
 
-	local did, voxels, existingDebris = ModelQueueBehavior(Shatterbox.ImaginaryVoxels, intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication, SkipFloors, SkipWalls)
+--[=[
+	Instantly performs voxel destruction around the hitbox according to the `params` supplied.
+
+	Returns the imaginary voxels to be created as well as any existing debris encountered.
+
+	These are to be instantiated using [InstantiateImaginaryVoxel](Shatterbox#InstantiateImaginaryVoxel).
+
+	:::warning
+	If you use SkipEncapsulatedVoxels, the #length of the imaginary voxels array will show up as larger than it really is.
+
+	This is to give the same functionality as [OnDestructCompleted voxelCount](Shatterbox#OnDestructCompleted) without the need for a third return value.
+
+	Use `ipairs` or generalized iteration to iterate over this array.
+	:::
+	@param params DestructionParameters | Hitbox
+	@return {ImaginaryVoxel}
+	@return {BasePart}
+]=]
+function Shatterbox.ImaginaryVoxels(params : Types.ImaginaryDestructionParams) : ({Types.ImaginaryVoxel}, {BasePart})
+
+	local did, voxels, existingDebris = ModelQueueBehavior(Shatterbox.ImaginaryVoxels, params)
 	if did then return voxels, existingDebris end
 
-	local params = ValidateDestructionParams(intersectingPart, FilterTagged, CleanupDelay, nil, GridSize, SkipEncapsulatedVoxels, nil, nil, ExcludePlayersReplication, SkipFloors, SkipWalls)
+	local Parameters = ValidateDestructionParams(params)
 
-	local destructibleParts, createdDirtyGroups, _, affectedIDs = GetDestructibleParts(params)
+	local destructibleParts, createdDirtyGroups, _, affectedIDs = GetDestructibleParts(Parameters)
 
 	if USE_CLIENT_SERVER then
 		if isServer then
-			ReplicateDestructionToClients(IMAGINARY, params, createdDirtyGroups)
+			ReplicateDestructionToClients(IMAGINARY, Parameters, createdDirtyGroups)
 		else
 			SendDirtyGroupsToServer(createdDirtyGroups)
 		end
 	end
 
-	voxels, existingDebris = ImaginaryVoxels(params, destructibleParts, affectedIDs)
+	voxels, existingDebris = ImaginaryVoxels(Parameters, destructibleParts, affectedIDs)
 
-	OperationAffectedFallingGroups[params.ID] = nil
+	OperationAffectedFallingGroups[Parameters.ID] = nil
 
 	return voxels or {}, existingDebris
 end
 
--- Will return a created voxel using the supplied ImaginaryVoxel, will automatically parent the voxel to the ShatterboxTemporary folder and give it the DebrisTag tag
-function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVoxel, doNotGiveDebrisTag : boolean?)
+--[=[
+	Returns a created voxel using the supplied `ImaginaryVoxel`.
+
+	Will automatically parent the voxel to the original parent of the group.
+
+	Will also automatically give the voxel the `"ShatterboxDebris"` tag unless you pass in `doNotGiveDebrisTag`.
+
+	:::tip
+	You would want to pass in `doNotGiveDebrisTag` if you're going to use the static function [OnVoxelDestruct](Shatterbox#OnVoxelDestruct) to use/extend an existing effect.
+	:::
+	@param ImaginaryVoxel ImaginaryVoxel
+	@param doNotGiveDebrisTag boolean?
+]=]
+function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVoxel, doNotGiveDebrisTag : boolean?) : Part
 	local DirtyGroupID = ImaginaryVoxel.DirtyGroupID
 
 	local voxel = InstantiatePart(DirtyGroupID, ImaginaryVoxel.CFrame, ImaginaryVoxel.Size)
@@ -2346,7 +2735,13 @@ function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVo
 end
 
 
---Resets an area rather than everything at once, without reverting the ownership of those parts
+--[=[
+	Resets an area. Currently only supports Box shaped areas.
+
+	Does not revert the ownership of parts with Client-Server enabled.
+
+	@param area Part|ImaginaryPart
+]=]
 function Shatterbox.ResetArea(area : Part | Types.WorldInfo)
 
 	local ACF, AS = area.CFrame, area.Size
@@ -2388,8 +2783,16 @@ function Shatterbox.ResetArea(area : Part | Types.WorldInfo)
 end
 
 
--- resets all modified parts to where they originally were (turning the map back to normal) and re-allocating system queues and maps
-function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?)
+--[=[
+	Resets all modified parts and re-allocates system queues/maps.
+
+	If `doNotRevertOwnership` is `true` with Client-Server enabled, the clients do not delete their owned map parts.
+
+	@function Reset
+	@param doNotRevertOwnership boolean?
+	@within Shatterbox
+]=]
+function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated)
 	-- stop all queued destructions
 	ShatterQueue = {}
 
@@ -2449,160 +2852,268 @@ function Shatterbox.ClearQueue()
 end
 
 
--- Creates a "Hitbox" object which can be used in place of the destruction functions, and has additional functionality. (like VoxBreaker moveable hitbox)
--- If you use ExcludePlayersReplication, that will be cleared after every destruction automatically, for convenience.
+--[=[
+	@class Hitbox
+
+	Helper class which represents a virtual hitbox. Contains all [destruction parameters](DestructionParameters) as well as some unique parameters.
+]=]
+local HitboxMT = setmetatable({}, DestructionParamsMT)
+HitboxMT.__index = HitboxMT
+
+--[=[
+	The delay in seconds between destructions when using [Hitbox:Start()](Hitbox#Start)
+
+	@prop DestructDelay number?
+	@within Hitbox
+]=]
+HitboxMT.DestructDelay = nil :: number?
+
+--[=[
+	Determines what kind of destruction is performed while using [Hitbox:Start()](Hitbox#Start).
+
+	If set to "IMAGINARY", then [Hitbox.ImaginaryCallback](Hitbox#ImaginaryCallback) is used to give you the imaginary voxels and existing debris.
+
+	@prop DestructionType "DEFAULT"|"IMAGINARY"
+	@within Hitbox
+]=]
+HitboxMT.DestructionType = "DEFAULT" :: ("DEFAULT"|"IMAGINARY")
+
+--[=[
+	A callback that runs if [Hitbox.DestructionType](Hitbox#DestructionType) is set to `"IMAGINARY"` while using [Hitbox:Start()](Hitbox#Start).
+
+	It supplies you the imaginary voxels and any existing debris.
+
+	@prop ImaginaryCallback ( (imaginaryVoxels : {ImaginaryVoxel}, existingDebris : {BasePart}) -> () )?
+	@within Hitbox
+]=]
+HitboxMT.ImaginaryCallback = nil :: ( (imaginaryVoxels : {Types.ImaginaryVoxel}, existingDebris : {BasePart}) -> () )?
+
+--[=[
+	Polling event for [Hitbox:Start()](Hitbox#Start).
+
+	@prop StartConnectionEvent RBXScriptSignal
+	@within Hitbox
+]=]
+HitboxMT.StartConnectionEvent = RunService.Heartbeat :: RBXScriptSignal-- the event that the hitbox connects to when using Start(), needs to have a deltaTime parameter
+
+--[=[
+	Polling event for [Hitbox:WeldTo()](Hitbox#WeldTo).
+
+	@prop WeldConnectionEvent RBXScriptSignal
+	@within Hitbox
+]=]
+HitboxMT.WeldConnectionEvent = RunService.PostSimulation :: RBXScriptSignal -- the event that the hitbox connects to when using WeldTo()
+
+--[=[
+	Whether or not to predict the velocity of the part the hitbox is welded to.
+
+	Only works if the hitbox is welded to a BasePart using [Hitbox:WeldTo()](Hitbox#WeldTo).
+
+	@prop VelocityPrediction boolean
+	@within Hitbox
+]=]
+HitboxMT.VelocityPrediction = false :: boolean
+
+--[=[
+	How many frames ahead to predict when using [Hitbox:VelocityPrediction](Hitbox#VelocityPrediction).
+
+	@prop VelocityBias number
+	@within Hitbox
+]=]
+HitboxMT.VelocityBias = 1 :: number
+
+--[=[
+	Equivalent to [Shatterbox.Destroy(Hitbox)](Shatterbox#Destroy).
+
+	Clears [Hitbox.ExcludePlayersReplication](DestructionParameters#ExcludePlayersReplication).
+
+	@within Hitbox
+]=]
+function HitboxMT:Destroy()
+	Shatterbox.Destroy(self)
+	self.ExcludePlayersReplication = {} -- QOL automatically clear the exlcusion after the destruction is performed
+end
+
+--[=[
+	Equivalent to [Shatterbox.ImaginaryVoxels(Hitbox)](Shatterbox#ImaginaryVoxels).
+
+	Clears [Hitbox.ExcludePlayersReplication](DestructionParameters#ExcludePlayersReplication).
+
+	@return {ImaginaryVoxel}
+	@return {BasePart}
+
+	@within Hitbox
+]=]
+function HitboxMT:ImaginaryVoxels() : ({Types.ImaginaryVoxel}, {BasePart})
+	local voxels, existingDebris = Shatterbox.ImaginaryVoxels(self)
+	self.ExcludePlayersReplication = {} -- QOL automatically clear the exlcusion after the destruction is performed
+	return voxels, existingDebris
+end
+
+--[=[
+	Will "weld" the hitbox to the given part, setting `Hitbox.CFrame` to be equal to `Part.CFrame` whenever [Hitbox.WeldConnectionEvent](Hitbox#WeldConnectionEvent) fires.
+
+	If `Part` is destroyed using `Instance:Destroy()`, the hitbox will automatically call [Hitbox:DestroyHitbox()](Hitbox#DestroyHitbox)
+
+	If `workspace.PlayerCharacterDestroyBehavior` is false, the hitbox *will not* be automatically stopped when that Player respawns if you have welded to their root part.
+
+	@within Hitbox
+]=]
+function HitboxMT:WeldTo(Part : BasePart)
+	if self.wcon then self.wcon:Disconnect() end
+	if self.dcon then self.dcon:Disconnect() end
+	self.CFrame = Part.CFrame
+	self.wcon = self.WeldConnectionEvent:Connect(function(deltaTime)
+		if self.VelocityPrediction then
+			self.CFrame = Part.CFrame + Part.AssemblyLinearVelocity * self.VelocityBias * deltaTime
+		else
+			self.CFrame = Part.CFrame
+		end
+	end)
+	self.dcon = Part.Destroying:Once(self.DestroyHitbox)
+end
+
+--[=[
+	Will "unweld" the hitbox if it has been welded after using [Hitbox:WeldTo(BasePart)](Hitbox#WeldTo).
+
+	@within Hitbox
+]=]
+function HitboxMT:Unweld()
+	if self.wcon then self.wcon:Disconnect() end
+	if self.dcon then self.dcon:Disconnect() end
+	self.wcon, self.dcon = nil, nil
+end
+
+--[=[
+	Will start to cut around the hitbox every [Hitbox.DestructDelay](Hitbox#DestructDelay) seconds, which defaults to 0 (every frame).
+
+	The hitbox updates every time the [Hitbox.StartConnectionEvent](Hitbox#StartConnectionEvent) fires, which is expected to supply a `deltaTime` parameter.
+
+	If [Hitbox.DestructionType](Hitbox#DestructionType) is set to `"IMAGINARY"`, then [Hitbox.ImaginaryCallback](Hitbox#ImaginaryCallback) is used to give you the imaginary voxels and existing debris.
+
+	@within Hitbox
+]=]
+function HitboxMT:Start()
+	if self.ccon then return end
+	self.ccon = self.StartConnectionEvent:Connect(function()
+		if self.DestructDelay then
+			local t = time()
+			if self.lastCut and t - self.lastCut < self.DestructDelay then return end
+			self.lastCut = t
+		end
+
+		if self.DestructionType == "DEFAULT" then
+			self:Destroy()
+		else
+			local voxels, existingDebris = self:ImaginaryVoxels()
+			if self.ImaginaryCallback then
+				self.ImaginaryCallback(voxels, existingDebris)
+			end
+		end
+	end)
+end
+
+--[=[
+	Will stop cutting around the hitbox if the hitbox is active after using [Hitbox:Start()](Hitbox#Start).
+
+	@within Hitbox
+]=]
+function HitboxMT:Stop()
+	if self.ccon then self.ccon:Disconnect() end
+	self.ccon = nil
+end
+
+--[=[
+	Will call [Hitbox:Unweld()](Hitbox#Unweld) and then [Hitbox:Stop()](Hitbox#Stop).
+
+	Calling each individually is equivalent to calling this function.
+
+	@within Hitbox
+]=]
+function HitboxMT:DestroyHitbox()
+	self:Unweld()
+	self:Stop()
+end
+
+
+
+--[=[
+	Creates a Hitbox object which can be used in place of the destruction functions, and has additional functionality. (like VoxBreaker moveable hitbox)
+
+	If you use ExcludePlayersReplication, that will be cleared after every destruction automatically, for convenience.
+
+	@return Hitbox
+]=]
 function Shatterbox.CreateHitbox()
 
-	local hitbox = {}
-	hitbox.CFrame = CFrame.new() :: CFrame
-	hitbox.Size = Vector3.new(1, 1, 1) :: Vector3
-	hitbox.Shape = Enum.PartType.Ball :: Enum.PartType
+	local hitbox = setmetatable({}, HitboxMT)
 
-	hitbox.DestructDelay = nil :: number?
-
-	hitbox.WaitForClientTimeout = nil :: number?
-
-	hitbox.FilterTagged = nil :: (string | {string})?
-
-	hitbox.OnVoxelDestruct = nil :: string?
-	hitbox.UserData = {} :: {any}
-	hitbox.ExcludePlayersReplication = {} :: {Player}
-
-	hitbox.OnDestructCompleted = nil :: (() -> ())?
-
-	hitbox.CleanupDelay = nil :: number?
-	hitbox.GridSize = nil :: number?
-
-	hitbox.SkipEncapsulatedVoxels = nil :: boolean?
-	hitbox.SkipWalls = nil :: boolean?
-	hitbox.SkipFloors = nil :: boolean?
-
-	hitbox.DestructionType = "DEFAULT" :: ("DEFAULT"|"IMAGINARY")
-	hitbox.ImaginaryCallback = nil :: ( (imaginaryVoxels : {Types.ImaginaryVoxel}, existingDebris : {BasePart}) -> () )?
-
-	hitbox.StartConnectionEvent = RunService.Heartbeat -- the event that the hitbox connects to when using Start(), needs to have a deltaTime parameter
-	hitbox.WeldConnectionEvent = RunService.PostSimulation -- the event that the hitbox connects to when using WeldTo()
-
-	hitbox.VelocityPrediction = false :: boolean
-	hitbox.VelocityBias = 1 :: number?
-
-	-- Performs voxel destruction around the hitbox
-	function hitbox:Destroy()
-		Shatterbox.Destroy(hitbox)
-		hitbox.ExcludePlayersReplication = {} -- QOL automatically clear the exlcusion after the destruction is performed
-	end
-
-	--*Yields until the NEXT Heartbeat to perform instant destruction.* <br>
-	--
-	-- returns the imaginary voxels bounded by the hitbox as an array, for you to optionally create, as well as any existing debris as a second returned array.
-	function hitbox:ImaginaryVoxels()
-		local voxels, existingDebris = Shatterbox.ImaginaryVoxels(hitbox)
-		hitbox.ExcludePlayersReplication = {} -- QOL automatically clear the exlcusion after the destruction is performed
-		return voxels, existingDebris
-	end
-
-
-	local wcon : RBXScriptConnection?
-	local dcon : RBXScriptConnection?
-
-	-- will "weld" the hitbox to the given part, continously setting its CFrame to be equal to the parts CFrame.
-	-- If the Part is destroyed using ":Destroy()", the hitbox will be automatically stopped and disconnected.
-	-- If workspace.PlayerCharacterDestroyBehavior is not set to true, the hitbox wont be automatically stopped when that Player respawns.
-	function hitbox:WeldTo(Part : BasePart)
-		if wcon then wcon:Disconnect() end
-		if dcon then dcon:Disconnect() end
-		hitbox.CFrame = Part.CFrame
-		wcon = hitbox.WeldConnectionEvent:Connect(function(deltaTime)
-			if hitbox.VelocityPrediction then
-				hitbox.CFrame = Part.CFrame + Part.AssemblyLinearVelocity * hitbox.VelocityBias * deltaTime
-			else
-				hitbox.CFrame = Part.CFrame
-			end
-		end)
-		dcon = Part.Destroying:Once(hitbox.DestroyHitbox)
-	end
-
-	-- will "unweld" the hitbox
-	function hitbox:Unweld()
-		if wcon then wcon:Disconnect() end
-		if dcon then dcon:Disconnect() end
-		wcon, dcon = nil, nil
-	end
-
-	local ccon : RBXScriptConnection?
-	local lastCut : number
-
-	local function DestructionStartConnection()
-		if hitbox.DestructDelay then
-			local t = time()
-			if lastCut and t - lastCut < hitbox.DestructDelay then return end
-			lastCut = t
-		end
-
-		if hitbox.DestructionType == "DEFAULT" then
-			hitbox:Destroy()
-		else
-			local voxels, existingDebris = hitbox:ImaginaryVoxels()
-			if hitbox.ImaginaryCallback then
-				hitbox.ImaginaryCallback(voxels, existingDebris)
-			end
-		end
-	end
-
-	-- will continuously cut around the hitbox every hitbox.DestructDelay seconds, which defaults to 0.1
-	function hitbox:Start()
-		if ccon then return end
-		ccon = hitbox.StartConnectionEvent:Connect(DestructionStartConnection)
-	end
-
-	-- will stop continuous destruction
-	function hitbox:Stop()
-		if ccon then ccon:Disconnect() end
-		ccon = nil
-	end
-
-	-- will disconnect all connections.
-	function hitbox:DestroyHitbox()
-		hitbox:Unweld()
-		hitbox:Stop()
-	end
+	hitbox.UserData = {}
 
 	return hitbox
 end
 
 
--- Returns the original part that is associated with this DirtyGroupID. It was never destroyed, just had its parent set to `nil`
-function Shatterbox.GetOriginalPart(DirtyGroupID : string)
+--[=[
+	Returns the original part that is associated with this DirtyGroupID.
+
+	This part is never destroyed, just has its parent set to `nil`.
+]=]
+function Shatterbox.GetOriginalPart(DirtyGroupID : string) : BasePart
 	local groupData = DirtyGroupData[DirtyGroupID]
 	if not groupData then return nil end
 	return groupData.OriginalPart
 end
 
 
--- Takes a point and converts it to the voxel space distance relative to "voxel".
--- This is a vector which tells you how many voxels away the point is on each local axis, as fractional quantities.
--- It is possible for an axis to be less than one, but never negative.
-function Shatterbox.VoxelDistanceVector(voxel, point : Vector3) : Vector3
+--[=[
+	Takes a `point` and converts it to the voxel space distance relative to `voxel`.
+
+	This is a vector which tells you how many voxels away `point` is on each local axis, as fractional quantities.
+
+	It is possible for an axis to be less than one, but never negative.
+
+	:::tip
+	See `Shatterbox/effects/Server/MappingVoxelSpace` for an example on how to use VoxelDistanceVector
+	:::
+	@param voxel Part|ImaginaryPart
+	@param point Vector3
+]=]
+function Shatterbox.VoxelDistanceVector(voxel : Part|Types.ImaginaryBox, point : Vector3) : Vector3
 	return voxel.CFrame:PointToObjectSpace(point):Abs() / voxel.Size
 end
 
 
--- Returns a vector that tells you how many voxels a box determined by "size" has on each local axis, as fractional quantities.
--- It is not possible for an axis to be less than one, because there is always at least one voxel on every axis.
-function Shatterbox.VoxelCountVector(voxel, boxSize : Vector3) : Vector3
+--[=[
+	Returns a vector that tells you how many voxels (relative to `voxel`) a box determined by `boxSize` has on each local axis, as fractional quantities.
+
+	It is *not* possible for an axis to be less than one, because there is always at least one voxel on every axis.
+
+	:::tip
+	See `Shatterbox/effects/Server/MappingVoxelSpace` for an example on how to use VoxelCountVector
+	:::
+	@param voxel Part|ImaginaryPart
+	@param boxSize Vector3
+]=]
+function Shatterbox.VoxelCountVector(voxel : Part|Types.ImaginaryBox, boxSize : Vector3) : Vector3
 	return Vector3.one:Max(boxSize / voxel.Size)
 end
 
 
--- Will return true if "contains" is FULLY contained by "part", otherwise false
-function Shatterbox.PartEncapsulatesBlockPart(part : Part, contains : Part)
-	assert(part:IsA("Part"), "You can only use this function when a Part is the container.")
-	assert(contains:IsA("Part") and contains.Shape == Enum.PartType.Block, "You can only use this function when a Block Part is the contained object.")	
-	return PartEncapsulatesBlockPart(part, contains.CFrame, contains.Size)
-end
+--[=[
+	Will register the given callback to the given name.
 
+	If you call this function on the server side, you are creating a server-side effect. Vice-versa for registering on the client side.
 
--- Will register the given callback to the given name. It's suggested you do this at the top of the module instead, otherwise it is only registered on the side you called this function from.
+	Consider using `Shatterbox/effects` modules for effect definitions.
+
+	:::warning
+	Register any given effect only once, you are free to use it by name in scripts other than the one it is defined in.
+	:::
+
+	@param name string
+	@param callback OnVoxelDestructType
+]=]
 function Shatterbox.RegisterOnVoxelDestruct(name : string, callback : Types.OnVoxelDestruct)
 	assert(typeof(name) == "string", "You must register the OnVoxelDestruct callback with a string as the name")
 	local id = name:lower()
@@ -2613,6 +3124,28 @@ end
 
 Shatterbox.Voxelize = Voxelize
 
+--[=[
+	A function to manually call a registered OnVoxelDestruct effect.
+
+	:::tip
+	This can be used as a way to constructively build on top of any existing effects, saving you time.
+
+	#### Example
+	```lua
+	-- BumpyFloorBreakWalls but it makes every voxel black
+	Shatterbox.RegisterOnVoxelDestruct("ExtendingAnEffect", function(voxel, info)
+		voxel.Color = Color3.new()
+		Shatterbox.OnVoxelDestruct("BumpyFloorBreakWalls", voxel, info)
+	end)
+	```
+	:::
+
+	@function OnVoxelDestruct
+	@param name string
+	@param voxel Part
+	@param info VoxelInfo
+	@within Shatterbox
+]=]
 Shatterbox.OnVoxelDestruct = HandleVoxelDestruction
 
 Shatterbox.VertexMath = VertexMath

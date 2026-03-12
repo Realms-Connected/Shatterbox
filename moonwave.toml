@@ -1,0 +1,26 @@
+title = "Shatterbox Reference"
+
+classOrder = [
+    "Shatterbox",
+    "Hitbox",
+    "DestructionParameters",
+    "Settings"
+]
+
+[[navbar.items]]
+href = "https://discord.gg/WRfz79uRTy"
+label = "Discord"
+position = "right"
+
+[[navbar.items]]
+href = "https://devforum.roblox.com/t/shatterbox-client-server-voxel-destruction-simple-and-optimized-release-77/3674163"
+label = "DevForum"
+position = "right"
+
+
+[API]
+apiCategories = [
+    "PartDivision",
+    "SmoothCleanup",
+    "Puppeteer"
+]

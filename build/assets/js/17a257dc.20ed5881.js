@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[401],{4410:e=>{e.exports=JSON.parse('{"sourceUrl":"https://github.com/azavier-a/Shatterbox/blob/master","baseUrl":"/Shatterbox/","classOrder":["Shatterbox","Hitbox","DestructionParameters","Settings"],"apiCategories":[]}')}}]);
