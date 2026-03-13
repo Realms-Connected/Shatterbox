@@ -18,7 +18,7 @@ local Settings = {}
 	@within Settings
 	@readonly
 ]=]
-Settings.USE_CLIENT_SERVER = true
+Settings.USE_CLIENT_SERVER = false
 
 --Settings.USE_OBJECTCACHE = false -- whether or not to use ObjectCache (not fully implemented)
 --	Settings.CACHE_INITIAL_SIZE = 10000 -- The initial size of the part Caches
@@ -61,7 +61,7 @@ Settings.DefaultGridSize = 1
 	@within Settings
 	@tag PartDivision
 ]=]
-Settings.UseGreedyMeshing = true
+Settings.UseGreedyMeshing = false
 
 --[=[
 	What happens to destructible parts that cannot be divided by Shatterbox.
@@ -84,7 +84,7 @@ Settings.NonDivisibleInteraction = "FALL" :: "FALL"|"DESTROY"|"NONE" -- What hap
 	@within Settings
 	@tag SmoothCleanup
 ]=]
-Settings.UseSmoothCleanup = true
+Settings.UseSmoothCleanup = false
 
 --[=[
 	The default smooth cleanup delay if none is provided.

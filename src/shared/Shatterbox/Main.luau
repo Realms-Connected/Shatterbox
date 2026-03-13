@@ -201,7 +201,7 @@ local ImaginaryDestroyQueue = {} :: { [Part] : boolean }
 -- Ongoing operations array
 local ShatterQueue = {} :: { Types.DestructionParams }
 -- Falling groups being processed by an ongoing operation [DestructionID] : { [FallingGroupID] : boolean }
-local OperationAffectedFallingGroups = {} :: { [string] : { [string] : boolean }}
+local ChangedFallingGroups = {} :: { [string] : boolean }
 
 -- Dirty groups waiting to be greedy meshed [DirtyGroupID] : GridSize
 local GreedyMeshingQueue = {} :: { [string] : number }
@@ -323,7 +323,6 @@ local function DestroyPart(part)
 end
 
 local HalfVector = Vector3.one * 0.5
---[[
 local MAXU32 = 0xFFFFFFFF
 local function InitGreedyState(part, GridSize, groupMin, State, DIMYSTATEDIMZ, STATEDIMZ)
 
@@ -413,134 +412,132 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 	local meshed = {}
 
 	local searchIndex = 1
+	local StateSize = #State
+
 	while count > 0 do
-		-- find first unvisited and active state position
-		while State[searchIndex] == 0 do searchIndex += 1 end
-		local startIndex = searchIndex
+		while searchIndex <= StateSize and State[searchIndex] == 0 do
+			searchIndex += 1
+		end
+		if searchIndex > StateSize then break end
+
 		local state = State[searchIndex]
 
-		local ZBitOffset = bit32.countrz(state)
+		local startBit = bit32.countrz(state)
+		local shifted = bit32.rshift(state, startBit)
+
+		local run = bit32.countrz(bit32.bnot(shifted))
+		if run > (32 - startBit) then run = 32 - startBit end
+
+		local firstMask = bit32.lshift(bit32.lshift(1, run) - 1, startBit)
 
 		local StartX, rem = ((searchIndex - 1) // DIMYSTATEDIMZ) + 1, (searchIndex - 1) % DIMYSTATEDIMZ
 		local StartY, StartLayerZ = (rem // STATEDIMZ) + 1, (rem % STATEDIMZ) + 1
-		local StartZ = 32*(StartLayerZ - 1) + ZBitOffset + 1
+		local StartZ = 32*(StartLayerZ - 1) + startBit + 1
 
-		-- planar expansion along Z axis
-		local CountZ = bit32.countrz(bit32.bnot(bit32.rshift(state, ZBitOffset)))
-		local FirstLayerMask = bit32.lshift(bit32.lshift(1, CountZ) - 1, ZBitOffset)
-		-- mark these cells as visited
-		State[searchIndex] = bit32.bxor(state, FirstLayerMask)
-
-		local LastLayerMask
-		local EndZBit = ZBitOffset + CountZ - 1
 		local EndLayerZ = StartLayerZ
-		while EndZBit == 31 do
-			local nextIndex = searchIndex + 1
+		local EndBit = startBit + run - 1
+		local layerIndex = searchIndex
+		local lastMask
+
+		while EndBit == 31 and EndLayerZ < STATEDIMZ do
+			local nextIndex = layerIndex + 1
 			local nextLayer = State[nextIndex]
 			if not nextLayer or nextLayer == 0 then break end
 
 			if nextLayer == MAXU32 then
+				layerIndex = nextIndex
 				EndLayerZ += 1
-				EndZBit = 31
-				searchIndex = nextIndex
-				CountZ += 32
-				-- mark these cells as visited
-				State[searchIndex] = 0
-				continue
-			end
+				EndBit = 31
+				run += 32
+			else
+				local r = bit32.countrz(bit32.bnot(nextLayer))
+				if r == 0 then break end
 
-			local countOnes = bit32.countrz(bit32.bnot(nextLayer))
-			if countOnes == 0 then break end
-
-			EndLayerZ += 1
-			EndZBit = countOnes - 1
-			searchIndex = nextIndex
-			CountZ += countOnes
-			LastLayerMask = bit32.lshift(1, countOnes) - 1
-			-- mark these cells as visited
-			State[searchIndex] = bit32.bxor(nextLayer, LastLayerMask)
-
-			break
-		end
-
-		local EndZ = 32*(EndLayerZ - 1) + EndZBit + 1
-		local EndLayerOffset = EndLayerZ - StartLayerZ
-
-		-- planar expansion along Y axis
-		local EndY = StartY
-		while EndY + 1 <= DIMY do
-			local index = startIndex + STATEDIMZ * (EndY - StartY + 1)
-
-			local EndLayerIndex = index + EndLayerOffset
-			if bit32.band(State[index], FirstLayerMask) ~= FirstLayerMask or (LastLayerMask and bit32.band(State[EndLayerIndex], LastLayerMask) ~= LastLayerMask) then break end
-
-			local breakExpansion = false
-			for i = 1, EndLayerOffset - 1 do
-				if State[index + i] == MAXU32 then continue end
-				breakExpansion = true
+				layerIndex = nextIndex
+				EndLayerZ += 1
+				EndBit = r - 1
+				run += r
+				lastMask = bit32.lshift(1, r) - 1
 				break
 			end
+		end
 
-			if breakExpansion then break end
+		local EndLayerOffset = EndLayerZ - StartLayerZ
 
-			State[index] = bit32.bxor(State[index], FirstLayerMask)
-			if LastLayerMask then State[EndLayerIndex] = bit32.bxor(State[EndLayerIndex], LastLayerMask) end
+		local masks = {}
+		for layer = 0, EndLayerOffset do
+			if layer == 0 then
+				masks[layer] = firstMask
+			elseif layer == EndLayerOffset then
+				masks[layer] = lastMask or MAXU32
+			else
+				masks[layer] = MAXU32
+			end
+		end
 
-			for i = 1, EndLayerOffset - 1 do State[index + i] = 0 end
-
+		local EndY = StartY
+		while EndY < DIMY do
+			local nextY = EndY + 1
+			local valid = true
+			for layer = 0, EndLayerOffset do
+				local idx = (StartX - 1)*DIMYSTATEDIMZ + (nextY - 1)*STATEDIMZ + StartLayerZ + layer
+				local mask = State[idx]
+				local req = masks[layer]
+				if not mask or bit32.band(mask, req) ~= req then
+					valid = false
+					break
+				end
+			end
+			if not valid then break end
 			EndY += 1
 		end
 
-
-		-- planar expansion along X axis
 		local EndX = StartX
-		while EndX + 1 <= DIMX do
-			local index = startIndex + DIMYSTATEDIMZ * (EndX - StartX + 1)
-
-			local breakExpansion = false
+		while EndX < DIMX do
+			local nextX = EndX + 1
+			local valid = true
 			for Y = StartY, EndY do
-				local I = index + STATEDIMZ * (Y - StartY)
-
-				local EndLayerIndex = I + EndLayerOffset
-				if bit32.band(State[I], FirstLayerMask) ~= FirstLayerMask or (LastLayerMask and bit32.band(State[EndLayerIndex], LastLayerMask) ~= LastLayerMask) then
-					breakExpansion = true
-					break
+				for layer = 0, EndLayerOffset do
+					local idx = (nextX - 1)*DIMYSTATEDIMZ + (Y - 1)*STATEDIMZ + StartLayerZ + layer
+					local mask = State[idx]
+					local req = masks[layer]
+					if not mask or bit32.band(mask, req) ~= req then
+						valid = false
+						break
+					end
 				end
-
-				for i = 1, EndLayerOffset - 1 do
-					if State[I + i] == MAXU32 then continue end
-					breakExpansion = true
-					break
-				end
-
-				if breakExpansion then break end
+				if not valid then break end
 			end
-
-			if breakExpansion then break end
-
-			for Y = StartY, EndY do
-				local I = index + STATEDIMZ * (Y - StartY)
-				local EndLayerIndex = I + EndLayerOffset
-
-				State[I] = bit32.bxor(State[I], FirstLayerMask)
-				if LastLayerMask then State[EndLayerIndex] = bit32.bxor(State[EndLayerIndex], LastLayerMask) end
-
-				for i = 1, EndLayerOffset - 1 do State[I + i] = 0 end
-			end
-
+			if not valid then break end
 			EndX += 1
 		end
 
+		for X = StartX, EndX do
+			for Y = StartY, EndY do
+				local I = (X - 1)*DIMYSTATEDIMZ + (Y - 1)*STATEDIMZ + StartLayerZ
+				local EndLayerIndex = I + EndLayerOffset
 
-		-- the number of voxels in the meshed span on every axis
-		local NX, NY, NZ = EndX - StartX + 1, EndY - StartY + 1, EndZ - StartZ + 1
-		-- subtract the total number of voxels in the meshed span
+				State[I] = bit32.band(State[I], bit32.bnot(firstMask))
+				for i = 1, EndLayerOffset - 1 do State[I + i] = 0 end
+				if lastMask then
+					State[EndLayerIndex] = bit32.band(State[EndLayerIndex], bit32.bnot(lastMask))
+				elseif EndLayerOffset > 0 then
+					State[EndLayerIndex] = 0
+				end
+			end
+		end
+
+		local EndZ = 32*(EndLayerZ - 1) + EndBit + 1
+
+		local NX = EndX - StartX + 1
+		local NY = EndY - StartY + 1
+		local NZ = EndZ - StartZ + 1
+
 		count -= NX * NY * NZ
 
-		-- define a cuboid using the start and end positions.
 		table.insert(meshed, {
 			DirtyGroupID = DirtyGroupID,
-			CFrame = ( groupMin + groupMin.XVector*VSX*((StartX + EndX)*0.5 - 1) + groupMin.YVector*VSY*((StartY + EndY)*0.5 - 1) + groupMin.ZVector*VSZ*((StartZ + EndZ)*0.5 - 1) ),
+			CFrame = groupMin + groupMin.XVector * VSX * ((StartX + EndX)*0.5 - 1) + groupMin.YVector * VSY * ((StartY + EndY)*0.5 - 1) + groupMin.ZVector * VSZ * ((StartZ + EndZ)*0.5 - 1),
 			Size = VoxelSize * Vector3.new(NX, NY, NZ)
 		})
 	end
@@ -553,7 +550,6 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 				break
 			end
 		end
-
 		if index then
 			table.remove(OriginalParts, index)
 			ImaginaryDestroyQueue[found] = nil
@@ -562,196 +558,6 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 		end
 	end
 end
---]]
---
-local function InitGreedyState(part, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
-
-	local minCFrame, _, S, _, _, _, NVX, NVY, NVZ = GridInfo(part.CFrame, part.Size, GridSize)
-
-	if not minCFrame.Rotation:FuzzyEq(groupMin.Rotation, EPSILON) then return nil end
-
-	local Offset = groupMin:PointToObjectSpace(minCFrame.Position) / S
-	local RoundedOffset = (Offset + HalfVector):Floor()
-
-	if not Offset:FuzzyEq(RoundedOffset, EPSILON) then return nil end
-
-	local DX, DY, DZ = RoundedOffset.X - 1, RoundedOffset.Y - 1, RoundedOffset.Z
-
-	-- Initialize the 3d state volume
-	for X = 1, NVX do
-		local dixz = (X + DX)*DIMYDIMZ + DZ
-		for Y = 1, NVY do
-			local di = dixz + (Y + DY)*DIMZ
-			for Z = 1, NVZ do
-				State[di + Z] = true
-			end
-		end
-	end
-
-	return NVX * NVY * NVZ
-end
-
--- coroutine based greedy meshing with smooth display of results
-local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Types.ImaginaryBox })
-	local GridSize = GreedyMeshingQueue[DirtyGroupID]
-
-	local dirtyGroupData = DirtyGroupData[DirtyGroupID]
-	local dirtyGroupMembers = DirtyGroupMembers[DirtyGroupID]
-
-	local Original = dirtyGroupData.OriginalPart
-
-	-- The bounding area of Greedy Meshing, defined by the original part before it was ever destroyed
-	local groupMin, _, VoxelSize, _, _, _, DIMX, DIMY, DIMZ = GridInfo(Original.CFrame, Original.Size, GridSize)
-	local DIMYDIMZ = DIMY*DIMZ
-	local VSX, VSY, VSZ = VoxelSize.X, VoxelSize.Y, VoxelSize.Z
-
-	-- local stateBitCount = DIMX*DIMYDIMZ
-
-	-- flat 3d state array : index = (X - 1)*DIMYDIMZ + (Y - 1)*DIMZ + Z
-	local State = table.create(DIMX*DIMYDIMZ, false)
-
-	-- information about the original parts, used for smoothly displaying the output of greedy meshing
-	local OriginalParts = {} :: { Part }
-
-	-- the total number of voxels in the State array
-	local count = 0
-
-	for member in pairs(dirtyGroupMembers) do
-		if member:HasTag(DebrisTag) then continue end
-
-		table.insert(OriginalParts, member)
-
-		if ImaginaryDestroyQueue[member] then continue end
-
-		local n = InitGreedyState(member, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
-		if n then
-			count += n
-			ImaginaryDestroyQueue[member] = true
-		end
-	end
-
-	for _, imaginaryMember in ipairs(ImaginaryParts) do
-		local n = InitGreedyState(imaginaryMember, GridSize, groupMin, State, DIMYDIMZ, DIMZ)
-		if n then count += n end
-	end
-
-	if count == 0 then return end
-
-	local meshed = {}
-
-	local sx, sy, sz = 1, 1, 1
-	local si = 1
-	while count > 0 do
-		-- find first unvisited and active state position
-		while not State[si] do si += 1 end
-
-		State[si] = false
-
-		local X, rem = ((si - 1) // DIMYDIMZ) + 1, (si - 1) % DIMYDIMZ
-		local Y, Z = (rem // DIMZ) + 1, (rem % DIMZ) + 1
-
-		sx, sy, sz = X, Y, Z
-
-		local XINDEX = (X - 1)*DIMYDIMZ
-		local XYINDEX = si - Z
-		-- planar expansion along Z axis
-		for DZ = Z + 1, DIMZ do
-			local i = XYINDEX + DZ
-
-			if not State[i] then break end
-
-			State[i] = false
-
-			Z = DZ
-		end
-
-		-- planar expansion along Y axis
-		for DY = Y + 1, DIMY do
-			local breakExpansion = false
-
-			local indices = {}
-
-			XYINDEX = XINDEX + (DY - 1)*DIMZ
-			for iz = sz, Z do
-				local i = XYINDEX + iz
-
-				if not State[i] then
-					breakExpansion = true
-					break
-				end
-
-				indices[i] = true
-			end
-
-			if breakExpansion then break end
-
-			for index in pairs(indices) do State[index] = false end
-
-			Y = DY
-		end
-
-		-- planar expansion along X axis
-		for DX = X + 1, DIMX do
-			local breakExpansion = false
-
-			local indices = {}
-
-			XINDEX = (DX - 1)*DIMYDIMZ
-			for iy = sy, Y do
-				XYINDEX = XINDEX + (iy - 1)*DIMZ
-				for iz = sz, Z do
-					local i = XYINDEX + iz
-
-					if not State[i] then
-						breakExpansion = true
-						break
-					end
-
-					indices[i] = true
-				end
-
-				if breakExpansion then break end
-			end
-
-			if breakExpansion then break end
-
-			for index in pairs(indices) do State[index] = false end
-
-			X = DX
-		end
-
-		-- the number of voxels in the meshed span on every axis
-		local NX, NY, NZ = X - sx + 1, Y - sy + 1, Z - sz + 1
-		-- subtract the total number of voxels in the meshed span
-		count -= NX * NY * NZ
-
-		-- define a cuboid using the start and end positions.
-		table.insert(meshed, {
-			DirtyGroupID = DirtyGroupID,
-			CFrame = ( groupMin + groupMin.XVector*VSX*((X + sx)*0.5 - 1) + groupMin.YVector*VSY*((Y + sy)*0.5 - 1) + groupMin.ZVector*VSZ*((Z + sz)*0.5 - 1) ),
-			Size = VoxelSize * Vector3.new(NX, NY, NZ)
-		})
-	end
-
-	for _, meshedInfo in ipairs(meshed) do
-		local index, found = nil, nil
-		for i, original in ipairs(OriginalParts) do
-			if original.CFrame:FuzzyEq(meshedInfo.CFrame, 0.001) and original.Size:FuzzyEq(meshedInfo.Size, 0.001) then
-				index, found = i, original
-				break
-			end
-		end
-
-		if index then
-			table.remove(OriginalParts, index)
-			ImaginaryDestroyQueue[found] = nil
-		else
-			--InstantiatePart(DirtyGroupID, meshedInfo.CFrame, meshedInfo.Size)
-			table.insert(GreedyMeshedImaginaryParts, meshedInfo)
-		end
-	end
-end
---]]
 
 
 -- Returns the first occurance of an ancestor that is a Folder or a Model
@@ -1409,8 +1215,6 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 	IntersectingPart.Size = cuttingPart.Size
 	IntersectingPart.Shape = cuttingPart.Shape
 
-	local AffectedFallingGroups = OperationAffectedFallingGroups[destructionParams.ID] or {}
-
 	local AffectedDirtyGroups = {}
 
 	for _, part in ipairs( workspace:GetPartsInPart(IntersectingPart, destructionParams.FilterTagged and OverlapParamsOfTagged(destructionParams.FilterTagged)) ) do
@@ -1437,11 +1241,12 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 			createdDirtyGroups[DirtyGroupID] = true
 		end
 
-		if fallingGroupID then createdFallingGroups[fallingGroupID] = true end
-
-		fallingGroupID = part:GetAttribute(FallingGroupIDAttribute)
 		if fallingGroupID then
-			AffectedFallingGroups[fallingGroupID] = true
+			ChangedFallingGroups[fallingGroupID] = true
+			createdFallingGroups[fallingGroupID] = true
+		else
+			fallingGroupID = part:GetAttribute(FallingGroupIDAttribute)
+			if fallingGroupID then ChangedFallingGroups[fallingGroupID] = true end
 		end
 
 		if part:IsA("Part") and part.Shape == Enum.PartType.Block then
@@ -1460,8 +1265,6 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 			AffectedDirtyGroups[DirtyGroupID] = true
 		end
 	end
-
-	OperationAffectedFallingGroups[destructionParams.ID] = AffectedFallingGroups
 
 	return partsInPart, createdDirtyGroups, createdFallingGroups, AffectedDirtyGroups
 end
@@ -1769,8 +1572,6 @@ local function ProcessShatterQueue()
 
 		if popped.OnDestructCompleted then popped.OnDestructCompleted(ivoxels and #ivoxels or 0, affectedIDs) end
 
-		OperationAffectedFallingGroups[popped.ID] = nil
-
 	until #ShatterQueue == 0
 end
 
@@ -1956,7 +1757,7 @@ local function CreatePuppets(puppets)
 	for _, serialPuppet in ipairs(puppets) do
 		local Part = DeserializedPuppet(serialPuppet)
 
-		--[[
+		--
 		local Motor6D = Instance.new("Motor6D")
 		Motor6D.Transform = serialPuppet.CFrame
 		Motor6D.Part0 = WorldAnchor
@@ -2070,15 +1871,16 @@ if isClient then -- Client side interpolation loop that "tweens" every puppet vo
 		local puppets, interpolatedPositions, finishedLerps = nil, nil, {}
 		for index, lerpData in pairs(PuppetsLerpData) do
 			local d = lerpData[3] + deltaTime
+			local Motor6D = Puppets[index][1]:FindFirstChildWhichIsA("Motor6D")
 			if d >= P then
 				table.insert(finishedLerps, index)
 				--interpolatedPositions[i] = lerpData[2]
-				Puppets[index][1].CFrame = lerpData[2]
-				--Motor6D.Transform = lerpData[2]
+				--Puppets[index][1].CFrame = lerpData[2]
+				Motor6D.Transform = lerpData[2]
 			else
 				--interpolatedPositions[i] = lerpData[1]:Lerp(lerpData[2], d / P)
-				Puppets[index][1].CFrame = lerpData[1]:Lerp(lerpData[2], d / P)
-				--Motor6D.Transform = lerpData[1]:Lerp(lerpData[2], d / P)
+				--Puppets[index][1].CFrame = lerpData[1]:Lerp(lerpData[2], d / P)
+				Motor6D.Transform = lerpData[1]:Lerp(lerpData[2], d / P)
 				lerpData[3] = d
 			end
 
@@ -2407,6 +2209,11 @@ local function HeartbeatWorker(deltaTime)
 		end
 		ImaginaryDestroyQueue = {}
 	end
+
+	for FallingGroupID in pairs(ChangedFallingGroups) do
+		DFSWeld(FallingGroupID)
+	end
+	ChangedFallingGroups = {}
 	--debug.profileend()
 
 	if #NewPlayerStateReplicationQueue > 0 then
@@ -2615,6 +2422,18 @@ function Shatterbox.Puppeteer(voxel : Part)
 		PuppetNextIndex = 1
 	end
 end
+
+--[=[
+	Returns true if the passed in part has had [Puppeteer](Shatterbox#Puppeteer) called on it before.
+
+	On the client side, this will always be false because the client sided puppets are indestructible.
+
+	@function IsPuppet
+	@param voxel Part
+	@return boolean
+	@within Shatterbox
+	@server
+]=]
 Shatterbox.IsPuppet = IsPuppet
 
 
@@ -2697,8 +2516,6 @@ function Shatterbox.ImaginaryVoxels(params : Types.ImaginaryDestructionParams) :
 	end
 
 	voxels, existingDebris = ImaginaryVoxels(Parameters, destructibleParts, affectedIDs)
-
-	OperationAffectedFallingGroups[Parameters.ID] = nil
 
 	return voxels or {}, existingDebris
 end
