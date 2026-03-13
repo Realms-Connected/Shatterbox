@@ -670,7 +670,7 @@ DestructionParamsMT.__index = DestructionParamsMT
 --[=[
 	The virtual/physical hitbox that the destruction will use.
 
-	If this is not provided, [CFrame](../DestructionParameters#CFrame), [Size](../DestructionParameters#Size), and [Shape](../DestructionParameters#Shape), will be used. *You must provide one or the other.*
+	If this is not provided, [CFrame](#CFrame), [Size](#Size), and [Shape](#Shape), will be used. *You must provide one or the other.*
 
 	If this is a Model, a destruction will be queued for every Part descendant of that Model
 
@@ -2490,7 +2490,7 @@ end
 	:::warning
 	If you use SkipEncapsulatedVoxels, the #length of the imaginary voxels array will show up as larger than it really is.
 
-	This is to give the same functionality as [OnDestructCompleted voxelCount](../Shatterbox#OnDestructCompleted) without the need for a third return value.
+	This is to give the same functionality as [OnDestructCompleted voxelCount](/api/Shatterbox#OnDestructCompleted) without the need for a third return value.
 
 	Use `ipairs` or generalized iteration to iterate over this array.
 	:::
@@ -2672,7 +2672,7 @@ end
 --[=[
 	@class Hitbox
 
-	Helper class which represents a virtual hitbox. Contains all [destruction parameters](../DestructionParameters) as well as some unique parameters.
+	Helper class which represents a virtual hitbox. Contains all [destruction parameters](/api/DestructionParameters) as well as some unique parameters.
 ]=]
 local HitboxMT = setmetatable({}, DestructionParamsMT)
 HitboxMT.__index = HitboxMT
@@ -2740,9 +2740,9 @@ HitboxMT.VelocityPrediction = false :: boolean
 HitboxMT.VelocityBias = 1 :: number
 
 --[=[
-	Equivalent to [Shatterbox.Destroy(Hitbox)](../Shatterbox#Destroy).
+	Equivalent to [Shatterbox.Destroy(Hitbox)](/api/Shatterbox#Destroy).
 
-	Clears [Hitbox.ExcludePlayersReplication](../DestructionParameters#ExcludePlayersReplication).
+	Clears [Hitbox.ExcludePlayersReplication](/api/DestructionParameters#ExcludePlayersReplication).
 
 	@within Hitbox
 ]=]
@@ -2752,9 +2752,9 @@ function HitboxMT:Destroy()
 end
 
 --[=[
-	Equivalent to [Shatterbox.ImaginaryVoxels(Hitbox)](../Shatterbox#ImaginaryVoxels).
+	Equivalent to [Shatterbox.ImaginaryVoxels(Hitbox)](/api/Shatterbox#ImaginaryVoxels).
 
-	Clears [Hitbox.ExcludePlayersReplication](../DestructionParameters#ExcludePlayersReplication).
+	Clears [Hitbox.ExcludePlayersReplication](/api/DestructionParameters#ExcludePlayersReplication).
 
 	@return {ImaginaryVoxel}
 	@return {BasePart}
