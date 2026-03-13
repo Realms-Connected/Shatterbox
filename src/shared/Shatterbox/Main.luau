@@ -670,7 +670,7 @@ DestructionParamsMT.__index = DestructionParamsMT
 --[=[
 	The virtual/physical hitbox that the destruction will use.
 
-	If this is not provided, [CFrame](#CFrame), [Size](#Size), and [Shape](#Shape), will be used. *You must provide one or the other.*
+	If this is not provided, [CFrame](../DestructionParameters#CFrame), [Size](../DestructionParameters#Size), and [Shape](../DestructionParameters#Shape), will be used. *You must provide one or the other.*
 
 	If this is a Model, a destruction will be queued for every Part descendant of that Model
 
@@ -775,7 +775,7 @@ DestructionParamsMT.SkipWalls = nil :: boolean?
 --[=[
 	The name of the OnVoxelDestruct effect you want to use for this destruction.
 
-	You can register these effects either with [RegisterOnVoxelDestruct](Shatterbox#RegisterOnVoxelDestruct) or by making an entry in the desired `Shatterbox/effects` module.
+	You can register these effects either with [Shatterbox.RegisterOnVoxelDestruct] or by making an entry in the desired `Shatterbox/effects` module.
 
 	Client side effects should be registered on the client side, while server side effects should be registered on the server side. Client side effects only work with Client-Server enabled.
 
@@ -2234,7 +2234,7 @@ end
 
 	### voxelCount
 
-	A number that dictates how many voxels this destruction destroyed. This number is identical whether or not [params.SkipEncapsulatedVoxels](DestructionParameters#SkipEncapsulatedVoxels) is true.
+	A number that dictates how many voxels this destruction destroyed. This number is identical whether or not [DestructionParameters.SkipEncapsulatedVoxels] is true.
 
 	### affectedIDs
 
@@ -2265,7 +2265,7 @@ end
 --[=[
 	A function that is run for every voxel the destruction encounters.
 
-	see [DestructionParameters.OnVoxelDestruct](DestructionParameters#OnVoxelDestruct) for a brief explanation on how to use it.
+	see [DestructionParameters.OnVoxelDestruct] for a brief explanation on how to use it.
 
 	@type OnVoxelDestructType (voxel : Part, info : VoxelInfo) -> ()
 	@within Shatterbox
@@ -2299,7 +2299,7 @@ end
 
 	User supplied information to use in the OnVoxelDestruct effect.
 
-	Equivalent to [DestructionParameters.UserData](DestructionParameters#UserData).
+	Equivalent to [DestructionParameters.UserData].
 
 	.DirtyGroupID string
 	.CuttingPart ImaginaryPart
@@ -2327,9 +2327,9 @@ end
 
 	Represents a voxel that might be created.
 
-	These are to be instantiated using [InstantiateImaginaryVoxel](Shatterbox#InstantiateImaginaryVoxel)
+	These are to be instantiated using [Shatterbox.InstantiateImaginaryVoxel]
 
-	See [VoxelInfo](Shatterbox#VoxelInfo) for an explanation on these properties.
+	See [Shatterbox.VoxelInfo] for an explanation on these properties.
 
 	.CFrame CFrame
 	.Size Vector3
@@ -2424,7 +2424,7 @@ function Shatterbox.Puppeteer(voxel : Part)
 end
 
 --[=[
-	Returns true if the passed in part has had [Puppeteer](Shatterbox#Puppeteer) called on it before.
+	Returns true if the passed in part has had [Shatterbox.Puppeteer] called on it before.
 
 	On the client side, this will always be false because the client sided puppets are indestructible.
 
@@ -2485,12 +2485,12 @@ end
 
 	Returns the imaginary voxels to be created as well as any existing debris encountered.
 
-	These are to be instantiated using [InstantiateImaginaryVoxel](Shatterbox#InstantiateImaginaryVoxel).
+	These are to be instantiated using [Shatterbox.InstantiateImaginaryVoxel].
 
 	:::warning
 	If you use SkipEncapsulatedVoxels, the #length of the imaginary voxels array will show up as larger than it really is.
 
-	This is to give the same functionality as [OnDestructCompleted voxelCount](Shatterbox#OnDestructCompleted) without the need for a third return value.
+	This is to give the same functionality as [OnDestructCompleted voxelCount](../Shatterbox#OnDestructCompleted) without the need for a third return value.
 
 	Use `ipairs` or generalized iteration to iterate over this array.
 	:::
@@ -2528,7 +2528,7 @@ end
 	Will also automatically give the voxel the `"ShatterboxDebris"` tag unless you pass in `doNotGiveDebrisTag`.
 
 	:::tip
-	You would want to pass in `doNotGiveDebrisTag` if you're going to use the static function [OnVoxelDestruct](Shatterbox#OnVoxelDestruct) to use/extend an existing effect.
+	You would want to pass in `doNotGiveDebrisTag` if you're going to use the static function [Shatterbox.OnVoxelDestruct] to use/extend an existing effect.
 	:::
 	@param ImaginaryVoxel ImaginaryVoxel
 	@param doNotGiveDebrisTag boolean?
@@ -2672,13 +2672,13 @@ end
 --[=[
 	@class Hitbox
 
-	Helper class which represents a virtual hitbox. Contains all [destruction parameters](DestructionParameters) as well as some unique parameters.
+	Helper class which represents a virtual hitbox. Contains all [destruction parameters](../DestructionParameters) as well as some unique parameters.
 ]=]
 local HitboxMT = setmetatable({}, DestructionParamsMT)
 HitboxMT.__index = HitboxMT
 
 --[=[
-	The delay in seconds between destructions when using [Hitbox:Start()](Hitbox#Start)
+	The delay in seconds between destructions when using [Hitbox:Start]
 
 	@prop DestructDelay number?
 	@within Hitbox
@@ -2686,9 +2686,9 @@ HitboxMT.__index = HitboxMT
 HitboxMT.DestructDelay = nil :: number?
 
 --[=[
-	Determines what kind of destruction is performed while using [Hitbox:Start()](Hitbox#Start).
+	Determines what kind of destruction is performed while using [Hitbox:Start].
 
-	If set to "IMAGINARY", then [Hitbox.ImaginaryCallback](Hitbox#ImaginaryCallback) is used to give you the imaginary voxels and existing debris.
+	If set to "IMAGINARY", then [Hitbox.ImaginaryCallback] is used to give you the imaginary voxels and existing debris.
 
 	@prop DestructionType "DEFAULT"|"IMAGINARY"
 	@within Hitbox
@@ -2696,7 +2696,7 @@ HitboxMT.DestructDelay = nil :: number?
 HitboxMT.DestructionType = "DEFAULT" :: ("DEFAULT"|"IMAGINARY")
 
 --[=[
-	A callback that runs if [Hitbox.DestructionType](Hitbox#DestructionType) is set to `"IMAGINARY"` while using [Hitbox:Start()](Hitbox#Start).
+	A callback that runs if [Hitbox.DestructionType] is set to `"IMAGINARY"` while using [Hitbox:Start].
 
 	It supplies you the imaginary voxels and any existing debris.
 
@@ -2706,7 +2706,7 @@ HitboxMT.DestructionType = "DEFAULT" :: ("DEFAULT"|"IMAGINARY")
 HitboxMT.ImaginaryCallback = nil :: ( (imaginaryVoxels : {Types.ImaginaryVoxel}, existingDebris : {BasePart}) -> () )?
 
 --[=[
-	Polling event for [Hitbox:Start()](Hitbox#Start).
+	Polling event for [Hitbox:Start].
 
 	@prop StartConnectionEvent RBXScriptSignal
 	@within Hitbox
@@ -2714,7 +2714,7 @@ HitboxMT.ImaginaryCallback = nil :: ( (imaginaryVoxels : {Types.ImaginaryVoxel},
 HitboxMT.StartConnectionEvent = RunService.Heartbeat :: RBXScriptSignal-- the event that the hitbox connects to when using Start(), needs to have a deltaTime parameter
 
 --[=[
-	Polling event for [Hitbox:WeldTo()](Hitbox#WeldTo).
+	Polling event for [Hitbox:WeldTo].
 
 	@prop WeldConnectionEvent RBXScriptSignal
 	@within Hitbox
@@ -2724,7 +2724,7 @@ HitboxMT.WeldConnectionEvent = RunService.PostSimulation :: RBXScriptSignal -- t
 --[=[
 	Whether or not to predict the velocity of the part the hitbox is welded to.
 
-	Only works if the hitbox is welded to a BasePart using [Hitbox:WeldTo()](Hitbox#WeldTo).
+	Only works if the hitbox is welded to a BasePart using [Hitbox:WeldTo].
 
 	@prop VelocityPrediction boolean
 	@within Hitbox
@@ -2732,7 +2732,7 @@ HitboxMT.WeldConnectionEvent = RunService.PostSimulation :: RBXScriptSignal -- t
 HitboxMT.VelocityPrediction = false :: boolean
 
 --[=[
-	How many frames ahead to predict when using [Hitbox:VelocityPrediction](Hitbox#VelocityPrediction).
+	How many frames ahead to predict when using [Hitbox.VelocityPrediction].
 
 	@prop VelocityBias number
 	@within Hitbox
@@ -2740,9 +2740,9 @@ HitboxMT.VelocityPrediction = false :: boolean
 HitboxMT.VelocityBias = 1 :: number
 
 --[=[
-	Equivalent to [Shatterbox.Destroy(Hitbox)](Shatterbox#Destroy).
+	Equivalent to [Shatterbox.Destroy(Hitbox)](../Shatterbox#Destroy).
 
-	Clears [Hitbox.ExcludePlayersReplication](DestructionParameters#ExcludePlayersReplication).
+	Clears [Hitbox.ExcludePlayersReplication](../DestructionParameters#ExcludePlayersReplication).
 
 	@within Hitbox
 ]=]
@@ -2752,9 +2752,9 @@ function HitboxMT:Destroy()
 end
 
 --[=[
-	Equivalent to [Shatterbox.ImaginaryVoxels(Hitbox)](Shatterbox#ImaginaryVoxels).
+	Equivalent to [Shatterbox.ImaginaryVoxels(Hitbox)](../Shatterbox#ImaginaryVoxels).
 
-	Clears [Hitbox.ExcludePlayersReplication](DestructionParameters#ExcludePlayersReplication).
+	Clears [Hitbox.ExcludePlayersReplication](../DestructionParameters#ExcludePlayersReplication).
 
 	@return {ImaginaryVoxel}
 	@return {BasePart}
@@ -2768,9 +2768,9 @@ function HitboxMT:ImaginaryVoxels() : ({Types.ImaginaryVoxel}, {BasePart})
 end
 
 --[=[
-	Will "weld" the hitbox to the given part, setting `Hitbox.CFrame` to be equal to `Part.CFrame` whenever [Hitbox.WeldConnectionEvent](Hitbox#WeldConnectionEvent) fires.
+	Will "weld" the hitbox to the given part, setting `Hitbox.CFrame` to be equal to `Part.CFrame` whenever [Hitbox.WeldConnectionEvent] fires.
 
-	If `Part` is destroyed using `Instance:Destroy()`, the hitbox will automatically call [Hitbox:DestroyHitbox()](Hitbox#DestroyHitbox)
+	If `Part` is destroyed using `Instance:Destroy()`, the hitbox will automatically call [Hitbox:DestroyHitbox]
 
 	If `workspace.PlayerCharacterDestroyBehavior` is false, the hitbox *will not* be automatically stopped when that Player respawns if you have welded to their root part.
 
@@ -2791,7 +2791,7 @@ function HitboxMT:WeldTo(Part : BasePart)
 end
 
 --[=[
-	Will "unweld" the hitbox if it has been welded after using [Hitbox:WeldTo(BasePart)](Hitbox#WeldTo).
+	Will "unweld" the hitbox if it has been welded after using [Hitbox:WeldTo].
 
 	@within Hitbox
 ]=]
@@ -2802,11 +2802,11 @@ function HitboxMT:Unweld()
 end
 
 --[=[
-	Will start to cut around the hitbox every [Hitbox.DestructDelay](Hitbox#DestructDelay) seconds, which defaults to 0 (every frame).
+	Will start to cut around the hitbox every [Hitbox.DestructDelay] seconds, which defaults to 0 (every frame).
 
-	The hitbox updates every time the [Hitbox.StartConnectionEvent](Hitbox#StartConnectionEvent) fires, which is expected to supply a `deltaTime` parameter.
+	The hitbox updates every time the [Hitbox.StartConnectionEvent] fires, which is expected to supply a `deltaTime` parameter.
 
-	If [Hitbox.DestructionType](Hitbox#DestructionType) is set to `"IMAGINARY"`, then [Hitbox.ImaginaryCallback](Hitbox#ImaginaryCallback) is used to give you the imaginary voxels and existing debris.
+	If [Hitbox.DestructionType] is set to `"IMAGINARY"`, then [Hitbox.ImaginaryCallback] is used to give you the imaginary voxels and existing debris.
 
 	@within Hitbox
 ]=]
@@ -2831,7 +2831,7 @@ function HitboxMT:Start()
 end
 
 --[=[
-	Will stop cutting around the hitbox if the hitbox is active after using [Hitbox:Start()](Hitbox#Start).
+	Will stop cutting around the hitbox if the hitbox is active after using [Hitbox:Start].
 
 	@within Hitbox
 ]=]
@@ -2841,7 +2841,7 @@ function HitboxMT:Stop()
 end
 
 --[=[
-	Will call [Hitbox:Unweld()](Hitbox#Unweld) and then [Hitbox:Stop()](Hitbox#Stop).
+	Will call [Hitbox:Unweld] and then [Hitbox:Stop].
 
 	Calling each individually is equivalent to calling this function.
 
