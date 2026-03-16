@@ -2419,6 +2419,59 @@ Shatterbox.IsPuppet = IsPuppet
 --[=[
 	A sparse array that holds information for every puppet in existence.
 
+	### Example
+
+	Server:
+	```lua
+	Shatterbox.RegisterOnVoxelDestruct("Fall", function(voxel, info)
+		-- voxels try to fly away from the center of the destruction hitbox
+		voxel.AssemblyLinearVelocity = (voxel.Position - info.CuttingPart.CFrame.Position).Unit * 30
+
+		-- create map to store the Puppet IDs generated or affected by this destruction if it doesnt exist
+		local PuppetIDs = info.UserData.PuppetIDs 
+		if not PuppetIDs then
+			PuppetIDs = {}
+			info.UserData.PuppetIDs = PuppetIDs
+		end
+
+		-- if the voxel was already a puppet, Puppeteer returns the ID of that puppet.
+		-- Puppeteer also automatically unanchors voxels.
+		local puppetID = Shatterbox.Puppeteer(voxel)
+		PuppetIDs[puppetID] = true
+	end)
+
+
+	local hb = Shatterbox.CreateHitbox()
+	hb.Size = Vector3.one * 16
+	hb.OnVoxelDestruct = "Fall"
+
+	hb.OnDestructCompleted = function()
+		local PuppetIDs = hb.UserData.PuppetIDs
+
+		if PuppetIDs then
+			-- Tell clients to do stuff with the found and created puppets.
+			SignalClientPuppetVFX:FireAllClients(PuppetIDs)
+
+			-- clear the map after each destruction
+			hb.UserData.PuppetIDs = {}
+		end
+	end
+	```
+
+	Client:
+	```lua
+	SignalClientPuppetVFX.OnClientEvent:Connect(function(voxelIDs)
+		local Puppets = Shatterbox.Puppets
+
+		for id in pairs(voxelIDs) do
+			local PuppetPart = Shatterbox.GetPuppetAsync(id)
+			if not PuppetPart then continue end
+
+			-- do whatever you want with the client side puppet part
+		end
+	end)
+	```
+
 	@prop Puppets {PuppetDataType}
 	@within Shatterbox
 ]=]
