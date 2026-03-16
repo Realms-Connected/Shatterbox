@@ -2308,21 +2308,22 @@ Shatterbox.Settings = Settings
 --[=[
 	Server side function. Begins controlled replication of `voxel` to the clients according to the Puppeteer settings.
 
-	Returns the index of the new Puppet in the [Shatterbox.Puppets] sparse array, or nil if the passed in `voxel` is already a Puppet.
+	Returns the index of the new Puppet in the [Shatterbox.Puppets] sparse array. If the voxel was already a puppet, then the puppetID of that voxel is returned.
 
 	When the part stops moving, it will become anchored to allow for a larger number of ground debris while still having good motion.
 
 	It is safe to un-anchor these parts again in your destruction effects to have them start replicating again, they will still anchor themselves when they stop moving.
 
-	@return number?
+	@return number
 	@server
 ]=]
-function Shatterbox.Puppeteer(voxel : Part)
+function Shatterbox.Puppeteer(voxel : Part) : number
 	assert(isServer, "This function can only be called from the server")
 
-	if IsPuppet(voxel) then return end
-
 	voxel.Anchored = false
+
+	local isAlreadyPuppet = IsPuppet(voxel)
+	if isAlreadyPuppet then return isAlreadyPuppet end
 
 	voxel.Parent = mapContainer
 
@@ -2422,6 +2423,29 @@ Shatterbox.IsPuppet = IsPuppet
 	@within Shatterbox
 ]=]
 Shatterbox.Puppets = Puppets
+
+--[=[
+	A function that will wait for a Puppet with a given id to exist in [Shatterbox.Puppets], and return it if it was found.
+
+	@param puppetID number
+	@param waitCount number? -- The number of Heartbeats to wait. Defaults to 10.
+	@client
+]=]
+function Shatterbox.GetPuppetAsync(puppetID : number, waitCount : number?) : Part?
+	waitCount = waitCount or 10
+	local PuppetPart : Part = Puppets[puppetID] and Puppets[puppetID][1]
+	if not PuppetPart then
+		local i = 1
+		repeat
+			RunService.Heartbeat:Wait()
+			PuppetPart = Puppets[puppetID] and Puppets[puppetID][1]
+			i += 1
+		until PuppetPart or i > waitCount
+	end
+
+	return PuppetPart
+end
+
 
 
 function Shatterbox.FakeClientPuppets(fakePuppets : { Part })
