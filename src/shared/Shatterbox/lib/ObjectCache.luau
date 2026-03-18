@@ -1,4 +1,3 @@
-local RunService = game:GetService("RunService")
 --!strict
 --!native
 local FAR_AWAY_CFRAME = CFrame.new(2^24, 2^24, 2^24)
@@ -7,19 +6,12 @@ local EXPAND_BY_AMOUNT = 50
 local MovingParts = table.create(10_000)
 local MovingCFrames = table.create(10_000)
 
-local ScheduledUpdate = false
 local function UpdateMovement()
-	while true do
-		workspace:BulkMoveTo(MovingParts, MovingCFrames, Enum.BulkMoveMode.FireCFrameChanged)
+	workspace:BulkMoveTo(MovingParts, MovingCFrames, Enum.BulkMoveMode.FireCFrameChanged)
 
-		table.clear(MovingParts)
-		table.clear(MovingCFrames)
-
-		ScheduledUpdate = false
-		coroutine.yield()
-	end
+	table.clear(MovingParts)
+	table.clear(MovingCFrames)
 end
-local UpdateMovementThread = coroutine.create(UpdateMovement)
 
 local Cache = {}
 Cache.__index = Cache
@@ -63,26 +55,10 @@ end
 function Cache:GetPart(PartCFrame: CFrame?): BasePart
 	local Part = table.remove(self._FreeObjects) or self:_GetNew(self._ExpandAmount, true)
 
-
-	for _, tag in ipairs(Part:GetTags()) do -- I added these two loops, not sure if it's the best placement
-		Part:RemoveTag(tag)
-	end
-	Part:AddTag("ObjectCache")
-
-	for att in pairs(Part:GetAttributes()) do
-		Part:SetAttribute(att)
-	end
-
-
 	self._Objects[Part] = nil
 	if PartCFrame then
 		table.insert(MovingParts, Part)
 		table.insert(MovingCFrames, PartCFrame)
-
-		if not ScheduledUpdate then
-			ScheduledUpdate = true
-			task.defer(UpdateMovementThread)
-		end
 	end
 
 	return Part
@@ -92,25 +68,15 @@ function Cache:ReturnPart(Part: BasePart)
 		return
 	end
 
-	Part:RemoveTag("ObjectCache")
-
-	Part.Parent = self.CacheHolder
-	Part.Anchored = true
-
 	self._Objects[Part] = true
 
 	table.insert(self._FreeObjects, Part)
 	table.insert(MovingParts, Part)
 	table.insert(MovingCFrames, FAR_AWAY_CFRAME)
-
-	if not ScheduledUpdate then
-		ScheduledUpdate = true
-		task.defer(UpdateMovementThread)
-	end
 end
 
 function Cache:Update()
-	task.spawn(UpdateMovementThread)
+	UpdateMovement()
 end
 
 function Cache:ExpandCache(Amount: number)
@@ -164,23 +130,16 @@ function Constructor.new(Template: BasePart | Model, CacheSize: number?, CachesC
 	local TargetParts = table.create(PreallocAmount)
 
 	local IsTemplateModel = Template:IsA("Model")
-	task.spawn(function()
-		for Index = 1, PreallocAmount do
+	for Index = 1, PreallocAmount do
+		local Object = Template:Clone()
+		local ObjectRoot: BasePart = if IsTemplateModel then (Object:: Model).PrimaryPart:: BasePart else Object:: BasePart
 
-			if Index % 100 == 0 then
-				RunService.Heartbeat:Wait()
-			end
+		FreeObjects[Index] = Object
+		TargetParts[Index] = ObjectRoot
 
-			local Object = Template:Clone()
-			local ObjectRoot: BasePart = if IsTemplateModel then (Object:: Model).PrimaryPart:: BasePart else Object:: BasePart
-
-			FreeObjects[Index] = Object
-			TargetParts[Index] = ObjectRoot
-
-			ObjectRoot.CFrame = FAR_AWAY_CFRAME;
-			(Object:: Instance).Parent = CacheParent
-		end
-	end)
+		ObjectRoot.CFrame = FAR_AWAY_CFRAME;
+		(Object:: Instance).Parent = CacheParent
+	end
 
 	CacheParent.Parent = CachesContainer or workspace
 

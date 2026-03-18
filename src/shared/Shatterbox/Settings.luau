@@ -20,8 +20,26 @@ local Settings = {}
 ]=]
 Settings.USE_CLIENT_SERVER = true
 
---Settings.USE_OBJECTCACHE = false -- whether or not to use ObjectCache (not fully implemented)
---	Settings.CACHE_INITIAL_SIZE = 10000 -- The initial size of the part Caches
+
+--[=[
+	Set this to false if you don't want to use ObjectCache.
+
+	:::danger
+	If you have ObjectCache enabled, you **must** use [Shatterbox.Cleanup] to destroy map parts and voxels created by this library.
+	:::
+	@prop USE_OBJECT_CACHE boolean
+	@within Settings
+	@readonly
+]=]
+Settings.USE_OBJECT_CACHE = true
+	--[=[
+		The initial size of the ObjectCache.
+
+		@prop CACHE_INITIAL_SIZE number
+		@within Settings
+		@readonly
+	]=]
+	Settings.CACHE_INITIAL_SIZE = 5000
 
 
 
@@ -123,7 +141,7 @@ Settings.PuppetMaxCount = 8191
 	@within Settings
 	@tag Puppeteer
 ]=]
-Settings.PuppetSleepVelocity = 0.1
+Settings.PuppetSleepVelocity = 0.2
 
 --[=[
 	How long a puppet moving slower than PuppetSleepVelocity has before becoming anchored (seconds)
@@ -132,7 +150,7 @@ Settings.PuppetSleepVelocity = 0.1
 	@within Settings
 	@tag Puppeteer
 ]=]
-Settings.PuppetAnchorTimeout = 1
+Settings.PuppetAnchorTimeout = 0.3
 
 --[=[
 	How frequently puppet CFrames are sent to each client (default 20 fps target replication frequency)
@@ -157,6 +175,16 @@ Settings.PuppetReplicationFrequency = 20
 	@client
 ]=]
 Settings.ClientTweenPuppets = true
+
+--[=[
+	Whether to use [Motor6D.Transform] or [WorldRoot:BulkMoveTo] for interpolating the client side puppets.
+
+	@prop PUPPET_TWEEN_MODE "TRANSFORM"|"BULKMOVETO"
+	@within Settings
+	@tag Puppeteer
+	@client
+]=]
+Settings.PUPPET_TWEEN_MODE = "TRANSFORM" :: "TRANSFORM"|"BULKMOVETO"
 
 --[=[
 	Voxels farther than this many studs away don't get interpolated (Client-side only setting)

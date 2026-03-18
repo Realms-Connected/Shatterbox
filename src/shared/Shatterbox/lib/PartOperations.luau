@@ -12,7 +12,6 @@ type PartType = {CFrame : CFrame, Size : Vector3}
 local localAxisVectors = { X = "RightVector", Y = "UpVector", Z = "ZVector" }
 
 local WHITE = Color3.new(1, 1, 1)
-local MEDIUMSTONEGREY = Color3.fromRGB(163, 162, 165)
 
 
 -- Serializes the given decal instance
@@ -77,7 +76,7 @@ end
 
     A CFrame can be supplied which is where the part will be placed.
 ]]
-local function PartFromTemplate(template, cframe, provider)
+local function PartFromTemplate(template, cframe, CachedParts)
 
 	if not template:IsA("Part") or template.Shape ~= Enum.PartType.Block then
 		local cloned = template:Clone()
@@ -89,14 +88,12 @@ local function PartFromTemplate(template, cframe, provider)
 
 	--debug.profilebegin("create part")
 
-	if provider and #provider._FreeObjects > 0 then
-		part = provider:GetPart(cframe)
+	if CachedParts then
+		part = CachedParts:GetPart(cframe)
+		part.CanCollide = true
 	else
-		--if provider then warn("cache length exceeded : " .. #provider._FreeObjects) end
 		part = Instance.new("Part")
-		if cframe then
-			part.CFrame = cframe
-		end
+		if cframe then part.CFrame = cframe end
 	end
 
 	-- Set properties if they are not their defaults
@@ -162,54 +159,52 @@ end
 --[[
     Deserializes the given serialized part instance `p`
 ]]
-local function DeserializedPartInstance(p, provider)
+local function DeserializedPartInstance(p, CachedParts)
 
 	local part
 
-	if provider and #provider._FreeObjects > 0 then
-		part = provider:GetPart(p.CFrame)
+	if CachedParts then
+		part = CachedParts:GetPart(p.CFrame)
+		part.CanCollide = true
 	else
-		--if provider then warn("cache length exceeded : " .. #provider._FreeObjects) end
 		part = Instance.new("Part")
-		if p.CFrame then
-			part.CFrame = p.CFrame
-		end
+		if p.CFrame then part.CFrame = p.CFrame end
 	end
 
-	if p.Anchored then part.Anchored = true end
+	if not part.Anchored then part.Anchored = true end
 
 	-- deserialize properties
 	local prop
 
 	prop = p.Size
-	if prop then part.Size = prop end
+	if prop and part.Size ~= prop then part.Size = prop end
 	--part.Color = Color3.fromHSV(math.random(), 1, 1)
 	prop = p.Color
-    if prop then part.Color = prop end
+    if prop and part.Color ~= prop then part.Color = prop end
 	prop = p.Transparency
-    if prop then part.Transparency = prop end
+    if prop and part.Transparency ~= prop then part.Transparency = prop end
 	prop = p.Reflectance
-    if prop then part.Reflectance = prop end
+    if prop and part.Reflectance ~= prop then part.Reflectance = prop end
 	prop = p.Material
-    if prop then part.Material = Enum.Material:FromValue(prop) end
+    if prop and part.Material.Value ~= prop then part.Material = Enum.Material:FromValue(prop) end
 	prop = p.MaterialVariant
-    if prop then part.MaterialVariant = prop end
+    if prop and part.MaterialVariant ~= prop then part.MaterialVariant = prop end
 	prop = p.CollisionGroup
-    if prop then part.CollisionGroup = prop end
+    if prop and part.CollisionGroup ~= prop then part.CollisionGroup = prop end
 
 	-- deserialize surface property values
 	prop = p.RightSurface
-    if prop then part.RightSurface = Enum.SurfaceType:FromValue(prop) end
+    if prop and part.RightSurface.Value ~= prop then part.RightSurface = Enum.SurfaceType:FromValue(prop) end
 	prop = p.LeftSurface
-    if prop then part.LeftSurface = Enum.SurfaceType:FromValue(prop) end
+    if prop and part.LeftSurface.Value ~= prop then part.LeftSurface = Enum.SurfaceType:FromValue(prop) end
 	prop = p.FrontSurface
-    if prop then part.FrontSurface = Enum.SurfaceType:FromValue(prop) end
+    if prop and part.FrontSurface.Value ~= prop then part.FrontSurface = Enum.SurfaceType:FromValue(prop) end
 	prop = p.BackSurface
-    if prop then part.BackSurface = Enum.SurfaceType:FromValue(prop) end
+    if prop and part.BackSurface.Value ~= prop then part.BackSurface = Enum.SurfaceType:FromValue(prop) end
 	prop = p.TopSurface
-    if prop then part.TopSurface = Enum.SurfaceType:FromValue(prop) end
+    if prop and part.TopSurface.Value ~= prop then part.TopSurface = Enum.SurfaceType:FromValue(prop) end
 	prop = p.BottomSurface
-    if prop then part.BottomSurface = Enum.SurfaceType:FromValue(prop) end
+    if prop and part.BottomSurface.Value ~= prop then part.BottomSurface = Enum.SurfaceType:FromValue(prop) end
 
 	-- deserialize tags
 	for _, tag in ipairs(p.Tags) do part:AddTag(tag) end
@@ -286,41 +281,24 @@ local function SerializedPartInstance(p, ignoreWorldState)
 	end
 	serial.Attributes = Attributes
 
-	-- serialize properties if they are not their defaults
-	local prop
+	serial.Color = p.Color
+	serial.Transparency = p.Transparency
+	serial.Reflectance = p.Reflectance
+	serial.Material = p.Material.Value
+	serial.MaterialVariant = p.MaterialVariant
+	serial.CollisionGroup = p.CollisionGroup
 
-	serial.Anchored = p.Anchored
-
-	prop = p.Color
-	if prop ~= MEDIUMSTONEGREY then serial.Color = prop end
-	prop = p.Transparency
-    if prop ~= 0 then serial.Transparency = prop end
-	prop = p.Reflectance
-    if prop ~= 0 then serial.Reflectance = prop end
-	prop = p.Material
-    if prop ~= Enum.Material.Plastic then serial.Material = prop.Value end
-	prop = p.MaterialVariant
-    if #prop > 0 then serial.MaterialVariant = prop end
-	prop = p.CollisionGroup
-    if prop ~= "Default" then serial.CollisionGroup = prop end
-
-	-- serialize surface property values if they are not their defaults
-	prop = p.RightSurface.Value
-    if prop ~= 0 then serial.RightSurface = prop end
-	prop = p.LeftSurface.Value
-    if prop ~= 0 then serial.LeftSurface = prop end
-	prop = p.FrontSurface.Value
-    if prop ~= 0 then serial.FrontSurface = prop end
-	prop = p.BackSurface.Value
-    if prop ~= 0 then serial.BackSurface = prop end
-	prop = p.TopSurface.Value
-    if prop ~= 3 then serial.TopSurface = prop end
-	prop = p.BottomSurface.Value
-    if prop ~= 4 then serial.BottomSurface = prop end
+	serial.RightSurface = p.RightSurface.Value
+	serial.LeftSurface = p.LeftSurface.Value
+	serial.FrontSurface = p.FrontSurface.Value
+	serial.BackSurface = p.BackSurface.Value
+	serial.TopSurface = p.TopSurface.Value
+	serial.BottomSurface = p.BottomSurface.Value
 
 	-- serialize decals, textures, and lights
 	local decals, textures, lights = {}, {}, {}
 	for _, child in ipairs(p:GetChildren()) do
+		local prop = nil
 		if child:IsA("Texture") then
 			local serialTexture = SerializedDecalInstance(child)
 			prop = child.OffsetStudsU

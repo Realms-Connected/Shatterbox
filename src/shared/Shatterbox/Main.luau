@@ -100,6 +100,8 @@ end
 local Types = require(src:WaitForChild("Types"))
 
 local USE_CLIENT_SERVER = Settings.USE_CLIENT_SERVER
+local USE_OBJECT_CACHE = Settings.USE_OBJECT_CACHE
+local PUPPET_TWEEN_MODE = Settings.PUPPET_TWEEN_MODE
 
 local IMAGINARY, NORMAL = "IMAGINARY", "NORMAL"
 type DestructionTypes = ("IMAGINARY"|"NORMAL")
@@ -142,19 +144,18 @@ elseif isClient then
 end
 
 local ObjectCache, CachedParts
---[[
-if USE_OBJECTCACHE and not (USE_CLIENT_SERVER and isServer) then
+if USE_OBJECT_CACHE then
 
 	local TemplatePart = Instance.new("Part")
 	TemplatePart.Anchored = true
+	TemplatePart.CanCollide = false
 
 	ObjectCache = require(lib:WaitForChild("ObjectCache"))
 
 	local cacheContainer = mapContainer
 
-	CachedParts = ObjectCache.new(TemplatePart, CACHE_INITIAL_SIZE, cacheContainer)
+	CachedParts = ObjectCache.new(TemplatePart, Settings.CACHE_INITIAL_SIZE, cacheContainer)
 end
---]]
 
 -- Shorthands for commonly used functions
 local VertexMath = require(lib:WaitForChild("VertexMath"))
@@ -238,8 +239,8 @@ local frameDivs = 0
 
 local clientInitComplete = false -- flag used to pause replicating events until the server has replicated it's state
 
+local ScheduledUpdate = false
 
-local ci, cd = 0, 0
 
 local textUVMap = {
 	[0] = Vector3.new( 0,  1,  1),
@@ -260,11 +261,11 @@ local axisUVMap = {
 }
 
 --Instantiates a new member of a dirty group using the group ID and a given CFrame and Size
-local function InstantiatePart(DirtyGroupID, cframe, size)
+local function InstantiatePart(DirtyGroupID, cframe, size, doNotUseObjectCache)
 	--debug.profilebegin("InstantiatePart")
 	local dirtyGroupData, dirtyGroupMembers = DirtyGroupData[DirtyGroupID], DirtyGroupMembers[DirtyGroupID]
 
-	local part = PartFromTemplate(dirtyGroupData.OriginalPart, cframe, CachedParts)
+	local part = PartFromTemplate(dirtyGroupData.OriginalPart, cframe, not doNotUseObjectCache and CachedParts)
 	part.Size = size
 
 	local partIsDivisible = part:IsA("Part") and part.Shape == Enum.PartType.Block
@@ -297,26 +298,48 @@ local function InstantiatePart(DirtyGroupID, cframe, size)
 
 	dirtyGroupMembers[part] = true
 
+	if USE_OBJECT_CACHE then ScheduledUpdate = true end
 	--debug.profileend()
-	ci += 1
 	return part
 end
 --Destroys a member of a dirty group using the part itself
-local function DestroyPart(part)
+local function DestroyPart(part : BasePart)
 	--debug.profilebegin("DestroyPart")
 	local DirtyGroupID = part:GetAttribute(DirtyGroupIDAttribute)
 	if not DirtyGroupID then return end
 
 	local dirtyGroupData, dirtyGroupMembers = DirtyGroupData[DirtyGroupID], DirtyGroupMembers[DirtyGroupID]
 
-	if part == dirtyGroupData.OriginalPart then
+	if dirtyGroupData and part == dirtyGroupData.OriginalPart then
 		part.Parent = nil
 	else
-		dirtyGroupMembers[part] = nil
-		part:Destroy()
+		if dirtyGroupMembers then dirtyGroupMembers[part] = nil end
+
+		local puppetID = Shatterbox.IsPuppet(part)
+
+		if USE_OBJECT_CACHE and CachedParts:IsInUse(part) then
+			if not part.Anchored then part.Anchored = true end
+
+			if puppetID and isServer then Puppets[puppetID][2]() end
+
+			part:ClearAllChildren()
+
+			for _, tag in ipairs(part:GetTags()) do part:RemoveTag(tag) end
+
+			for k in pairs(part:GetAttributes()) do
+				if k:sub(1, 3) == "RBX" then continue end
+				part:SetAttribute(k)
+			end
+
+			part.CanCollide = false
+			CachedParts:ReturnPart(part)
+
+			ScheduledUpdate = true
+		else
+			part:Destroy()
+		end
 	end
 
-	cd += 1
 	--debug.profileend()
 end
 
@@ -543,6 +566,7 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 		})
 	end
 
+	--
 	for _, meshedInfo in ipairs(meshed) do
 		local index, found = nil, nil
 		for i, original in ipairs(OriginalParts) do
@@ -558,6 +582,8 @@ local function GreedyMeshBehavior(DirtyGroupID : string, ImaginaryParts : { Type
 			table.insert(GreedyMeshedImaginaryParts, meshedInfo)
 		end
 	end
+	--]]
+	--table.move(meshed, 1, #meshed, #GreedyMeshedImaginaryParts + 1, GreedyMeshedImaginaryParts)
 end
 
 
@@ -1227,7 +1253,11 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 
 	local AffectedDirtyGroups = {}
 
-	for _, part in ipairs( workspace:GetPartsInPart(IntersectingPart, destructionParams.FilterTagged and OverlapParamsOfTagged(destructionParams.FilterTagged)) ) do
+	--debug.profilebegin("GetPartsInPart nil Parent")
+	local FoundPartsInPart = workspace:GetPartsInPart(IntersectingPart, destructionParams.FilterTagged and OverlapParamsOfTagged(destructionParams.FilterTagged))
+	--debug.profileend()
+
+	for _, part in ipairs( FoundPartsInPart ) do
 		if ImaginaryDestroyQueue[part] then continue end
 
 		if (replicated and not part:IsDescendantOf(mapContainer)) or ShouldSkipInstance(part) then continue end
@@ -1272,7 +1302,7 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 end
 
 -- Returns all of the imaginary destructible parts that intersect the cuttingPart, removing them from the ImaginaryCreateQueue when that happens.
-local function GetImaginaryDestructibleParts(cuttingPart, verts, normals)
+local function GetImaginaryDestructibleParts(cuttingPart, filterTagged, verts, normals)
 	local iBa, iC = cuttingPart.Shape.Name == "Ball", cuttingPart.Shape.Name == "Cylinder"
 
 	local processed = {}
@@ -1280,6 +1310,18 @@ local function GetImaginaryDestructibleParts(cuttingPart, verts, normals)
 
 	while #ImaginaryCreateQueue > 0 do
 		local ivox = table.remove(ImaginaryCreateQueue)
+		if filterTagged then
+			local OriginalPart = Shatterbox.GetOriginalPart(ivox.DirtyGroupID)
+			local shouldSkip = true
+			for _, tag in ipairs(filterTagged) do
+				if OriginalPart:HasTag(tag) then
+					shouldSkip = false
+					break
+				end
+			end
+			if shouldSkip then continue end
+		end
+
 		local voxVerts = BlockVerts(ivox.CFrame, ivox.Size)
 
 		local intersected = PartContainsAVert(cuttingPart, voxVerts)
@@ -1349,7 +1391,7 @@ local function ImaginaryVoxels(params, destructibleParts, dirtyGroups)
 	end
 
 	if #ImaginaryCreateQueue > 0 then
-		local ImaginaryDestructibleParts = GetImaginaryDestructibleParts(params.CuttingPart, intersectingVerts, intersectingNormals)
+		local ImaginaryDestructibleParts = GetImaginaryDestructibleParts(params.CuttingPart, params.FilterTagged, intersectingVerts, intersectingNormals)
 		if #ImaginaryDestructibleParts > 0 then table.move(ImaginaryDestructibleParts, 1, #ImaginaryDestructibleParts, #partsInPart + 1, partsInPart) end
 	end
 
@@ -1576,7 +1618,7 @@ local function SendDirtyGroupsToServer(DirtyGroups)
 	for DirtyGroupID in pairs(DirtyGroups) do
 		local groupData = DirtyGroupData[DirtyGroupID]
 		local PartToSend = groupData.OriginalPart
-		local newClientPart = PartFromTemplate(PartToSend, PartToSend.CFrame)
+		local newClientPart = PartFromTemplate(PartToSend, PartToSend.CFrame, CachedParts)
 		groupData.OriginalPart = newClientPart
 		PartToSend.Parent = nil
 		newClientPart.Parent = mapContainer
@@ -1705,34 +1747,37 @@ local function DeserializedPuppet(serialPuppet)
 	return Part
 end
 
-local WorldAnchor = Instance.new("Part")
-WorldAnchor.CanCollide = false
-WorldAnchor.CanTouch = false
-WorldAnchor.CanQuery = false
-WorldAnchor.Anchored = true
-WorldAnchor.Transparency = 1
-WorldAnchor.CFrame = CFrame.identity
-WorldAnchor.Parent = workspace
+local WorldAnchor
+if PUPPET_TWEEN_MODE == "TRANSFORM" then
+	WorldAnchor = Instance.new("Part")
+	WorldAnchor.Anchored = true
+	WorldAnchor.CanCollide = false
+	WorldAnchor.CanTouch = false
+	WorldAnchor.CanQuery = false
+	WorldAnchor.Transparency = 1
+	WorldAnchor.CFrame = CFrame.identity
+	WorldAnchor.Parent = workspace
+end
 
 local function CreatePuppets(puppets)
 	--debug.profilebegin("Create Puppets")
 	for _, serialPuppet in ipairs(puppets) do
-		local Part = DeserializedPuppet(serialPuppet)
-
-		--
-		local Motor6D = Instance.new("Motor6D")
-		Motor6D.Transform = serialPuppet.CFrame
-		Motor6D.Part0 = WorldAnchor
-		Motor6D.Part1 = Part
-		Motor6D.Parent = Part
-
-		Part.Anchored = false
-		--]]
-
 		local OldPuppetData = Puppets[PuppetNextIndex]
 		if OldPuppetData then
-			OldPuppetData[1]:Destroy()
+			DestroyPart(OldPuppetData[1])
 			PuppetsLerpData[PuppetNextIndex] = nil
+		end
+
+		local Part = DeserializedPuppet(serialPuppet)
+
+		if PUPPET_TWEEN_MODE == "TRANSFORM" then
+			local Motor6D = Instance.new("Motor6D")
+			Motor6D.Enabled = false
+
+			Motor6D.Transform = serialPuppet.CFrame
+			Motor6D.Part0 = WorldAnchor
+			Motor6D.Part1 = Part
+			Motor6D.Parent = Part
 		end
 
 		Puppets[PuppetNextIndex] = { Part }
@@ -1743,7 +1788,11 @@ local function CreatePuppets(puppets)
 		end
 	end
 	FakePuppetOverrideIndex = PuppetNextIndex
-	--debug.profileend()
+
+	if USE_OBJECT_CACHE then
+		ScheduledUpdate = false
+		CachedParts:Update()
+	end
 end
 
 
@@ -1802,9 +1851,18 @@ local function ReplicatePuppetStates(puppetStatesBuffer, stepDelta)
 				-- Puppets outside of the interpolation distance limit are moved directly to their updated position in bulk (or if the interpolation setting is disabled)
 				if PuppetsLerpData[index] then PuppetsLerpData[index] = nil end
 				--puppetData[1].CFrame = cframe
-				updatedPuppets[i] = puppetData[1]
-				updatedStates[i] = cframe
-				i += 1
+				if PUPPET_TWEEN_MODE == "TRANSFORM" then
+					local Motor6D = puppetData[1]:FindFirstChildWhichIsA("Motor6D")
+					if not Motor6D.Enabled then
+						Motor6D.Enabled = true
+						puppetData[1].Anchored = false
+					end
+					Motor6D.Transform = cframe
+				else
+					updatedPuppets[i] = puppetData[1]
+					updatedStates[i] = cframe
+					i += 1
+				end
 			else
 				-- change the interpolation target of this Puppet index
 				PuppetsLerpData[index] = {
@@ -1829,30 +1887,36 @@ if isClient then -- Client side interpolation loop that "tweens" every puppet vo
 		--debug.profilebegin("Direct set CFrame Puppets")
 		local P = ClientPuppetStepDelta / Settings.PuppetReplicationFrequency
 
-		--local i = 1
-		local puppets, interpolatedPositions, finishedLerps = nil, nil, {}
+		local i = 1
+		local puppets, interpolatedPositions, finishedLerps = {}, {}, {}
 		for index, lerpData in pairs(PuppetsLerpData) do
 			local d = lerpData[3] + deltaTime
-			local Motor6D = Puppets[index][1]:FindFirstChildWhichIsA("Motor6D")
 			if d >= P then
+				d = P
 				table.insert(finishedLerps, index)
-				--interpolatedPositions[i] = lerpData[2]
-				--Puppets[index][1].CFrame = lerpData[2]
-				Motor6D.Transform = lerpData[2]
 			else
-				--interpolatedPositions[i] = lerpData[1]:Lerp(lerpData[2], d / P)
-				--Puppets[index][1].CFrame = lerpData[1]:Lerp(lerpData[2], d / P)
-				Motor6D.Transform = lerpData[1]:Lerp(lerpData[2], d / P)
 				lerpData[3] = d
 			end
 
-			--puppets[i] = Puppets[index][1]
-			--i += 1
+			local newPos = d < P and lerpData[1]:Lerp(lerpData[2], d / P) or lerpData[2]
+
+			if PUPPET_TWEEN_MODE == "TRANSFORM" then
+				local Motor6D = Puppets[index][1]:FindFirstChildWhichIsA("Motor6D")
+				if not Motor6D.Enabled then
+					Motor6D.Enabled = true
+					Puppets[index][1].Anchored = false
+				end
+				Motor6D.Transform = newPos
+			else
+				interpolatedPositions[i] = newPos
+				puppets[i] = Puppets[index][1]
+				i += 1
+			end
 		end
 
 		for _, index in ipairs(finishedLerps) do PuppetsLerpData[index] = nil end
 
-		--workspace:BulkMoveTo(puppets, interpolatedPositions, Enum.BulkMoveMode.FireCFrameChanged)
+		if i > 1 then workspace:BulkMoveTo(puppets, interpolatedPositions, Enum.BulkMoveMode.FireCFrameChanged) end
 		--debug.profileend()
 	end)
 end
@@ -1874,7 +1938,7 @@ end)
 --]]
 
 local function DestroyPuppet(index)
-	Puppets[index][1]:Destroy()
+	DestroyPart(Puppets[index][1])
 	Puppets[index] = nil
 	PuppetsLerpData[index] = nil
 end
@@ -2111,9 +2175,7 @@ local function HeartbeatWorker(deltaTime)
 	if Settings.UseSmoothCleanup then coroutine.wrap(SmoothCleanupBehavior)(deltaTime) end
 
 	--debug.profilebegin("Process ShatterQueue")
-
 	ProcessShatterQueue()
-
 	--debug.profileend()
 
 	if #ImaginaryCreateQueue > 0 then
@@ -2173,6 +2235,10 @@ local function HeartbeatWorker(deltaTime)
 	end
 
 	--debug.profileend()
+	if ScheduledUpdate then
+		ScheduledUpdate = false
+		CachedParts:Update()
+	end
 
 	if #NewPlayerStateReplicationQueue > 0 then
 		for _, plr in ipairs(NewPlayerStateReplicationQueue) do ReplicateStateToPlayer(plr) end
@@ -2341,7 +2407,7 @@ function Shatterbox.Puppeteer(voxel : Part) : number
 	local OldPuppetData = Puppets[PuppetNextIndex]
 
 	if OldPuppetData then
-		OldPuppetData[3]:Disconnect()
+		if not USE_OBJECT_CACHE then OldPuppetData[3]:Disconnect() end
 		OldPuppetData[2](true)
 		DestroyPart(OldPuppetData[1])
 	end
@@ -2372,7 +2438,7 @@ function Shatterbox.Puppeteer(voxel : Part) : number
 		end
 	}
 
-	PuppetData[3] = voxel.Destroying:Once(PuppetData[2])
+	if not USE_OBJECT_CACHE then PuppetData[3] = voxel.Destroying:Once(PuppetData[2]) end
 
 	PuppetData[4] = 0 -- The sleep anchoring timeout
 
@@ -2505,7 +2571,7 @@ function Shatterbox.FakeClientPuppets(fakePuppets : { Part })
 	for _, fake in ipairs(fakePuppets) do
 		local OldPuppetData = Puppets[FakePuppetOverrideIndex]
 		if OldPuppetData then
-			OldPuppetData[1]:Destroy()
+			DestroyPart(OldPuppetData[1])
 			PuppetsLerpData[FakePuppetOverrideIndex] = nil
 		end
 
@@ -2600,7 +2666,7 @@ end
 function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVoxel, doNotGiveDebrisTag : boolean?) : Part
 	local DirtyGroupID = ImaginaryVoxel.DirtyGroupID
 
-	local voxel = InstantiatePart(DirtyGroupID, ImaginaryVoxel.CFrame, ImaginaryVoxel.Size)
+	local voxel = InstantiatePart(DirtyGroupID, ImaginaryVoxel.CFrame, ImaginaryVoxel.Size, true)
 
 	if not doNotGiveDebrisTag then voxel:AddTag(DebrisTag) end
 
@@ -2683,7 +2749,7 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated)
 
 	if isServer then
 		for _, puppetData in pairs(Puppets) do
-			puppetData[3]:Disconnect()
+			if not USE_OBJECT_CACHE then puppetData[3]:Disconnect() end
 			puppetData[2](true)
 			DestroyPart(puppetData[1])
 		end
@@ -2691,7 +2757,7 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated)
 		ServerEvents.SignalReset.FireAll(doNotRevertOwnership)
 	else
 		for _, puppetData in pairs(Puppets) do
-			puppetData[1]:Destroy()
+			DestroyPart(puppetData[1])
 		end
 	end
 
@@ -2716,7 +2782,7 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated)
 				OriginalPart.Parent = groupData.OriginalParent
 			end
 			-- destroy all members of the dirty group
-			for member in pairs(DirtyGroupMembers[DirtyGroupID]) do member:Destroy() end
+			for member in pairs(DirtyGroupMembers[DirtyGroupID]) do DestroyPart(member) end
 		end
 
 		DirtyGroupData = {}
@@ -3000,6 +3066,18 @@ function Shatterbox.RegisterOnVoxelDestruct(name : string, callback : Types.OnVo
 	local id = name:lower()
 	assert(not rawget(OnVoxelDestructRegistry, id), `Callback with name {id} already exists in the registry`)
 	OnVoxelDestructRegistry[id] = callback
+end
+
+
+--[=[
+	Properly returns a tuple of parts to the cache if ObjectCache is enabled. Parts not from the cache or if ObjectCache is disabled are directly destroyed.
+
+	:::danger
+	If you have ObjectCache enabled, you **must** use this function to destroy map parts and voxels created by this library.
+	:::
+]=]
+function Shatterbox.Cleanup(... : BasePart)
+	for _, Part in ipairs({...}) do DestroyPart(Part) end
 end
 
 
