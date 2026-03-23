@@ -2,7 +2,7 @@
 --!optimize 2
 
 
--- Shatterbox release 8
+-- Shatterbox dev build March 23, 2026
 
 
 --#selene: allow(multiple_statements)
@@ -1747,6 +1747,7 @@ local function DeserializedPuppet(serialPuppet)
 	return Part
 end
 
+--
 local WorldAnchor
 if PUPPET_TWEEN_MODE == "TRANSFORM" then
 	WorldAnchor = Instance.new("Part")
@@ -1758,6 +1759,7 @@ if PUPPET_TWEEN_MODE == "TRANSFORM" then
 	WorldAnchor.CFrame = CFrame.identity
 	WorldAnchor.Parent = workspace
 end
+--]]
 
 local function CreatePuppets(puppets)
 	--debug.profilebegin("Create Puppets")
@@ -1770,6 +1772,7 @@ local function CreatePuppets(puppets)
 
 		local Part = DeserializedPuppet(serialPuppet)
 
+		--
 		if PUPPET_TWEEN_MODE == "TRANSFORM" then
 			local Motor6D = Instance.new("Motor6D")
 			Motor6D.Enabled = false
@@ -1779,6 +1782,7 @@ local function CreatePuppets(puppets)
 			Motor6D.Part1 = Part
 			Motor6D.Parent = Part
 		end
+		--]]
 
 		Puppets[PuppetNextIndex] = { Part }
 
@@ -2852,6 +2856,14 @@ HitboxMT.StartConnectionEvent = RunService.Heartbeat :: RBXScriptSignal-- the ev
 HitboxMT.WeldConnectionEvent = RunService.PostSimulation :: RBXScriptSignal -- the event that the hitbox connects to when using WeldTo()
 
 --[=[
+	The local offset from [DestructionParameters.CFrame] when using [Hitbox:WeldTo].
+
+	@prop WeldOffset CFrame?
+	@within Hitbox
+]=]
+HitboxMT.WeldOffset = nil :: CFrame?
+
+--[=[
 	Whether or not to predict the velocity of the part the hitbox is welded to.
 
 	Only works if the hitbox is welded to a BasePart using [Hitbox:WeldTo].
@@ -2909,14 +2921,18 @@ end
 function HitboxMT:WeldTo(Part : BasePart)
 	if self.wcon then self.wcon:Disconnect() end
 	if self.dcon then self.dcon:Disconnect() end
-	self.CFrame = Part.CFrame
+
+	local newCFrame = Part.CFrame
+	if self.WeldOffset then newCFrame *= self.WeldOffset end
+	self.CFrame = newCFrame
+
 	self.wcon = self.WeldConnectionEvent:Connect(function(deltaTime)
-		if self.VelocityPrediction then
-			self.CFrame = Part.CFrame + Part.AssemblyLinearVelocity * self.VelocityBias * deltaTime
-		else
-			self.CFrame = Part.CFrame
-		end
+		local newCFrame = Part.CFrame
+		if self.WeldOffset then newCFrame *= self.WeldOffset end
+		if self.VelocityPrediction then newCFrame += Part.AssemblyLinearVelocity * self.VelocityBias * deltaTime end
+		self.CFrame = newCFrame
 	end)
+
 	self.dcon = Part.Destroying:Once(self.DestroyHitbox)
 end
 
@@ -2983,6 +2999,9 @@ function HitboxMT:DestroyHitbox()
 end
 
 
+export type ShatterboxHitbox = typeof(HitboxMT)
+
+
 
 --[=[
 	Creates a Hitbox object which can be used in place of the destruction functions, and has additional functionality. (like VoxBreaker moveable hitbox)
@@ -2991,13 +3010,13 @@ end
 
 	@return Hitbox
 ]=]
-function Shatterbox.CreateHitbox()
+function Shatterbox.CreateHitbox() : ShatterboxHitbox
 
 	local hitbox = setmetatable({}, HitboxMT)
 
 	hitbox.UserData = {}
 
-	return hitbox
+	return hitbox :: ShatterboxHitbox
 end
 
 

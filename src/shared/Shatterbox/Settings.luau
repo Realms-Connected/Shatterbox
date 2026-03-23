@@ -184,7 +184,7 @@ Settings.ClientTweenPuppets = true
 	@tag Puppeteer
 	@client
 ]=]
-Settings.PUPPET_TWEEN_MODE = "TRANSFORM" :: "TRANSFORM"|"BULKMOVETO"
+Settings.PUPPET_TWEEN_MODE = "BULKMOVETO" :: "TRANSFORM"|"BULKMOVETO"
 
 --[=[
 	Voxels farther than this many studs away don't get interpolated (Client-side only setting)

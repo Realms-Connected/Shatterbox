@@ -6,9 +6,42 @@ local EXPAND_BY_AMOUNT = 50
 local MovingParts = table.create(10_000)
 local MovingCFrames = table.create(10_000)
 
-local function UpdateMovement()
-	workspace:BulkMoveTo(MovingParts, MovingCFrames, Enum.BulkMoveMode.FireCFrameChanged)
+local UpdateMap = {} :: { [Part] : CFrame }
 
+--[[
+local WorldAnchor = Instance.new("Part")
+WorldAnchor.Anchored = true
+WorldAnchor.CanCollide = false
+WorldAnchor.CanTouch = false
+WorldAnchor.CanQuery = false
+WorldAnchor.Transparency = 1
+WorldAnchor.CFrame = CFrame.identity
+WorldAnchor.Parent = workspace
+--]]
+
+
+local function UpdateMovement()
+	--
+	local i = 1
+	for MovingPart, MovingCFrame in pairs(UpdateMap) do
+		MovingParts[i] = MovingPart
+		MovingCFrames[i] = MovingCFrame
+		i += 1
+	end
+
+	workspace:BulkMoveTo(MovingParts, MovingCFrames, Enum.BulkMoveMode.FireCFrameChanged)
+	--]]
+	--[[
+	for part, cframe in pairs(UpdateMap) do
+		local Motor6D = part:FindFirstChildWhichIsA("Motor6D")
+		if Motor6D then
+			Motor6D.Transform = cframe
+			part.Anchored = (cframe == FAR_AWAY_CFRAME)
+		end
+	end
+	--]]
+
+	table.clear(UpdateMap)
 	table.clear(MovingParts)
 	table.clear(MovingCFrames)
 end
@@ -35,6 +68,16 @@ function Cache:_GetNew(Amount: number, Warn: boolean)
 		local Object = Template:Clone()
 		local ObjectRoot: BasePart = if IsTemplateModel then (Object:: Model).PrimaryPart:: BasePart else Object:: BasePart
 
+		--[[
+		ObjectRoot.CFrame = FAR_AWAY_CFRAME
+
+		local Motor6D = Instance.new("Motor6D")
+		Motor6D.Transform = FAR_AWAY_CFRAME
+		Motor6D.Part0 = WorldAnchor
+		Motor6D.Part1 = ObjectRoot;
+		Motor6D.Parent = ObjectRoot;
+		--]]
+
 		FreeObjectsContainer[Index] = ObjectRoot
 
 		local OffsetIndex = Index - InitialLength
@@ -57,8 +100,7 @@ function Cache:GetPart(PartCFrame: CFrame?): BasePart
 
 	self._Objects[Part] = nil
 	if PartCFrame then
-		table.insert(MovingParts, Part)
-		table.insert(MovingCFrames, PartCFrame)
+		UpdateMap[Part] = PartCFrame
 	end
 
 	return Part
@@ -71,8 +113,8 @@ function Cache:ReturnPart(Part: BasePart)
 	self._Objects[Part] = true
 
 	table.insert(self._FreeObjects, Part)
-	table.insert(MovingParts, Part)
-	table.insert(MovingCFrames, FAR_AWAY_CFRAME)
+
+	UpdateMap[Part] = FAR_AWAY_CFRAME
 end
 
 function Cache:Update()
@@ -138,6 +180,16 @@ function Constructor.new(Template: BasePart | Model, CacheSize: number?, CachesC
 		TargetParts[Index] = ObjectRoot
 
 		ObjectRoot.CFrame = FAR_AWAY_CFRAME;
+
+		--[[
+		local Motor6D = Instance.new("Motor6D")
+
+		Motor6D.Transform = FAR_AWAY_CFRAME
+		Motor6D.Part0 = WorldAnchor
+		Motor6D.Part1 = ObjectRoot;
+		Motor6D.Parent = ObjectRoot;
+		--]]
+
 		(Object:: Instance).Parent = CacheParent
 	end
 
