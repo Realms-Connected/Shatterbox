@@ -4,16 +4,9 @@
 local Shatterbox
 local Types = require(script.Parent.Parent:WaitForChild("Types"))
 
+
 local ClientEffects = {} :: { [string] : Types.OnVoxelDestruct }
-
--- Do not use this function, it just lets you use the Shatterbox functions in this module (avoiding a cyclic dependancy)
-function ClientEffects:SetReference(shatterbox) Shatterbox = shatterbox end
-
-
-
-
-
-
+local DestructCompleted = {} :: { [string] : Types.OnDestructCompleted }
 
 
 
@@ -27,24 +20,6 @@ ClientEffects.EffectName = function(voxel, info)
 end
 
 ]]
-
-
-
-
-
-
-
-
-
-
-
-
--- The default client behavior (for when an OnVoxelDestruct callback does not exist)
--- ClientEffects.Default = function(voxel) voxel:Destroy() end
-
-
-
-
 
 
 
@@ -86,4 +61,37 @@ end
 
 
 
-return ClientEffects
+-- Also define your client side OnDestructCompleted callbacks here. This works the same way as OnVoxelDestruct.
+--[[
+
+DestructCompleted.CompletedName = function(voxelCount, affectedIDs)
+
+
+end
+
+]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local ClientSideCallbacks = {}
+
+-- Do not use this function, it just lets you use the Shatterbox functions in this module (avoiding a cyclic dependancy)
+function ClientSideCallbacks:SetReference(shatterbox) Shatterbox = shatterbox end
+
+ClientSideCallbacks.OnVoxelDestruct = ClientEffects
+ClientSideCallbacks.OnDestructCompleted = DestructCompleted
+
+return ClientSideCallbacks

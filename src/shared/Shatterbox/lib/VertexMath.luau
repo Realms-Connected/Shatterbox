@@ -400,4 +400,6 @@ VertexMath.BallIntersectsBlock = BallIntersectsBlock
 
 VertexMath.CylinderIntersectsBlock = CylinderIntersectsBlock
 
+VertexMath.PartTypeContainsPoint = PartTypeContainsPoint
+
 return VertexMath

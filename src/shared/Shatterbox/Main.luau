@@ -2,7 +2,7 @@
 --!optimize 2
 
 
--- Shatterbox dev build March 23, 2026
+-- Shatterbox dev build April 17, 2026
 
 
 --#selene: allow(multiple_statements)
@@ -112,8 +112,12 @@ local EPSILON = 1e-3
 local Shatterbox = {}
 
 local OnVoxelDestructRegistry = setmetatable({}, {
-	__index = function(tbl, k) return (k and rawget(tbl, k:lower())) end -- or rawget(tbl, "default") end
+	__index = function(tbl, k) return (k and rawget(tbl, k:lower())) end
 }) :: { [string] : Types.OnVoxelDestruct }
+
+local OnDestructCompletedRegistry = setmetatable({}, {
+	__index = function(tbl, k) return (k and rawget(tbl, k:lower())) end
+}) :: { [string] : Types.OnDestructCompleted }
 
 local StepReplication, ClientEvents, ServerEvents, mapContainer
 if isServer then
@@ -122,10 +126,10 @@ if isServer then
 
 	mapContainer = workspace.CurrentCamera
 
-	local serverEffects = require(src.effects.Server)
-	serverEffects:SetReference(Shatterbox)
-	serverEffects.SetReference = nil
-	for name, func in pairs(serverEffects) do OnVoxelDestructRegistry[name:lower()] = func end
+	local serverCallbacks = require(src.effects.Server)
+	serverCallbacks:SetReference(Shatterbox)
+	for name, func in pairs(serverCallbacks.OnVoxelDestruct) do OnVoxelDestructRegistry[name:lower()] = func end
+	for name, func in pairs(serverCallbacks.OnDestructCompleted) do OnDestructCompletedRegistry[name:lower()] = func end
 elseif isClient then
 	ClientEvents = require(PathToClient)
 	StepReplication = ClientEvents.StepReplication
@@ -137,10 +141,10 @@ elseif isClient then
 		mapContainer.Name = "ClientMap"
 	end
 
-	local clientEffects = require(src:WaitForChild("effects"):WaitForChild("Client"))
-	clientEffects:SetReference(Shatterbox)
-	clientEffects.SetReference = nil
-	for name, func in pairs(clientEffects) do OnVoxelDestructRegistry[name:lower()] = func end
+	local clientCallbacks = require(src:WaitForChild("effects"):WaitForChild("Client"))
+	clientCallbacks:SetReference(Shatterbox)
+	for name, func in pairs(clientCallbacks.OnVoxelDestruct) do OnVoxelDestructRegistry[name:lower()] = func end
+	for name, func in pairs(clientCallbacks.OnDestructCompleted) do OnDestructCompletedRegistry[name:lower()] = func end
 end
 
 local ObjectCache, CachedParts
@@ -770,6 +774,14 @@ DestructionParamsMT.CleanupDelay = nil :: number?
 DestructionParamsMT.GridSize = nil :: number?
 
 --[=[
+	If set to true, the voxels passed to OnVoxelDestruct are not instantiated by the library, and you must do it manually with [Shatterbox.InstantiateImaginaryVoxel].
+
+	@prop ManualVoxelInstantiation boolean?
+	@within DestructionParameters
+]=]
+DestructionParamsMT.ManualVoxelInstantiation = nil :: boolean?
+
+--[=[
 	*This makes larger destructions an entire **order of magnitude** faster.*
 
 	Whether or not to intelligently skip voxels fully contained by the hitbox.
@@ -826,17 +838,21 @@ DestructionParamsMT.SkipWalls = nil :: boolean?
 DestructionParamsMT.OnVoxelDestruct = nil :: string?
 
 --[=[
-	A callback that runs when the destruction is finished processing 
+	A callback that runs when the destruction is finished processing. Can be either a string or a function.
+
+	You can register these callbacks either with [Shatterbox.RegisterOnDestructCompleted] or by making an entry in the desired `Shatterbox/effects` module.
+
+	Client side callbacks should be registered on the client side, while server side callbacks should be registered on the server side. Client side callbacks only work with Client-Server enabled.
 
 	:::warning
 	This only works with `Shatterbox.Destroy` or `hitbox:Destroy()`.
 
 	For ImaginaryVoxels, you can use the array of imaginary voxels to obtain the same information.
 	:::
-	@prop OnDestructCompleted OnDestructCompleted?
+	@prop OnDestructCompleted (string | OnDestructCompleted)?
 	@within DestructionParameters
 ]=]
-DestructionParamsMT.OnDestructCompleted = nil :: Types.OnDestructCompleted?
+DestructionParamsMT.OnDestructCompleted = nil :: (string | Types.OnDestructCompleted)?
 
 --[=[
 	A table that is passed to the OnVoxelDestruct effect as `info.UserData`.
@@ -956,6 +972,7 @@ local function ValidateDestructionParams(Parameters : Types.DestructionParams | 
 				 params.FilterTagged = filterTagged
 				 params.CleanupDelay = tbl.CleanupDelay		         or Settings.DefaultSmoothCleanupDelay
 			  params.OnVoxelDestruct = tbl.OnVoxelDestruct
+	 params.ManualVoxelInstantiation = tbl.ManualVoxelInstantiation
 					 params.GridSize = tbl.GridSize
 	   params.SkipEncapsulatedVoxels = tbl.SkipEncapsulatedVoxels
 				   params.SkipFloors = tbl.SkipFloors
@@ -965,12 +982,12 @@ local function ValidateDestructionParams(Parameters : Types.DestructionParams | 
 		 params.WaitForClientTimeout = tbl.WaitForClientTimeout
 	params.ExcludePlayersReplication = playerExclusions 			 or {}
 		                   params.ID = tbl.ID 					     or GetCondensedGUID()
-
+	assert(not params.ManualVoxelInstantiation or typeof(params.ManualVoxelInstantiation) == "boolean", "ManualVoxelInstantiation must be a boolean if it is set.")
 	assert(not params.CleanupDelay or typeof(params.CleanupDelay) == "number", "CleanupDelay must be a number if it is set.")
 	assert(not params.OnVoxelDestruct or typeof(params.OnVoxelDestruct) == "string", "OnVoxelDestruct must be a string indicating the name of the OnVoxelDestruct callback.")
 	assert(not params.GridSize or typeof(params.GridSize) == "number", "GridSize must be a number.")
 	assert(not params.SkipEncapsulatedVoxels or typeof(params.SkipEncapsulatedVoxels) == "boolean", "SkipEncapsulatedVoxels must be a boolean.")
-	assert(not params.OnDestructCompleted or typeof(params.OnDestructCompleted) == "function", "OnDestructCompleted must be a function.")
+	assert(not params.OnDestructCompleted or typeof(params.OnDestructCompleted) == "string" or typeof(params.OnDestructCompleted) == "function", "OnDestructCompleted must be a string or a function.")
 
 	return params :: (Types.InternalImaginaryParams | Types.InternalDestructionParams)
 end
@@ -978,6 +995,10 @@ end
 local function SerializedDestructionParams(destructionParams)
 	destructionParams = table.clone(destructionParams)
 	destructionParams.CuttingPart = SerializedCuttingPart(destructionParams.CuttingPart)
+	local OnDestructCompleted = destructionParams.OnDestructCompleted
+	if OnDestructCompleted and typeof(OnDestructCompleted) == "function" then
+		destructionParams.OnDestructCompleted = nil
+	end
 	return destructionParams
 end
 
@@ -1310,6 +1331,7 @@ local function GetImaginaryDestructibleParts(cuttingPart, filterTagged, verts, n
 
 	while #ImaginaryCreateQueue > 0 do
 		local ivox = table.remove(ImaginaryCreateQueue)
+		--[[
 		if filterTagged then
 			local OriginalPart = Shatterbox.GetOriginalPart(ivox.DirtyGroupID)
 			local shouldSkip = true
@@ -1321,6 +1343,7 @@ local function GetImaginaryDestructibleParts(cuttingPart, filterTagged, verts, n
 			end
 			if shouldSkip then continue end
 		end
+		--]]
 
 		local voxVerts = BlockVerts(ivox.CFrame, ivox.Size)
 
@@ -1397,7 +1420,7 @@ local function ImaginaryVoxels(params, destructibleParts, dirtyGroups)
 
 	--debug.profileend()
 
-	if #partsInPart == 0 then return nil, existingDebris end
+	if #partsInPart == 0 then return nil, existingDebris, AffectedDirtyGroups end
 
 	local dividing = partsInPart :: {Types.ImaginaryBox}
 	partsInPart = nil
@@ -1530,7 +1553,7 @@ local function HandleVoxelDestruction(callbackName : string?, voxel : Part, info
 
 	if not s then warn("Voxel destruction failed: " .. e) end
 
-	if not info.IsAlreadyDebris then voxel:AddTag(DebrisTag) end
+	if not (info.IsAlreadyDebris or typeof(voxel) == "table") then voxel:AddTag(DebrisTag) end
 end
 
 
@@ -1540,8 +1563,9 @@ end
 local function ProcessShatterQueue()
 	if #ShatterQueue == 0 then return end
 	repeat
-		local popped = table.remove(ShatterQueue)
-		local OnVoxelDestruct = popped.OnVoxelDestruct
+		local popped = table.remove(ShatterQueue) :: Types.DestructionParams
+		local OnVoxelDestruct, OnDestructCompleted = popped.OnVoxelDestruct, popped.OnDestructCompleted
+		local ManualVoxelInstantiation = popped.ManualVoxelInstantiation
 		local CuttingPart, UserData = popped.CuttingPart, popped.UserData
 
 		local ivoxels, existingDebris, affectedIDs = ImaginaryVoxels(popped)
@@ -1549,7 +1573,8 @@ local function ProcessShatterQueue()
 		if ivoxels then
 			if OnVoxelDestructRegistry[OnVoxelDestruct] then
 				for _, ivoxel in ipairs(ivoxels) do
-					HandleVoxelDestruction(OnVoxelDestruct, Shatterbox.InstantiateImaginaryVoxel(ivoxel, true), {
+					local voxel = ManualVoxelInstantiation and ivoxel or Shatterbox.InstantiateImaginaryVoxel(ivoxel, true)
+					HandleVoxelDestruction(OnVoxelDestruct, voxel, {
 						DirtyGroupID = ivoxel.DirtyGroupID,
 						CuttingPart = CuttingPart,
 						IsEdge = ivoxel.isEdge,
@@ -1576,7 +1601,16 @@ local function ProcessShatterQueue()
 			end
 		end
 
-		if popped.OnDestructCompleted then popped.OnDestructCompleted(ivoxels and #ivoxels or 0, affectedIDs) end
+		if OnDestructCompleted then
+			if typeof(OnDestructCompleted) == "string" then
+				Shatterbox.OnDestructCompleted(OnDestructCompleted, ivoxels and #ivoxels or 0, affectedIDs, popped)
+			else
+				local s, res = pcall(OnDestructCompleted, ivoxels and #ivoxels or 0, affectedIDs, popped)
+				if not s then
+					warn("OnDestructCompleted failed: ", res)
+				end
+			end
+		end
 
 	until #ShatterQueue == 0
 end
@@ -1761,13 +1795,14 @@ if PUPPET_TWEEN_MODE == "TRANSFORM" then
 end
 --]]
 
-local function CreatePuppets(puppets)
+local function CreatePuppets(puppets, startIndex)
+	local index = startIndex
 	--debug.profilebegin("Create Puppets")
 	for _, serialPuppet in ipairs(puppets) do
-		local OldPuppetData = Puppets[PuppetNextIndex]
+		local OldPuppetData = Puppets[index]
 		if OldPuppetData then
 			DestroyPart(OldPuppetData[1])
-			PuppetsLerpData[PuppetNextIndex] = nil
+			PuppetsLerpData[index] = nil
 		end
 
 		local Part = DeserializedPuppet(serialPuppet)
@@ -1784,12 +1819,10 @@ local function CreatePuppets(puppets)
 		end
 		--]]
 
-		Puppets[PuppetNextIndex] = { Part }
+		Puppets[index] = { Part }
 
-		PuppetNextIndex += 1
-		if PuppetNextIndex > Settings.PuppetMaxCount then
-			PuppetNextIndex = 1
-		end
+		index += 1
+		if index > Settings.PuppetMaxCount then index = 1 end
 	end
 	FakePuppetOverrideIndex = PuppetNextIndex
 
@@ -2064,7 +2097,24 @@ local function SmoothCleanupBehavior(deltaTime)
 		end
 	end
 
-	for DirtyGroupID in pairs(toReset) do UndoDirtyGroup(DirtyGroupID) end
+	for DirtyGroupID in pairs(toReset) do
+		if Settings.BlockCleanupWhileCharacterInside then
+			local OriginalPart = Shatterbox.GetOriginalPart(DirtyGroupID)
+			local shouldSkip = false
+			for _, plr in ipairs(Players:GetPlayers()) do
+				local chr = plr.Character
+				if not chr then continue end
+				local hrp = chr:FindFirstChild("HumanoidRootPart")
+				if not hrp then continue end
+				if VertexMath.PartTypeContainsPoint.Block(OriginalPart.CFrame, OriginalPart.Size, hrp.Position) then
+					shouldSkip = true
+					break
+				end
+			end
+			if shouldSkip then continue end
+		end
+		UndoDirtyGroup(DirtyGroupID)
+	end
 end
 
 
@@ -2137,6 +2187,20 @@ local function PuppeteerBehavior(deltaTime)
 			for i, ReplicationIndex in ipairs(AvailablePuppets) do
 				--local puppetVoxel = Puppets[ReplicationIndex][1]
 
+				--[[
+				i25 - X
+				i25 - Y
+				i25 - Z
+
+				u8 - aX
+				u8 - aY
+				u8 - aZ
+
+				u13 - Puppet ID
+
+				Total : 112 bits per puppet state
+				]]
+
 				local bufferBitOffset = (i - 1) * 112
 
 				local cframe = table.remove(PuppetsLerpData[ReplicationIndex])
@@ -2170,7 +2234,7 @@ local function PuppeteerBehavior(deltaTime)
 			toReplicate[i] = SerializedPartInstance(puppetToCreate)
 		end
 		CreatePuppetQueue = {}
-		ServerEvents.CreatePuppets.FireAll(toReplicate)
+		ServerEvents.CreatePuppets.FireAll(toReplicate, PuppetNextIndex - PQL)
 	end
 end
 
@@ -2285,7 +2349,7 @@ end
 	end
 	```
 
-	@type OnDestructCompleted (voxelCount : number, affectedIDs : { [string] : boolean }) -> ()
+	@type OnDestructCompleted (voxelCount : number, affectedIDs : { [string] : boolean }, destructionParameters : DestructionParameters) -> ()
 	@within Shatterbox
 ]=]
 
@@ -2295,7 +2359,7 @@ end
 
 	see [DestructionParameters.OnVoxelDestruct] for a brief explanation on how to use it.
 
-	@type OnVoxelDestructType (voxel : Part, info : VoxelInfo) -> ()
+	@type OnVoxelDestructType (voxel : Part | ImaginaryVoxel, info : VoxelInfo) -> ()
 	@within Shatterbox
 ]=]
 
@@ -2554,8 +2618,9 @@ Shatterbox.Puppets = Puppets
 	@param waitCount number? -- The number of Heartbeats to wait. Defaults to 10.
 	@client
 ]=]
-function Shatterbox.GetPuppetAsync(puppetID : number, waitCount : number?) : Part?
-	waitCount = waitCount or 10
+function Shatterbox.GetPuppetAsync(puppetID : number|string, waitCount : number?) : Part?
+	puppetID = tonumber(puppetID)
+	waitCount = waitCount or 20
 	local PuppetPart : Part = Puppets[puppetID] and Puppets[puppetID][1]
 	if not PuppetPart then
 		local i = 1
@@ -2667,7 +2732,9 @@ end
 	@param ImaginaryVoxel ImaginaryVoxel
 	@param doNotGiveDebrisTag boolean?
 ]=]
-function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVoxel, doNotGiveDebrisTag : boolean?) : Part
+function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVoxel | BasePart, doNotGiveDebrisTag : boolean?) : Part
+	if typeof(ImaginaryVoxel) ~= "table" then return ImaginaryVoxel end
+
 	local DirtyGroupID = ImaginaryVoxel.DirtyGroupID
 
 	local voxel = InstantiatePart(DirtyGroupID, ImaginaryVoxel.CFrame, ImaginaryVoxel.Size, true)
@@ -2918,22 +2985,32 @@ end
 
 	@within Hitbox
 ]=]
-function HitboxMT:WeldTo(Part : BasePart)
+function HitboxMT:WeldTo(Part : BasePart|Player)
 	if self.wcon then self.wcon:Disconnect() end
 	if self.dcon then self.dcon:Disconnect() end
 
-	local newCFrame = Part.CFrame
+	local isPlayer = Part:IsA("Player")
+	local chr, weldedTo
+	if isPlayer then
+		chr = Part.Character or Part.CharacterAdded:Wait()
+		weldedTo = chr:WaitForChild("HumanoidRootPart")
+	else
+		weldedTo = Part
+	end
+
+	local newCFrame = weldedTo.CFrame
 	if self.WeldOffset then newCFrame *= self.WeldOffset end
 	self.CFrame = newCFrame
 
 	self.wcon = self.WeldConnectionEvent:Connect(function(deltaTime)
-		local newCFrame = Part.CFrame
+		local newCFrame = weldedTo.CFrame
+		local pingBias = isPlayer and Part:GetNetworkPing() * 0.5 or 1
 		if self.WeldOffset then newCFrame *= self.WeldOffset end
-		if self.VelocityPrediction then newCFrame += Part.AssemblyLinearVelocity * self.VelocityBias * deltaTime end
+		if self.VelocityPrediction then newCFrame += weldedTo.AssemblyLinearVelocity * self.VelocityBias * pingBias * deltaTime end
 		self.CFrame = newCFrame
 	end)
 
-	self.dcon = Part.Destroying:Once(self.DestroyHitbox)
+	self.dcon = weldedTo.Destroying:Once(self.DestroyHitbox)
 end
 
 --[=[
@@ -3067,7 +3144,7 @@ end
 
 
 --[=[
-	Will register the given callback to the given name.
+	Will register the given OnVoxelDestruct callback to the given name.
 
 	If you call this function on the server side, you are creating a server-side effect. Vice-versa for registering on the client side.
 
@@ -3085,6 +3162,28 @@ function Shatterbox.RegisterOnVoxelDestruct(name : string, callback : Types.OnVo
 	local id = name:lower()
 	assert(not rawget(OnVoxelDestructRegistry, id), `Callback with name {id} already exists in the registry`)
 	OnVoxelDestructRegistry[id] = callback
+end
+
+
+--[=[
+	Will register the given OnDestructCompleted callback to the given name.
+
+	If you call this function on the server side, you are creating a server-side callback. Vice-versa for registering on the client side.
+
+	Consider using `Shatterbox/effects` modules for callback definitions.
+
+	:::warning
+	Register any given callback name only once, you are free to use it by name in scripts other than the one it is defined in.
+	:::
+
+	@param name string
+	@param callback OnDestructCompleted
+]=]
+function Shatterbox.RegisterOnDestructCompleted(name : string, callback : Types.OnDestructCompleted)
+	assert(typeof(name) == "string", "You must register the OnDestructCompleted callback with a string as the name")
+	local id = name:lower()
+	assert(not rawget(OnDestructCompletedRegistry, id), `Callback with name {id} already exists in the registry`)
+	OnDestructCompletedRegistry[id] = callback
 end
 
 
@@ -3125,6 +3224,44 @@ Shatterbox.Voxelize = Voxelize
 	@within Shatterbox
 ]=]
 Shatterbox.OnVoxelDestruct = HandleVoxelDestruction
+
+
+--[=[
+	A function to manually call a registered OnDestructCompleted effect.
+
+	:::tip
+	This can be used as a way to constructively build on top of any existing effects, saving you time.
+
+	#### Example
+	```lua
+	-- Do something with the return value of an existing callback (GetMaterialsMap is defined in `effects/Server`)
+	Shatterbox.RegisterOnDestructCompleted("ExtendingACallback", function(voxelCount, affectedIDs, destructionParams)
+		local destroyedMaterials = Shatterbox.OnDestructCompleted("GetMaterialsMap", voxelCount, affectedIDs, destructionParams)
+		for material in pairs(destroyedMaterials) do
+			print(material.Name)
+		end
+	end)
+	```
+	:::
+
+	@param name string
+	@param voxelCount number
+	@param affectedIDs {[string] : boolean}
+	@param destructionParameters DestructionParameters
+	@within Shatterbox
+	@return any
+]=]
+function Shatterbox.OnDestructCompleted(name : string, voxelCount : number, affectedIDs : {[string] : boolean}, destructionParameters : Types.DestructionParams)
+	local callback = OnDestructCompletedRegistry[name]
+	if callback then
+		local s, res = pcall(callback, voxelCount, affectedIDs, destructionParameters)
+		if not s then
+			warn("OnDestructCompleted failed: ", res)
+		else
+			return res
+		end
+	end
+end
 
 Shatterbox.VertexMath = VertexMath
 
@@ -3221,9 +3358,9 @@ elseif isClient then
 		Shatterbox.ResetArea({ CFrame = cframe, Size = size })
 	end)
 
-	ClientEvents.CreatePuppets.On(function(serialPuppets)
+	ClientEvents.CreatePuppets.On(function(serialPuppets, startIndex)
 		if USE_CLIENT_SERVER and not clientInitComplete then return end
-		CreatePuppets(serialPuppets)
+		CreatePuppets(serialPuppets, startIndex)
 	end)
 	ClientEvents.ReplicatePuppetStates.On(function(puppetStates, stepDelta)
 		if USE_CLIENT_SERVER and not clientInitComplete then return end

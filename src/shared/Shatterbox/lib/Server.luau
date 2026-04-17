@@ -161,11 +161,11 @@ export type Vec2 = { number }
 export type Decal = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? }
 export type Texture = { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? }
 export type Light = { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? }
-export type PartProperties = { Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
+export type PartProperties = { Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
 export type Box = { CFrame: CFrame, Size: Vector3 }
 export type Hitbox = { CFrame: CFrame, Size: Vector3, Shape: number }
-export type PartInstance = { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
-export type DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }
+export type PartInstance = { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }
+export type DestructionParamsType = { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, ManualVoxelInstantiation: boolean?, OnVoxelDestruct: string?, OnDestructCompleted: string?, UserData: any? }
 local function WriteEVENT_SignalClearQueue(Value: nil): ()
 	-- Allocate BLOCK: 1 bytes
 	local BLOCK_START = Allocate(1)
@@ -197,16 +197,16 @@ local function WriteEVENT_SignalResetArea(Value1: CFrame, Value2: Vector3): ()
 	buffer.writef32(SendBuffer, BLOCK_START + 33, Vector.Z)
 end
 
-local function WriteEVENT_CreatePuppets(Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
-	-- Allocate BLOCK: 3 bytes
-	local BLOCK_START = Allocate(3)
+local function WriteEVENT_CreatePuppets(Value1: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }, Value2: number): ()
+	-- Allocate BLOCK: 5 bytes
+	local BLOCK_START = Allocate(5)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 3)
 	-- START ARRAY
-	buffer.writeu16(SendBuffer, BLOCK_START + 1, #Value)
-		-- Allocate BLOCK: 56 bytes
-	local ARRAY_START_1 = Allocate(56 * #Value)
-	for Index = 1, #Value do
-		local Item_1 = Value[Index]
+	buffer.writeu16(SendBuffer, BLOCK_START + 1, #Value1)
+		-- Allocate BLOCK: 57 bytes
+	local ARRAY_START_1 = Allocate(57 * #Value1)
+	for Index = 1, #Value1 do
+		local Item_1 = Value1[Index]
 		local Vector = Item_1.CFrame.Position
 		-- Allocate 4
 		local OPERATION_OFFSET_0 = ARRAY_START_1
@@ -360,61 +360,65 @@ local function WriteEVENT_CreatePuppets(Value: { { CFrame: CFrame, Size: Vector3
 		-- Allocate 1
 		local OPERATION_OFFSET_16 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_1.LeftSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_1.CanCollide and 1 or 0)
+		-- Allocate 1
+		local OPERATION_OFFSET_17 = ARRAY_START_1
+		ARRAY_START_1 += 1
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_1.LeftSurface ~= nil and 1 or 0)
 		if Item_1.LeftSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.LeftSurface)
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_17 = ARRAY_START_1
+		local OPERATION_OFFSET_18 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_1.RightSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_18, Item_1.RightSurface ~= nil and 1 or 0)
 		if Item_1.RightSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.RightSurface)
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_18 = ARRAY_START_1
+		local OPERATION_OFFSET_19 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_18, Item_1.FrontSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_19, Item_1.FrontSurface ~= nil and 1 or 0)
 		if Item_1.FrontSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.FrontSurface)
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_19 = ARRAY_START_1
+		local OPERATION_OFFSET_20 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_19, Item_1.BackSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_20, Item_1.BackSurface ~= nil and 1 or 0)
 		if Item_1.BackSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.BackSurface)
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_20 = ARRAY_START_1
+		local OPERATION_OFFSET_21 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_20, Item_1.TopSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_21, Item_1.TopSurface ~= nil and 1 or 0)
 		if Item_1.TopSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.TopSurface)
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_21 = ARRAY_START_1
+		local OPERATION_OFFSET_22 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_21, Item_1.BottomSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_22, Item_1.BottomSurface ~= nil and 1 or 0)
 		if Item_1.BottomSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_1.BottomSurface)
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_22 = ARRAY_START_1
+		local OPERATION_OFFSET_23 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_22, Item_1.Textures ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_23, Item_1.Textures ~= nil and 1 or 0)
 		if Item_1.Textures ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -549,9 +553,9 @@ local function WriteEVENT_CreatePuppets(Value: { { CFrame: CFrame, Size: Vector3
 			-- END ARRAY
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_23 = ARRAY_START_1
+		local OPERATION_OFFSET_24 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_23, Item_1.Lights ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_24, Item_1.Lights ~= nil and 1 or 0)
 		if Item_1.Lights ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -629,9 +633,9 @@ local function WriteEVENT_CreatePuppets(Value: { { CFrame: CFrame, Size: Vector3
 			-- END ARRAY
 		end
 		-- Allocate 1
-		local OPERATION_OFFSET_24 = ARRAY_START_1
+		local OPERATION_OFFSET_25 = ARRAY_START_1
 		ARRAY_START_1 += 1
-		buffer.writeu8(SendBuffer, OPERATION_OFFSET_24, Item_1.Decals ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OPERATION_OFFSET_25, Item_1.Decals ~= nil and 1 or 0)
 		if Item_1.Decals ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -730,7 +734,7 @@ local function WriteEVENT_CreatePuppets(Value: { { CFrame: CFrame, Size: Vector3
 			-- END ARRAY
 		end
 		-- Allocate 2
-		local OPERATION_OFFSET_25 = ARRAY_START_1
+		local OPERATION_OFFSET_26 = ARRAY_START_1
 		ARRAY_START_1 += 2
 		local Elements_2 = 0
 		for Key_2, Element_2 in Item_1.Attributes do
@@ -742,12 +746,12 @@ local function WriteEVENT_CreatePuppets(Value: { { CFrame: CFrame, Size: Vector3
 			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
 			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
 		end
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_25, Elements_2)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_26, Elements_2)
 		-- START ARRAY
 		-- Allocate 2
-		local OPERATION_OFFSET_26 = ARRAY_START_1
+		local OPERATION_OFFSET_27 = ARRAY_START_1
 		ARRAY_START_1 += 2
-		buffer.writeu16(SendBuffer, OPERATION_OFFSET_26, #Item_1.Tags)
+		buffer.writeu16(SendBuffer, OPERATION_OFFSET_27, #Item_1.Tags)
 			-- Allocate BLOCK: 2 bytes
 		local ARRAY_START_2 = Allocate(2 * #Item_1.Tags)
 		for Index = 1, #Item_1.Tags do
@@ -763,6 +767,7 @@ local function WriteEVENT_CreatePuppets(Value: { { CFrame: CFrame, Size: Vector3
 		-- END ARRAY
 	end
 	-- END ARRAY
+	buffer.writeu16(SendBuffer, BLOCK_START + 3, Value2)
 end
 
 local function WriteEVENT_ReplicatePuppetStates(Value1: buffer, Value2: number): ()
@@ -801,7 +806,7 @@ local function ReadEVENT_CreateDirtyGroupsFromClient(): ({[string]: Part})
 	return Value
 end
 
-local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 6)
@@ -929,49 +934,51 @@ local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame
 			buffer.writestring(SendBuffer, SendOffset, Element_1.CollisionGroup, Length)
 		end
 		local OFFSET_17 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.LeftSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.CanCollide and 1 or 0)
+		local OFFSET_18 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.LeftSurface ~= nil and 1 or 0)
 		if Element_1.LeftSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.LeftSurface)
 		end
-		local OFFSET_18 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.RightSurface ~= nil and 1 or 0)
+		local OFFSET_19 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.RightSurface ~= nil and 1 or 0)
 		if Element_1.RightSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.RightSurface)
 		end
-		local OFFSET_19 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.FrontSurface ~= nil and 1 or 0)
+		local OFFSET_20 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.FrontSurface ~= nil and 1 or 0)
 		if Element_1.FrontSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.FrontSurface)
 		end
-		local OFFSET_20 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.BackSurface ~= nil and 1 or 0)
+		local OFFSET_21 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.BackSurface ~= nil and 1 or 0)
 		if Element_1.BackSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BackSurface)
 		end
-		local OFFSET_21 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.TopSurface ~= nil and 1 or 0)
+		local OFFSET_22 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.TopSurface ~= nil and 1 or 0)
 		if Element_1.TopSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.TopSurface)
 		end
-		local OFFSET_22 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.BottomSurface ~= nil and 1 or 0)
+		local OFFSET_23 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.BottomSurface ~= nil and 1 or 0)
 		if Element_1.BottomSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BottomSurface)
 		end
-		local OFFSET_23 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.Textures ~= nil and 1 or 0)
+		local OFFSET_24 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Textures ~= nil and 1 or 0)
 		if Element_1.Textures ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -1105,8 +1112,8 @@ local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame
 			end
 			-- END ARRAY
 		end
-		local OFFSET_24 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Lights ~= nil and 1 or 0)
+		local OFFSET_25 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Lights ~= nil and 1 or 0)
 		if Element_1.Lights ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -1183,8 +1190,8 @@ local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame
 			end
 			-- END ARRAY
 		end
-		local OFFSET_25 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Decals ~= nil and 1 or 0)
+		local OFFSET_26 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_26, Element_1.Decals ~= nil and 1 or 0)
 		if Element_1.Decals ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -1282,7 +1289,7 @@ local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame
 			end
 			-- END ARRAY
 		end
-		local OFFSET_26 = Allocate(2)
+		local OFFSET_27 = Allocate(2)
 		local Elements_2 = 0
 		for Key_2, Element_2 in Element_1.Attributes do
 			Elements_2 += 1
@@ -1293,10 +1300,10 @@ local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame
 			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
 			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
 		end
-		buffer.writeu16(SendBuffer, OFFSET_26, Elements_2)
+		buffer.writeu16(SendBuffer, OFFSET_27, Elements_2)
 		-- START ARRAY
-		local OFFSET_27 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_27, #Element_1.Tags)
+		local OFFSET_28 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_28, #Element_1.Tags)
 			-- Allocate BLOCK: 2 bytes
 		local ARRAY_START_2 = Allocate(2 * #Element_1.Tags)
 		for Index = 1, #Element_1.Tags do
@@ -1314,7 +1321,7 @@ local function WriteEVENT_CreateDirtyGroupsFromServer(Value: {[string]: { CFrame
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Elements_1)
 end
 
-local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
+local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 	-- Allocate BLOCK: 15 bytes
 	local BLOCK_START = Allocate(15)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 7)
@@ -1442,49 +1449,51 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			buffer.writestring(SendBuffer, SendOffset, Element_1.CollisionGroup, Length)
 		end
 		local OFFSET_17 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.LeftSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.CanCollide and 1 or 0)
+		local OFFSET_18 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.LeftSurface ~= nil and 1 or 0)
 		if Element_1.LeftSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.LeftSurface)
 		end
-		local OFFSET_18 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.RightSurface ~= nil and 1 or 0)
+		local OFFSET_19 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.RightSurface ~= nil and 1 or 0)
 		if Element_1.RightSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.RightSurface)
 		end
-		local OFFSET_19 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.FrontSurface ~= nil and 1 or 0)
+		local OFFSET_20 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.FrontSurface ~= nil and 1 or 0)
 		if Element_1.FrontSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.FrontSurface)
 		end
-		local OFFSET_20 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.BackSurface ~= nil and 1 or 0)
+		local OFFSET_21 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.BackSurface ~= nil and 1 or 0)
 		if Element_1.BackSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BackSurface)
 		end
-		local OFFSET_21 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.TopSurface ~= nil and 1 or 0)
+		local OFFSET_22 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.TopSurface ~= nil and 1 or 0)
 		if Element_1.TopSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.TopSurface)
 		end
-		local OFFSET_22 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.BottomSurface ~= nil and 1 or 0)
+		local OFFSET_23 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.BottomSurface ~= nil and 1 or 0)
 		if Element_1.BottomSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BottomSurface)
 		end
-		local OFFSET_23 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.Textures ~= nil and 1 or 0)
+		local OFFSET_24 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Textures ~= nil and 1 or 0)
 		if Element_1.Textures ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -1618,8 +1627,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			end
 			-- END ARRAY
 		end
-		local OFFSET_24 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Lights ~= nil and 1 or 0)
+		local OFFSET_25 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Lights ~= nil and 1 or 0)
 		if Element_1.Lights ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -1696,8 +1705,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			end
 			-- END ARRAY
 		end
-		local OFFSET_25 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Decals ~= nil and 1 or 0)
+		local OFFSET_26 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_26, Element_1.Decals ~= nil and 1 or 0)
 		if Element_1.Decals ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -1795,7 +1804,7 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			end
 			-- END ARRAY
 		end
-		local OFFSET_26 = Allocate(2)
+		local OFFSET_27 = Allocate(2)
 		local Elements_2 = 0
 		for Key_2, Element_2 in Element_1.Attributes do
 			Elements_2 += 1
@@ -1806,10 +1815,10 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
 			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
 		end
-		buffer.writeu16(SendBuffer, OFFSET_26, Elements_2)
+		buffer.writeu16(SendBuffer, OFFSET_27, Elements_2)
 		-- START ARRAY
-		local OFFSET_27 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_27, #Element_1.Tags)
+		local OFFSET_28 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_28, #Element_1.Tags)
 			-- Allocate BLOCK: 2 bytes
 		local ARRAY_START_2 = Allocate(2 * #Element_1.Tags)
 		for Index = 1, #Element_1.Tags do
@@ -1833,8 +1842,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 		-- START ARRAY
 		local OFFSET_1 = Allocate(2)
 		buffer.writeu16(SendBuffer, OFFSET_1, #Element_1)
-			-- Allocate BLOCK: 56 bytes
-		local ARRAY_START_2 = Allocate(56 * #Element_1)
+			-- Allocate BLOCK: 57 bytes
+		local ARRAY_START_2 = Allocate(57 * #Element_1)
 		for Index = 1, #Element_1 do
 			local Item_2 = Element_1[Index]
 			local Vector = Item_2.CFrame.Position
@@ -1990,61 +1999,65 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			-- Allocate 1
 			local OPERATION_OFFSET_16 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_2.LeftSurface ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_16, Item_2.CanCollide and 1 or 0)
+			-- Allocate 1
+			local OPERATION_OFFSET_17 = ARRAY_START_2
+			ARRAY_START_2 += 1
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_2.LeftSurface ~= nil and 1 or 0)
 			if Item_2.LeftSurface ~= nil then
 				-- Allocate BLOCK: 1 bytes
 				local BLOCK_START = Allocate(1)
 				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.LeftSurface)
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_17 = ARRAY_START_2
+			local OPERATION_OFFSET_18 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_17, Item_2.RightSurface ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_18, Item_2.RightSurface ~= nil and 1 or 0)
 			if Item_2.RightSurface ~= nil then
 				-- Allocate BLOCK: 1 bytes
 				local BLOCK_START = Allocate(1)
 				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.RightSurface)
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_18 = ARRAY_START_2
+			local OPERATION_OFFSET_19 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_18, Item_2.FrontSurface ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_19, Item_2.FrontSurface ~= nil and 1 or 0)
 			if Item_2.FrontSurface ~= nil then
 				-- Allocate BLOCK: 1 bytes
 				local BLOCK_START = Allocate(1)
 				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.FrontSurface)
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_19 = ARRAY_START_2
+			local OPERATION_OFFSET_20 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_19, Item_2.BackSurface ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_20, Item_2.BackSurface ~= nil and 1 or 0)
 			if Item_2.BackSurface ~= nil then
 				-- Allocate BLOCK: 1 bytes
 				local BLOCK_START = Allocate(1)
 				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.BackSurface)
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_20 = ARRAY_START_2
+			local OPERATION_OFFSET_21 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_20, Item_2.TopSurface ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_21, Item_2.TopSurface ~= nil and 1 or 0)
 			if Item_2.TopSurface ~= nil then
 				-- Allocate BLOCK: 1 bytes
 				local BLOCK_START = Allocate(1)
 				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.TopSurface)
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_21 = ARRAY_START_2
+			local OPERATION_OFFSET_22 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_21, Item_2.BottomSurface ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_22, Item_2.BottomSurface ~= nil and 1 or 0)
 			if Item_2.BottomSurface ~= nil then
 				-- Allocate BLOCK: 1 bytes
 				local BLOCK_START = Allocate(1)
 				buffer.writeu8(SendBuffer, BLOCK_START + 0, Item_2.BottomSurface)
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_22 = ARRAY_START_2
+			local OPERATION_OFFSET_23 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_22, Item_2.Textures ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_23, Item_2.Textures ~= nil and 1 or 0)
 			if Item_2.Textures ~= nil then
 				-- Allocate BLOCK: 2 bytes
 				local BLOCK_START = Allocate(2)
@@ -2179,9 +2192,9 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 				-- END ARRAY
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_23 = ARRAY_START_2
+			local OPERATION_OFFSET_24 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_23, Item_2.Lights ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_24, Item_2.Lights ~= nil and 1 or 0)
 			if Item_2.Lights ~= nil then
 				-- Allocate BLOCK: 2 bytes
 				local BLOCK_START = Allocate(2)
@@ -2259,9 +2272,9 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 				-- END ARRAY
 			end
 			-- Allocate 1
-			local OPERATION_OFFSET_24 = ARRAY_START_2
+			local OPERATION_OFFSET_25 = ARRAY_START_2
 			ARRAY_START_2 += 1
-			buffer.writeu8(SendBuffer, OPERATION_OFFSET_24, Item_2.Decals ~= nil and 1 or 0)
+			buffer.writeu8(SendBuffer, OPERATION_OFFSET_25, Item_2.Decals ~= nil and 1 or 0)
 			if Item_2.Decals ~= nil then
 				-- Allocate BLOCK: 2 bytes
 				local BLOCK_START = Allocate(2)
@@ -2360,7 +2373,7 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 				-- END ARRAY
 			end
 			-- Allocate 2
-			local OPERATION_OFFSET_25 = ARRAY_START_2
+			local OPERATION_OFFSET_26 = ARRAY_START_2
 			ARRAY_START_2 += 2
 			local Elements_3 = 0
 			for Key_3, Element_3 in Item_2.Attributes do
@@ -2372,12 +2385,12 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 				buffer.writestring(SendBuffer, SendOffset, Key_3, Length)
 				table.insert(SendInstances, if Element_3 == nil then Null else Element_3)
 			end
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_25, Elements_3)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_26, Elements_3)
 			-- START ARRAY
 			-- Allocate 2
-			local OPERATION_OFFSET_26 = ARRAY_START_2
+			local OPERATION_OFFSET_27 = ARRAY_START_2
 			ARRAY_START_2 += 2
-			buffer.writeu16(SendBuffer, OPERATION_OFFSET_26, #Item_2.Tags)
+			buffer.writeu16(SendBuffer, OPERATION_OFFSET_27, #Item_2.Tags)
 				-- Allocate BLOCK: 2 bytes
 			local ARRAY_START_3 = Allocate(2 * #Item_2.Tags)
 			for Index = 1, #Item_2.Tags do
@@ -2546,49 +2559,51 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			buffer.writestring(SendBuffer, SendOffset, Element_1.CollisionGroup, Length)
 		end
 		local OFFSET_17 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.LeftSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.CanCollide and 1 or 0)
+		local OFFSET_18 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.LeftSurface ~= nil and 1 or 0)
 		if Element_1.LeftSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.LeftSurface)
 		end
-		local OFFSET_18 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.RightSurface ~= nil and 1 or 0)
+		local OFFSET_19 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.RightSurface ~= nil and 1 or 0)
 		if Element_1.RightSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.RightSurface)
 		end
-		local OFFSET_19 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.FrontSurface ~= nil and 1 or 0)
+		local OFFSET_20 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.FrontSurface ~= nil and 1 or 0)
 		if Element_1.FrontSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.FrontSurface)
 		end
-		local OFFSET_20 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.BackSurface ~= nil and 1 or 0)
+		local OFFSET_21 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.BackSurface ~= nil and 1 or 0)
 		if Element_1.BackSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BackSurface)
 		end
-		local OFFSET_21 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.TopSurface ~= nil and 1 or 0)
+		local OFFSET_22 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.TopSurface ~= nil and 1 or 0)
 		if Element_1.TopSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.TopSurface)
 		end
-		local OFFSET_22 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.BottomSurface ~= nil and 1 or 0)
+		local OFFSET_23 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.BottomSurface ~= nil and 1 or 0)
 		if Element_1.BottomSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BottomSurface)
 		end
-		local OFFSET_23 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.Textures ~= nil and 1 or 0)
+		local OFFSET_24 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Textures ~= nil and 1 or 0)
 		if Element_1.Textures ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -2722,8 +2737,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			end
 			-- END ARRAY
 		end
-		local OFFSET_24 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Lights ~= nil and 1 or 0)
+		local OFFSET_25 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Lights ~= nil and 1 or 0)
 		if Element_1.Lights ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -2800,8 +2815,8 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			end
 			-- END ARRAY
 		end
-		local OFFSET_25 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Decals ~= nil and 1 or 0)
+		local OFFSET_26 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_26, Element_1.Decals ~= nil and 1 or 0)
 		if Element_1.Decals ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -2899,7 +2914,7 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			end
 			-- END ARRAY
 		end
-		local OFFSET_26 = Allocate(2)
+		local OFFSET_27 = Allocate(2)
 		local Elements_2 = 0
 		for Key_2, Element_2 in Element_1.Attributes do
 			Elements_2 += 1
@@ -2910,10 +2925,10 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
 			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
 		end
-		buffer.writeu16(SendBuffer, OFFSET_26, Elements_2)
+		buffer.writeu16(SendBuffer, OFFSET_27, Elements_2)
 		-- START ARRAY
-		local OFFSET_27 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_27, #Element_1.Tags)
+		local OFFSET_28 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_28, #Element_1.Tags)
 			-- Allocate BLOCK: 2 bytes
 		local ARRAY_START_2 = Allocate(2 * #Element_1.Tags)
 		for Index = 1, #Element_1.Tags do
@@ -2932,9 +2947,9 @@ local function WriteEVENT_ReplicateState(Value1: {[string]: { CFrame: CFrame, Si
 	buffer.writeu16(SendBuffer, BLOCK_START + 13, Value7)
 end
 
-local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
-	-- Allocate BLOCK: 83 bytes
-	local BLOCK_START = Allocate(83)
+local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, ManualVoxelInstantiation: boolean?, OnVoxelDestruct: string?, OnDestructCompleted: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+	-- Allocate BLOCK: 85 bytes
+	local BLOCK_START = Allocate(85)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 8)
 	local Length = #Value1
 	buffer.writeu16(SendBuffer, BLOCK_START + 1, Length)
@@ -3010,7 +3025,13 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 		local BLOCK_START = Allocate(1)
 		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value2.SkipEncapsulatedVoxels and 1 or 0)
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 79, Value2.OnVoxelDestruct ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 79, Value2.ManualVoxelInstantiation ~= nil and 1 or 0)
+	if Value2.ManualVoxelInstantiation ~= nil then
+		-- Allocate BLOCK: 1 bytes
+		local BLOCK_START = Allocate(1)
+		buffer.writeu8(SendBuffer, BLOCK_START + 0, Value2.ManualVoxelInstantiation and 1 or 0)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 80, Value2.OnVoxelDestruct ~= nil and 1 or 0)
 	if Value2.OnVoxelDestruct ~= nil then
 		-- Allocate BLOCK: 2 bytes
 		local BLOCK_START = Allocate(2)
@@ -3019,7 +3040,16 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 		Allocate(Length)
 		buffer.writestring(SendBuffer, SendOffset, Value2.OnVoxelDestruct, Length)
 	end
-	buffer.writeu8(SendBuffer, BLOCK_START + 80, Value2.UserData ~= nil and 1 or 0)
+	buffer.writeu8(SendBuffer, BLOCK_START + 81, Value2.OnDestructCompleted ~= nil and 1 or 0)
+	if Value2.OnDestructCompleted ~= nil then
+		-- Allocate BLOCK: 2 bytes
+		local BLOCK_START = Allocate(2)
+		local Length = #Value2.OnDestructCompleted
+		buffer.writeu16(SendBuffer, BLOCK_START + 0, Length)
+		Allocate(Length)
+		buffer.writestring(SendBuffer, SendOffset, Value2.OnDestructCompleted, Length)
+	end
+	buffer.writeu8(SendBuffer, BLOCK_START + 82, Value2.UserData ~= nil and 1 or 0)
 	if Value2.UserData ~= nil then
 		table.insert(SendInstances, if Value2.UserData == nil then Null else Value2.UserData)
 	end
@@ -3147,49 +3177,51 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 			buffer.writestring(SendBuffer, SendOffset, Element_1.CollisionGroup, Length)
 		end
 		local OFFSET_17 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.LeftSurface ~= nil and 1 or 0)
+		buffer.writeu8(SendBuffer, OFFSET_17, Element_1.CanCollide and 1 or 0)
+		local OFFSET_18 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.LeftSurface ~= nil and 1 or 0)
 		if Element_1.LeftSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.LeftSurface)
 		end
-		local OFFSET_18 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_18, Element_1.RightSurface ~= nil and 1 or 0)
+		local OFFSET_19 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.RightSurface ~= nil and 1 or 0)
 		if Element_1.RightSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.RightSurface)
 		end
-		local OFFSET_19 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_19, Element_1.FrontSurface ~= nil and 1 or 0)
+		local OFFSET_20 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.FrontSurface ~= nil and 1 or 0)
 		if Element_1.FrontSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.FrontSurface)
 		end
-		local OFFSET_20 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_20, Element_1.BackSurface ~= nil and 1 or 0)
+		local OFFSET_21 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.BackSurface ~= nil and 1 or 0)
 		if Element_1.BackSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BackSurface)
 		end
-		local OFFSET_21 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_21, Element_1.TopSurface ~= nil and 1 or 0)
+		local OFFSET_22 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.TopSurface ~= nil and 1 or 0)
 		if Element_1.TopSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.TopSurface)
 		end
-		local OFFSET_22 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_22, Element_1.BottomSurface ~= nil and 1 or 0)
+		local OFFSET_23 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.BottomSurface ~= nil and 1 or 0)
 		if Element_1.BottomSurface ~= nil then
 			-- Allocate BLOCK: 1 bytes
 			local BLOCK_START = Allocate(1)
 			buffer.writeu8(SendBuffer, BLOCK_START + 0, Element_1.BottomSurface)
 		end
-		local OFFSET_23 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_23, Element_1.Textures ~= nil and 1 or 0)
+		local OFFSET_24 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Textures ~= nil and 1 or 0)
 		if Element_1.Textures ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -3323,8 +3355,8 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 			end
 			-- END ARRAY
 		end
-		local OFFSET_24 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_24, Element_1.Lights ~= nil and 1 or 0)
+		local OFFSET_25 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Lights ~= nil and 1 or 0)
 		if Element_1.Lights ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -3401,8 +3433,8 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 			end
 			-- END ARRAY
 		end
-		local OFFSET_25 = Allocate(1)
-		buffer.writeu8(SendBuffer, OFFSET_25, Element_1.Decals ~= nil and 1 or 0)
+		local OFFSET_26 = Allocate(1)
+		buffer.writeu8(SendBuffer, OFFSET_26, Element_1.Decals ~= nil and 1 or 0)
 		if Element_1.Decals ~= nil then
 			-- Allocate BLOCK: 2 bytes
 			local BLOCK_START = Allocate(2)
@@ -3500,7 +3532,7 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 			end
 			-- END ARRAY
 		end
-		local OFFSET_26 = Allocate(2)
+		local OFFSET_27 = Allocate(2)
 		local Elements_2 = 0
 		for Key_2, Element_2 in Element_1.Attributes do
 			Elements_2 += 1
@@ -3511,10 +3543,10 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 			buffer.writestring(SendBuffer, SendOffset, Key_2, Length)
 			table.insert(SendInstances, if Element_2 == nil then Null else Element_2)
 		end
-		buffer.writeu16(SendBuffer, OFFSET_26, Elements_2)
+		buffer.writeu16(SendBuffer, OFFSET_27, Elements_2)
 		-- START ARRAY
-		local OFFSET_27 = Allocate(2)
-		buffer.writeu16(SendBuffer, OFFSET_27, #Element_1.Tags)
+		local OFFSET_28 = Allocate(2)
+		buffer.writeu16(SendBuffer, OFFSET_28, #Element_1.Tags)
 			-- Allocate BLOCK: 2 bytes
 		local ARRAY_START_2 = Allocate(2 * #Element_1.Tags)
 		for Index = 1, #Element_1.Tags do
@@ -3529,7 +3561,7 @@ local function WriteEVENT_ReplicateDestruction(Value1: string, Value2: { ID: str
 		end
 		-- END ARRAY
 	end
-	buffer.writeu16(SendBuffer, BLOCK_START + 81, Elements_1)
+	buffer.writeu16(SendBuffer, BLOCK_START + 83, Elements_1)
 end
 
 local function ReadEVENT_ClientInitComplete(): (nil)
@@ -3871,14 +3903,14 @@ local Returns = table.freeze({
 		end,
 	},
 	CreatePuppets = {
-		Fire = function(Player: Player, Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
+		Fire = function(Player: Player, Value1: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }, Value2: number): ()
 			Load(PlayersMap[Player])
-			WriteEVENT_CreatePuppets(Value)
+			WriteEVENT_CreatePuppets(Value1, Value2)
 			PlayersMap[Player] = Save()
 		end,
-		FireAll = function(Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
+		FireAll = function(Value1: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }, Value2: number): ()
 			Load()
-			WriteEVENT_CreatePuppets(Value)
+			WriteEVENT_CreatePuppets(Value1, Value2)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 			for _, Player in Players:GetPlayers() do
 				Load(PlayersMap[Player])
@@ -3888,9 +3920,9 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireList = function(List: {Player}, Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
+		FireList = function(List: {Player}, Value1: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }, Value2: number): ()
 			Load()
-			WriteEVENT_CreatePuppets(Value)
+			WriteEVENT_CreatePuppets(Value1, Value2)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 			for _, Player in List do
 				Load(PlayersMap[Player])
@@ -3900,9 +3932,9 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireExcept = function(Except: Player, Value: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }): ()
+		FireExcept = function(Except: Player, Value1: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }, Value2: number): ()
 			Load()
-			WriteEVENT_CreatePuppets(Value)
+			WriteEVENT_CreatePuppets(Value1, Value2)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
 			for _, Player in Players:GetPlayers() do
 				if Player == Except then
@@ -4015,12 +4047,12 @@ local Returns = table.freeze({
 		end
 	},
 	CreateDirtyGroupsFromServer = {
-		Fire = function(Player: Player, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		Fire = function(Player: Player, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load(PlayersMap[Player])
 			WriteEVENT_CreateDirtyGroupsFromServer(Value)
 			PlayersMap[Player] = Save()
 		end,
-		FireAll = function(Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireAll = function(Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_CreateDirtyGroupsFromServer(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4032,7 +4064,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireList = function(List: {Player}, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireList = function(List: {Player}, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_CreateDirtyGroupsFromServer(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4044,7 +4076,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireExcept = function(Except: Player, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireExcept = function(Except: Player, Value: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_CreateDirtyGroupsFromServer(Value)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4061,12 +4093,12 @@ local Returns = table.freeze({
 		end,
 	},
 	ReplicateState = {
-		Fire = function(Player: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
+		Fire = function(Player: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 			Load(PlayersMap[Player])
 			WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7)
 			PlayersMap[Player] = Save()
 		end,
-		FireAll = function(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
+		FireAll = function(Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 			Load()
 			WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4078,7 +4110,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireList = function(List: {Player}, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
+		FireList = function(List: {Player}, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 			Load()
 			WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4090,7 +4122,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireExcept = function(Except: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
+		FireExcept = function(Except: Player, Value1: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value2: {[string]: { { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } } }}, Value3: {[string]: boolean}, Value4: {[string]: number}, Value5: {[string]: number}, Value6: {[number]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}, Value7: number): ()
 			Load()
 			WriteEVENT_ReplicateState(Value1, Value2, Value3, Value4, Value5, Value6, Value7)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4107,12 +4139,12 @@ local Returns = table.freeze({
 		end,
 	},
 	ReplicateDestruction = {
-		Fire = function(Player: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		Fire = function(Player: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, ManualVoxelInstantiation: boolean?, OnVoxelDestruct: string?, OnDestructCompleted: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load(PlayersMap[Player])
 			WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 			PlayersMap[Player] = Save()
 		end,
-		FireAll = function(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireAll = function(Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, ManualVoxelInstantiation: boolean?, OnVoxelDestruct: string?, OnDestructCompleted: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4124,7 +4156,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireList = function(List: {Player}, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireList = function(List: {Player}, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, ManualVoxelInstantiation: boolean?, OnVoxelDestruct: string?, OnDestructCompleted: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
@@ -4136,7 +4168,7 @@ local Returns = table.freeze({
 				PlayersMap[Player] = Save()
 			end
 		end,
-		FireExcept = function(Except: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, OnVoxelDestruct: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
+		FireExcept = function(Except: Player, Value1: string, Value2: { ID: string, CuttingPart: { CFrame: CFrame, Size: Vector3, Shape: number }, WaitForClientTimeout: number?, FilterTagged: { string }?, GridSize: number?, CleanupDelay: number?, SkipWalls: boolean?, SkipFloors: boolean?, SkipEncapsulatedVoxels: boolean?, ManualVoxelInstantiation: boolean?, OnVoxelDestruct: string?, OnDestructCompleted: string?, UserData: any? }, Value3: {[string]: { CFrame: CFrame, Size: Vector3, Anchored: boolean, Color: Color3?, Material: number?, Transparency: number?, Reflectance: number?, MaterialVariant: string?, CollisionGroup: string?, CanCollide: boolean, LeftSurface: number?, RightSurface: number?, FrontSurface: number?, BackSurface: number?, TopSurface: number?, BottomSurface: number?, Textures: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number?, OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } }?, Lights: { { ClassName: string, Brightness: number?, Color: Color3?, Shadows: boolean?, Range: number?, Angle: number?, Face: number? } }?, Decals: { { Color3: Color3?, ColorMap: string?, Transparency: number?, UVOffset: { number }?, UVScale: { number }?, ZIndex: number?, Face: number? } }?, Attributes: {[string]: any}, Tags: { string } }}): ()
 			Load()
 			WriteEVENT_ReplicateDestruction(Value1, Value2, Value3)
 			local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances

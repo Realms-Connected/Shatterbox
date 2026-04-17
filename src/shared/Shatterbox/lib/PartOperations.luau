@@ -104,6 +104,7 @@ local function PartFromTemplate(template, cframe, CachedParts)
 	prop = template.Size
     if prop ~= part.Size then part.Size = prop end
 
+	--
 	--part.Color = Color3.fromHSV(math.random(), 1, 1)
 	prop = template.Color
     if prop ~= part.Color then part.Color = prop end
@@ -119,6 +120,8 @@ local function PartFromTemplate(template, cframe, CachedParts)
 
 	prop = template.CollisionGroup
     if prop ~= part.CollisionGroup then part.CollisionGroup = prop end
+	prop = template.CanCollide
+    if prop ~= part.CanCollide then part.CanCollide = prop end
 
 	-- copy surface property values
 	prop = template.RightSurface
@@ -133,6 +136,7 @@ local function PartFromTemplate(template, cframe, CachedParts)
     if prop ~= part.TopSurface then part.TopSurface = prop end
 	prop = template.BottomSurface
     if prop ~= part.BottomSurface then part.BottomSurface = prop end
+	--]]
 
 	-- copy tags
 	for _, tag in ipairs(template:GetTags()) do part:AddTag(tag) end
@@ -143,10 +147,12 @@ local function PartFromTemplate(template, cframe, CachedParts)
 		part:SetAttribute(k, v)
 	end
 
+	--
 	-- copy textures
 	for _, child in ipairs(template:GetChildren()) do
 		if child:IsA("Texture") then child:Clone().Parent = part end
 	end
+	--]]
 
 	--debug.profileend()
 
@@ -178,6 +184,8 @@ local function DeserializedPartInstance(p, CachedParts)
 
 	prop = p.Size
 	if prop and part.Size ~= prop then part.Size = prop end
+
+	--
 	--part.Color = Color3.fromHSV(math.random(), 1, 1)
 	prop = p.Color
     if prop and part.Color ~= prop then part.Color = prop end
@@ -191,6 +199,8 @@ local function DeserializedPartInstance(p, CachedParts)
     if prop and part.MaterialVariant ~= prop then part.MaterialVariant = prop end
 	prop = p.CollisionGroup
     if prop and part.CollisionGroup ~= prop then part.CollisionGroup = prop end
+	prop = p.CanCollide
+    if part.CanCollide ~= prop then part.CanCollide = prop end
 
 	-- deserialize surface property values
 	prop = p.RightSurface
@@ -205,6 +215,7 @@ local function DeserializedPartInstance(p, CachedParts)
     if prop and part.TopSurface.Value ~= prop then part.TopSurface = Enum.SurfaceType:FromValue(prop) end
 	prop = p.BottomSurface
     if prop and part.BottomSurface.Value ~= prop then part.BottomSurface = Enum.SurfaceType:FromValue(prop) end
+	--]]
 
 	-- deserialize tags
 	for _, tag in ipairs(p.Tags) do part:AddTag(tag) end
@@ -212,6 +223,7 @@ local function DeserializedPartInstance(p, CachedParts)
 	-- deserialize attributes
 	for k, v in pairs(p.Attributes) do part:SetAttribute(k, v) end
 
+	--
 	-- deserialize decals
 	if p.Decals then
 		for _, serialDecal in ipairs(p.Decals) do
@@ -260,6 +272,7 @@ local function DeserializedPartInstance(p, CachedParts)
 			light.Parent = part
 		end
 	end
+	--]]
 
 	return part
 end
@@ -287,6 +300,7 @@ local function SerializedPartInstance(p, ignoreWorldState)
 	serial.Material = p.Material.Value
 	serial.MaterialVariant = p.MaterialVariant
 	serial.CollisionGroup = p.CollisionGroup
+	serial.CanCollide = p.CanCollide
 
 	serial.RightSurface = p.RightSurface.Value
 	serial.LeftSurface = p.LeftSurface.Value

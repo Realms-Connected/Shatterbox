@@ -18,9 +18,9 @@ export type DestroyedVoxelInfo = {
 	UserData : {any}
 }
 
-export type OnDestructCompleted = (DestroyedVoxelCount : number, AffectedDirtyGroupIDs : { [string] : boolean }) -> ()
+export type OnDestructCompleted = (DestroyedVoxelCount : number, AffectedDirtyGroupIDs : { [string] : boolean }, DestructionParameters : DestructionParams) -> ()
 
-export type OnVoxelDestruct = (voxel : Part, info : DestroyedVoxelInfo) -> ()
+export type OnVoxelDestruct = (voxel : Part | ImaginaryVoxel, info : DestroyedVoxelInfo) -> ()
 
 export type ImaginaryBox = WorldInfo & {
 
@@ -45,6 +45,8 @@ type SharedDestructionParams = {
 }
 
 type UsesOnVoxelDestruct = {
+	ManualVoxelInstantiation : boolean?,
+
 	OnVoxelDestruct : string?,
 	DestructParameters : { any },
 

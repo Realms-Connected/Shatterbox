@@ -55,6 +55,7 @@ struct PartProperties {
 	Reflectance : f16?,
 	MaterialVariant : string?,
 	CollisionGroup : string?,
+	CanCollide : boolean,
 
 	LeftSurface : u8(0..10)?,
 	RightSurface : u8(0..10)?,
@@ -104,7 +105,11 @@ struct DestructionParamsType {
 	SkipFloors : boolean?,
 	SkipEncapsulatedVoxels : boolean?,
 
+	ManualVoxelInstantiation : boolean?,
+
 	OnVoxelDestruct : string?,
+	OnDestructCompleted : string?,
+
 	UserData : unknown?
 }
 
@@ -141,7 +146,7 @@ event CreatePuppets {
 	From: Server,
 	Type: Reliable,
 	Call: ManyAsync,
-	Data: PartInstance[]
+	Data: (PartInstance[], u16)
 }
 
 event ReplicatePuppetStates {

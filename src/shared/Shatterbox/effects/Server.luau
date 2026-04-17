@@ -6,10 +6,7 @@ local Shatterbox
 local Types = require(script.Parent.Parent:WaitForChild("Types"))
 
 local ServerEffects = {} :: { [string] : Types.OnVoxelDestruct }
-
--- Do not use this function, it just lets you use the Shatterbox functions in this module (avoiding a cyclic dependancy)
-function ServerEffects:SetReference(shatterbox) Shatterbox = shatterbox end
-
+local DestructCompleted = {} :: { [string] : Types.OnDestructCompleted }
 
 
 
@@ -22,9 +19,6 @@ ServerEffects.EffectName = function(voxel, info)
 end
 
 ]]
-
-
-
 
 
 
@@ -71,10 +65,6 @@ end
 
 
 
-
-
-
-
 -- An example effect that attempts to re-create the M1 destructions from JJS.
 -- Debris is tweened by clients, having the CFrames replicateed from the server.
 -- Only non-floors turn into debris (a floor has a vertical normal when casting toward it from the cuttingPart).
@@ -115,4 +105,53 @@ end
 
 
 
-return ServerEffects
+
+
+-- Also define your server side OnDestructCompleted callbacks here. This works the same way as OnVoxelDestruct.
+--[[
+
+DestructCompleted.CompletedName = function(voxelCount, affectedIDs, destructionParameters)
+
+
+end
+
+]]
+
+
+-- An example OnDestructCompleted callback that returns all of the materials this destruction encountered as a map {[Enum.Material] : boolean}
+DestructCompleted.GetMaterialsMap = function(voxelCount : number, affectedIDs : {[string] : boolean}, destructionParameters : Types.DestructionParams)
+    local materialsMap = {}
+    for DirtyGroupID in pairs(affectedIDs) do
+        local OriginalPart = Shatterbox.GetOriginalPart(DirtyGroupID)
+        materialsMap[OriginalPart.Material] = true
+    end
+    return materialsMap
+end
+
+
+
+-- An example OnDestructCompleted callback that prints out the names of every material this destruction encountered. It uses Shatterbox.OnVoxelDestruct to extend the existing callback "GetMaterialsMap"
+DestructCompleted.ExtendingACallback = function(voxelCount, affectedIDs, destructionParams)
+	local destroyedMaterials = Shatterbox.OnDestructCompleted("GetMaterialsMap", voxelCount, affectedIDs, destructionParams)
+	for material in pairs(destroyedMaterials) do
+		print(material.Name)
+	end
+end
+
+
+
+
+
+
+
+
+
+local ServerSideCallbacks = {}
+
+-- Do not use this function, it just lets you use the Shatterbox functions in this module (avoiding a cyclic dependancy)
+function ServerSideCallbacks:SetReference(shatterbox) Shatterbox = shatterbox end
+
+ServerSideCallbacks.OnVoxelDestruct = ServerEffects
+ServerSideCallbacks.OnDestructCompleted = DestructCompleted
+
+return ServerSideCallbacks

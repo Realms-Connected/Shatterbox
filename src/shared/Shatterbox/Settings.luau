@@ -105,6 +105,15 @@ Settings.NonDivisibleInteraction = "FALL" :: "FALL"|"DESTROY"|"NONE" -- What hap
 Settings.UseSmoothCleanup = true
 
 --[=[
+	If true, the smooth cleanup of a part will be blocked while the HumanoidRootPart of any Player is inside of the part.
+
+	@prop BlockCleanupWhileCharacterInside boolean
+	@within Settings
+	@tag SmoothCleanup
+]=]
+Settings.BlockCleanupWhileCharacterInside = true
+
+--[=[
 	The default smooth cleanup delay if none is provided.
 
 	:::tip
