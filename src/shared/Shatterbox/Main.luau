@@ -2335,7 +2335,7 @@ end
 	Use this to obtain information such as the materials this destruction encountered.
 
 	```lua
-	hb.OnDestructCompleted = function(count, affectedIDs)
+	hb.OnDestructCompleted = function(count, affectedIDs, destructionParameters)
 		local materials = {}
 
 		for DirtyGroupID in pairs(affectedIDs) do
@@ -2349,7 +2349,7 @@ end
 	end
 	```
 
-	@type OnDestructCompleted (voxelCount : number, affectedIDs : { [string] : boolean }, destructionParameters : DestructionParameters) -> ()
+	@type OnDestructCompletedType (voxelCount : number, affectedIDs : { [string] : boolean }, destructionParameters : DestructionParameters) -> ()
 	@within Shatterbox
 ]=]
 
@@ -3177,7 +3177,7 @@ end
 	:::
 
 	@param name string
-	@param callback OnDestructCompleted
+	@param callback OnDestructCompletedType
 ]=]
 function Shatterbox.RegisterOnDestructCompleted(name : string, callback : Types.OnDestructCompleted)
 	assert(typeof(name) == "string", "You must register the OnDestructCompleted callback with a string as the name")
@@ -3227,7 +3227,7 @@ Shatterbox.OnVoxelDestruct = HandleVoxelDestruction
 
 
 --[=[
-	A function to manually call a registered OnDestructCompleted effect.
+	A function to manually call a registered OnDestructCompleted callback.
 
 	:::tip
 	This can be used as a way to constructively build on top of any existing effects, saving you time.
