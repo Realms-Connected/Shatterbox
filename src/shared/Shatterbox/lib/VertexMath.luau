@@ -206,12 +206,16 @@ local function PartContainsAllVerts(part : Part, verts : {Vector3})
 	local partSize = part.Size
 	local partCFrame = part.CFrame
 
+    local intersected = false
 	for _, vert in ipairs(verts) do
-		if PartContainsPoint(partCFrame, partSize, vert) then continue end
-		return false
+		if PartContainsPoint(partCFrame, partSize, vert) then
+            intersected = true
+            continue
+        end
+		return false, intersected
 	end
 
-	return true
+	return true, true
 end
 
 local function PartEncapsulatesBlockPart(part : Part, blockCFrame : CFrame, blockSize : Vector3)

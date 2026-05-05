@@ -1,5 +1,5 @@
-option ServerOutput = "./lib/Server.luau"
-option ClientOutput = "./lib/Client.luau"
+option ServerOutput = "./lib/Blink/Server.luau"
+option ClientOutput = "./lib/Blink/Client.luau"
 
 option ManualReplication = true
 
@@ -113,6 +113,11 @@ struct DestructionParamsType {
 	UserData : unknown?
 }
 
+struct DirtyGroupDataType {
+	OriginalPart : PartInstance,
+	GridLength : vector,
+	MaxGridLength : vector
+}
 
 
 
@@ -187,11 +192,9 @@ event ReplicateState {
 	Type: Reliable,
 	Call: ManyAsync,
 	Data: (
-			map{ [GUID]: PartInstance },
+			map{ [GUID]: DirtyGroupDataType },
 			map{ [GUID]: PartInstance[] },
 			map{ [GUID]: boolean },
-
-			map{ [GUID]: f32 },
 
 			map{ [GUID]: f32 },
 
@@ -204,7 +207,7 @@ event ReplicateDestruction {
 	From: Server,
 	Type: Reliable,
 	Call: ManyAsync,
-	Data: (string, DestructionParamsType, map{ [GUID]: PartInstance })
+	Data: (string, DestructionParamsType, map{ [GUID]: DirtyGroupDataType })
 }
 
 

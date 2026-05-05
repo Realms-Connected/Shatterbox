@@ -5,11 +5,14 @@
 
 local Settings = require(script.Parent.Parent:WaitForChild("Settings"))
 
-
-type PartType = {CFrame : CFrame, Size : Vector3}
+local Types = require(script.Parent.Parent:WaitForChild("Types"))
 
 
 local localAxisVectors = { X = "RightVector", Y = "UpVector", Z = "ZVector" }
+
+local splitInHalfVectors = { X = Vector3.new(0.5,1,1), Y = Vector3.new(1,0.5,1), Z = Vector3.new(1,1,0.5) }
+
+local axisNameArray = { "X", "Y", "Z" }
 
 local WHITE = Color3.new(1, 1, 1)
 
@@ -392,22 +395,14 @@ end
 
     \> Voxel count Z : number
 ]]
-local function GridInfo(PartCFrame : CFrame, PartSize : Vector3, GridSize : number)
-	local DIM = Vector3.one:Max(PartSize // GridSize)
-	local NVX, NVY, NVZ = DIM.X, DIM.Y, DIM.Z
+local function ExtentInfo(PartCFrame : CFrame, VoxelSize : Vector3, GridLength : number)
+	local lsx, lsy, lsz = PartCFrame.XVector*VoxelSize.X, PartCFrame.YVector*VoxelSize.Y, PartCFrame.ZVector*VoxelSize.Z
 
-	local VoxelSize = PartSize / DIM
-	local VSX, VSY, VSZ = VoxelSize.X, VoxelSize.Y, VoxelSize.Z
-
-	local lsx, lsy, lsz = PartCFrame.XVector*VSX, PartCFrame.YVector*VSY, PartCFrame.ZVector*VSZ
-
-	local ExtentOffset = 0.5*( lsx*(NVX - 1) + lsy*(NVY - 1) + lsz*(NVZ - 1) )
+	local ExtentOffset = 0.5*( lsx*(GridLength.X - 1) + lsy*(GridLength.Y - 1) + lsz*(GridLength.Z - 1) )
 
 	return (PartCFrame - ExtentOffset)--[[:Orthonormalize()]],
 		   (PartCFrame + ExtentOffset)--[[:Orthonormalize()]],
-		   VoxelSize,
-		   lsx, lsy, lsz,
-		   NVX, NVY, NVZ
+		   lsx, lsy, lsz
 end
 
 
@@ -419,28 +414,48 @@ end
 
     The returned table is created with proper allocation size using `table.create`
 ]]
-local function ImaginaryVoxelize(Part : PartType, GridSize : number?) : {PartType}
+--[[
+local function ImaginaryVoxelize(Part : Types.WorldInfo, VoxelSize : Vector3, GridLength : Vector3) : {Types.WorldInfo}
+	local lenX, lenY, lenZ = GridLength.X, GridLength.Y, GridLength.Z
 
-	GridSize = GridSize or Settings.DefaultGridSize
+	local O, _, lsx, lsy, lsz = ExtentInfo(Part.CFrame, VoxelSize, GridLength)
 
-    local count = Vector3.one:Max(Part.Size // GridSize)
-	if count.X*count.Y*count.Z == 1 then
-		return {Part}
+	local imaginaryParts, index = table.create(lenX*lenY*lenZ), 0
+
+	for X = 0, lenX - 1 do
+		local xPos = O + X*lsx
+		for Y = 0, lenY - 1 do
+			local yPos = xPos + Y*lsy
+			for Z = 0, lenZ - 1 do
+				index += 1
+				imaginaryParts[index] = {
+					CFrame = (yPos + Z*lsz)--[[:Orthonormalize(),
+					Size = VoxelSize
+				}
+			end
+		end
 	end
 
-	local O, _, S, lsx, lsy, lsz, NVX, NVY, NVZ = GridInfo(Part.CFrame, Part.Size, GridSize)
+	return imaginaryParts
+end
+--]]
 
-	local imaginaryParts, index = table.create(NVX*NVY*NVZ), 0
+local function ImaginaryVoxelize(Part : Types.WorldInfo, VoxelSize : Vector3, GridLength : Vector3) : {PartType}
+	local lenX, lenY, lenZ = GridLength.X, GridLength.Y, GridLength.Z
 
-	for X = 0, NVX - 1 do
+	local O, _, lsx, lsy, lsz = ExtentInfo(Part.CFrame, VoxelSize, GridLength)
+
+	local imaginaryParts, index = table.create(lenX*lenY*lenZ), 0
+
+	for X = 0, lenX - 1 do
 		local dx = X*lsx
-		for Y = 0, NVY - 1 do
+		for Y = 0, lenY - 1 do
 			local dy = Y*lsy
-			for Z = 0, NVZ - 1 do
+			for Z = 0, lenZ - 1 do
 				index += 1
 				imaginaryParts[index] = {
 					CFrame = (O + dx + dy + Z*lsz)--[[:Orthonormalize()]],
-					Size = S
+					Size = VoxelSize
 				}
 			end
 		end
@@ -452,6 +467,7 @@ end
 
 
 
+
 --[[
     Completely voxelizes a given part down to a specified GridSize, or uses the default GridSize specified in the Settings.
 
@@ -459,16 +475,11 @@ end
 
     Optimized by using math to fully subdivide a part before creating only the final voxels. However, it effectively has an O(N^3) runtime due to the nature of 3D grids.
 ]]
-local function Voxelize(Part : Part, GridSize : number?) : {Part}
+local function Voxelize(Part : Part, VoxelSize : Vector3, GridLength : Vector3) : {Part}
+	local NVX, NVY, NVZ = GridLength.X, GridLength.Y, GridLength.Z
+	if NVX*NVY*NVZ == 1 then return {Part} end
 
-    GridSize = GridSize or Settings.DefaultGridSize
-
-    local count = Vector3.one:Max(Part.Size // GridSize)
-	if count.X*count.Y*count.Z == 1 then
-		return {Part}
-	end
-
-    local O, _, S, lsx, lsy, lsz, NVX, NVY, NVZ = GridInfo(Part.CFrame, Part.Size, GridSize)
+	local O, _, lsx, lsy, lsz = ExtentInfo(Part.CFrame, VoxelSize, GridLength)
 
 	local createdParts, index = table.create(NVX*NVY*NVZ), 0
 
@@ -480,7 +491,7 @@ local function Voxelize(Part : Part, GridSize : number?) : {Part}
 				index += 1
 
                 local created = PartFromTemplate(Part, O + dx + dy + Z*lsz)
-                created.Size = S
+                created.Size = VoxelSize
                 created.Parent = Part.Parent
 
                 createdParts[index] = created
@@ -494,6 +505,9 @@ local function Voxelize(Part : Part, GridSize : number?) : {Part}
 end
 
 
+local EPSILON = 1e-3
+
+
 
 
 --[[ Modified Octree Subdivide
@@ -502,71 +516,92 @@ end
 
     Returns an array with the structure { {Size : Vector3, CFrame : CFrame} }
 
-    If possible, calculates the division of a part into 2, 4, or 8 pieces.
+    Calculates the division of a part into 2, 4, or 8 pieces along its longest axis in voxel coordinates.
 
-    Maintains grid structure for odd parity divisions.
+    Maintains grid structure according to the VoxelSize and GroupMinimumCorner supplied.
 ]]
-local function SubdivideOctree(Part : PartType, GridSize : number)
-	local PartSize = Part.Size
-	local Axis = {}
-
-    -- gather all valid subdivision axis
-	for axis in pairs(localAxisVectors) do
-		if PartSize[axis] * 0.5 < GridSize then continue end
-		table.insert(Axis, axis)
+local function SubdivideOctree(Part : Types.WorldInfo, PartGridLength : Vector3, VoxelSize : Vector3, GroupMinimumCornerPosition : Vector3, DirtyGroupID : string)
+	local Axis, i = table.create(3), 1
+	for _, axis in ipairs(axisNameArray) do
+		if PartGridLength[axis] == 1 then continue end
+		Axis[i] = axis
+		i += 1
 	end
 
-	if #Axis == 0 then return nil end
+	local PartCFrame = Part.CFrame
 
-	local createdParts = { { CFrame = Part.CFrame, Size = PartSize } }
+	local createdParts = { { CFrame = PartCFrame, Size = Part.Size } }
 	local tmpParts = {}
 
     -- Subdivide all createdParts along each valid axis, updating the createdParts array.
-	for _, axis in pairs(Axis) do
-		local ax, ay, az = axis == "X", axis == "Y", axis == "Z"
-		local l_axis = localAxisVectors[axis]
+	for _, axis in ipairs(Axis) do
+		local ax, ay = axis == "X", axis == "Y"
 
-		for _, part in pairs(createdParts) do
+		local worldAxisVector = (ax and PartCFrame.XVector) or (ay and PartCFrame.YVector) or PartCFrame.ZVector
+
+		for _, part in ipairs(createdParts) do
 			local size = part.Size
             local hs, cframe = size[axis] * 0.5, part.CFrame
-            local la = cframe[l_axis]
 
-            local numVoxels = size[axis] // GridSize
-            if numVoxels % 2 == 0 then
+			local centerOnAxis = worldAxisVector:Dot(cframe.Position - GroupMinimumCornerPosition)
 
-                local hla = la * 0.5 * hs
-                local ps = Vector3.new( (ax and hs or size.X), (ay and hs or size.Y), (az and hs or size.Z) )
-                table.insert(tmpParts, {
-                    CFrame = (cframe + hla)--[[:Orthonormalize()]],
-                    Size = ps
-                })
-                table.insert(tmpParts, {
-                    CFrame = (cframe - hla)--[[:Orthonormalize()]],
-                    Size = ps
-                })
-            else
-                local vs = size[axis] / numVoxels
-                local FHV, CHV = vs * math.floor(numVoxels * 0.5), vs * math.ceil(numVoxels * 0.5)
+			local gridStep : number = VoxelSize[axis]
+			local toSplitPoint = gridStep*math.round(centerOnAxis/gridStep) - centerOnAxis
 
-                local off = CHV * 0.5
-                table.insert(tmpParts, {
-                    CFrame = (cframe - off * la)--[[:Orthonormalize()]],
-                    Size = Vector3.new(
-                        ax and FHV or size.X,
-                        ay and FHV or size.Y,
-                        az and FHV or size.Z
-                    )
-                })
-                off = FHV * 0.5
-                table.insert(tmpParts, {
-                    CFrame = (cframe + off * la)--[[:Orthonormalize()]],
-                    Size = Vector3.new(
-                        ax and CHV or size.X,
-                        ay and CHV or size.Y,
-                        az and CHV or size.Z
-                    )
-                })
-            end
+			if math.abs(toSplitPoint) < EPSILON then
+				local newSize = size*splitInHalfVectors[axis]
+				local off = worldAxisVector*newSize[axis]*0.5
+				table.insert(tmpParts, {
+					CFrame = cframe - off,
+					Size = newSize,
+					DirtyGroupID = DirtyGroupID,
+					Verts = false,
+					isEdge = false
+				})
+				table.insert(tmpParts, {
+					CFrame = cframe + off,
+					Size = newSize,
+					DirtyGroupID = DirtyGroupID,
+					Verts = false,
+					isEdge = false
+				})
+				continue
+			end
+
+			local minSize = hs + toSplitPoint
+			local maxSize = hs - toSplitPoint
+
+			local splitPointCF = cframe + worldAxisVector*toSplitPoint
+			local splitWorldAxisVector = worldAxisVector*0.5
+
+			local minSizeVec, maxSizeVec
+			if ax then
+				local ySize, zSize = size.Y, size.Z
+				minSizeVec = Vector3.new(minSize, ySize, zSize)
+				maxSizeVec = Vector3.new(maxSize, ySize, zSize)
+			elseif ay then
+				local xSize, zSize = size.X, size.Z
+				minSizeVec = Vector3.new(xSize, minSize, zSize)
+				maxSizeVec = Vector3.new(xSize, maxSize, zSize)
+			else
+				local xSize, ySize = size.X, size.Y
+				minSizeVec = Vector3.new(xSize, ySize, minSize)
+				maxSizeVec = Vector3.new(xSize, ySize, maxSize)
+			end
+			table.insert(tmpParts, {
+				CFrame = splitPointCF - splitWorldAxisVector*minSize,
+				Size = minSizeVec,
+				DirtyGroupID = DirtyGroupID,
+				Verts = false,
+				isEdge = false
+			})
+			table.insert(tmpParts, {
+				CFrame = splitPointCF + splitWorldAxisVector*maxSize,
+				Size = maxSizeVec,
+				DirtyGroupID = DirtyGroupID,
+				Verts = false,
+				isEdge = false
+			})
 		end
 
 		createdParts = tmpParts
@@ -578,78 +613,89 @@ end
 
 
 
-
 --[[ Modified KD-tree Subdivide
 
     Does not mutate the supplied Part reference, which is meant to be an object with the structure {Size : Vector3, CFrame : CFrame}
 
     Returns an array with the structure { {Size : Vector3, CFrame : CFrame} }
 
-    If possible, calculates the division of a part into 2 pieces.
+    Calculates the division of a part into 2 pieces along its longest axis in voxel coordinates.
 
-    Maintains grid structure for odd parity divisions.
+    Maintains grid structure according to the VoxelSize and GroupMinimumCorner supplied.
 ]]
-local function SubdivideKD(Part : PartType, GridSize : number)
+local function SubdivideKD(Part : Types.WorldInfo, PartGridLength : Vector3, VoxelSize : Vector3, GroupMinimumCornerPosition : Vector3, DirtyGroupID : string)
+	local lenX, lenY, lenZ = PartGridLength.X, PartGridLength.Y, PartGridLength.Z
+	local maxSize = math.max(lenX, lenY, lenZ)
+	local axis = (lenX == maxSize and "X") or (lenY == maxSize and "Y") or "Z"
 	local PartSize = Part.Size
-	local axis, maxSize
 
-	for a in pairs(localAxisVectors) do
-		local PartSizeAxis = PartSize[a]
-		if PartSizeAxis * 0.5 < GridSize then continue end
-		if axis and maxSize > PartSizeAxis then continue end
-		axis, maxSize = a, PartSizeAxis
+	local PartCFrame = Part.CFrame
+	local worldAxisVector = (axis == "X" and PartCFrame.XVector) or (axis == "Y" and PartCFrame.YVector) or PartCFrame.ZVector
+
+	local centerOnAxis = worldAxisVector:Dot(PartCFrame.Position - GroupMinimumCornerPosition)
+
+	local gridStep : number = VoxelSize[axis]
+	local toSplitPoint = gridStep*math.round(centerOnAxis/gridStep) - centerOnAxis
+
+	local createdParts = table.create(2)
+
+	if math.abs(toSplitPoint) < EPSILON then
+		local newSize = PartSize*splitInHalfVectors[axis]
+		local off = worldAxisVector*newSize[axis]*0.5
+		createdParts[1] = {
+			CFrame = PartCFrame - off,
+			Size = newSize,
+			DirtyGroupID = DirtyGroupID,
+			Verts = false,
+			isEdge = false
+		}
+		createdParts[2] = {
+			CFrame = PartCFrame + off,
+			Size = newSize,
+			DirtyGroupID = DirtyGroupID,
+			Verts = false,
+			isEdge = false
+		}
+		return createdParts
 	end
+	maxSize = PartSize[axis] * 0.5
 
-    if not axis then return nil end
+	local minSize = maxSize + toSplitPoint
+	maxSize -= toSplitPoint
 
-    local hs = PartSize[axis] * 0.5
-    local cframe = Part.CFrame
+	local splitPointCF = PartCFrame + worldAxisVector*toSplitPoint
+	local splitWorldAxisVector = worldAxisVector*0.5
 
-    local numVoxels = PartSize[axis] // GridSize
-    if numVoxels % 2 == 0 then
-
-        local hla = cframe[localAxisVectors[axis]] * 0.5 * hs
-
-        local ps = Vector3.new(
-            axis == "X" and hs or PartSize.X,
-            axis == "Y" and hs or PartSize.Y,
-            axis == "Z" and hs or PartSize.Z
-        )
-
-        return { { CFrame = (cframe + hla)--[[:Orthonormalize()]], Size = ps }, { CFrame = (cframe - hla)--[[:Orthonormalize()]], Size = ps } }
-    else
-        local AX, AY, AZ = axis == "X", axis == "Y", axis == "Z"
-        local la = cframe[localAxisVectors[axis]]
-        local vs = PartSize[axis] / numVoxels
-
-        local createdParts = table.create(2)
-
-        local FHV, CHV = vs * math.floor(numVoxels * 0.5), vs * math.ceil(numVoxels * 0.5)
-
-        local off = CHV * 0.5
-        createdParts[1] = {
-            CFrame = (cframe - off * la)--[[:Orthonormalize()]],
-            Size = Vector3.new(
-                AX and FHV or PartSize.X,
-                AY and FHV or PartSize.Y,
-                AZ and FHV or PartSize.Z
-            )
-        }
-
-        off = FHV * 0.5
-        createdParts[2] = {
-            CFrame = (cframe + off * la)--[[:Orthonormalize()]],
-            Size = Vector3.new(
-                AX and CHV or PartSize.X,
-                AY and CHV or PartSize.Y,
-                AZ and CHV or PartSize.Z
-            )
-        }
-
-        return createdParts
-    end
+	local minSizeVec, maxSizeVec
+	if axis == "X" then
+		local ySize, zSize = PartSize.Y, PartSize.Z
+		minSizeVec = Vector3.new(minSize, ySize, zSize)
+		maxSizeVec = Vector3.new(maxSize, ySize, zSize)
+	elseif axis == "Y" then
+		local xSize, zSize = PartSize.X, PartSize.Z
+		minSizeVec = Vector3.new(xSize, minSize, zSize)
+		maxSizeVec = Vector3.new(xSize, maxSize, zSize)
+	else
+		local xSize, ySize = PartSize.X, PartSize.Y
+		minSizeVec = Vector3.new(xSize, ySize, minSize)
+		maxSizeVec = Vector3.new(xSize, ySize, maxSize)
+	end
+	createdParts[1] = {
+		CFrame = splitPointCF - splitWorldAxisVector*minSize,
+		Size = minSizeVec,
+		DirtyGroupID = DirtyGroupID,
+		Verts = false,
+		isEdge = false
+	}
+	createdParts[2] = {
+		CFrame = splitPointCF + splitWorldAxisVector*maxSize,
+		Size = maxSizeVec,
+		DirtyGroupID = DirtyGroupID,
+		Verts = false,
+		isEdge = false
+	}
+	return createdParts
 end
-
 
 
 
@@ -661,7 +707,7 @@ PartOperations.DeserializedPartInstance = DeserializedPartInstance
 
 PartOperations.SerializedPartInstance = SerializedPartInstance
 
-PartOperations.GridInfo = GridInfo
+PartOperations.ExtentInfo = ExtentInfo
 
 PartOperations.ImaginaryVoxelize = ImaginaryVoxelize
 
