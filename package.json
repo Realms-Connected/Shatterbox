@@ -1,0 +1,5 @@
+{
+  "name": "shatterbox",
+  "main": "init.luau",
+  "types": "index.d.ts"
+}
