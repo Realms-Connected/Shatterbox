@@ -80,13 +80,15 @@ interface Shatterbox
         SkipWalls?: boolean,
     ): LuaTuple<[ShatterImaginaryVoxel[], Part[]]>;
 
-    InstantiateImaginaryVoxel(this: void, voxel: ShatterImaginaryVoxel, doNotGiveDebrisTag?: boolean): Part;
+    InstantiateImaginaryVoxel(this: void, voxel: ShatterImaginaryVoxel, doNotGiveDebrisTag?: boolean): LuaTuple<[Part, Instance]>
 
     ResetArea(this: void, area: Part | ShatterWorldInfo): void;
     Reset(this: void, doNotRevertOwnership?: boolean, replicated?: boolean): void;
     ClearQueue(this: void): void;
 
     RegisterOnVoxelDestruct(this: void, name: string, callback: (voxel: Part, info: ShatterDestroyedVoxelInfo) => void): void;
+
+    RegisterClientImaginaryHandler(this: void, callback: ((voxels: ShatterImaginaryVoxel[], params: ShatterDestructionParams) => void) | undefined): void;
 
     GetOriginalPart(this: void, DirtyGroupID: string): Part | undefined;
 

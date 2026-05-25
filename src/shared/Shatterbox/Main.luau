@@ -113,6 +113,8 @@ local OnVoxelDestructRegistry = setmetatable({}, {
 	__index = function(tbl, k) return (k and rawget(tbl, k:lower())) end -- or rawget(tbl, "default") end
 }) :: { [string] : Types.OnVoxelDestruct }
 
+local ClientImaginaryHandler : ((voxels : {Types.ImaginaryVoxel}, params : Types.DestructionParams) -> ())? = nil
+
 local ClientEvents, ServerEvents, mapContainer
 if isServer then
 	ServerEvents = require(PathToServer).Shatterbox
@@ -1527,14 +1529,18 @@ local function ReplicateDestructionFromServer(destructionType, serialParams, ser
 
 	CreateSerialDirtyGroups(serialNewDirtyGroups)
 
-	while not clientInitComplete do RunService.Heartbeat:Wait() end
-
 	if destructionType == IMAGINARY then
 		destructionParams.SkipEncapsulatedVoxels = true
 		RunService.Heartbeat:Wait()
-		ImaginaryVoxels(destructionParams)
+		local clientVoxels = ImaginaryVoxels(destructionParams)
+		if ClientImaginaryHandler and clientVoxels and #clientVoxels > 0 then
+			ClientImaginaryHandler(clientVoxels, destructionParams)
+		end
+		return
 
 	elseif destructionType == NORMAL then
+		while not clientInitComplete do RunService.Heartbeat:Wait() end
+
 		local DestructionID = destructionParams.ID
 
 		OperationAffectedDirtyGroups[DestructionID] = affectedDirtyGroupIDs
@@ -2232,7 +2238,7 @@ function Shatterbox.ImaginaryVoxels(intersectingPart : Part | Model | Types.Worl
 	local destructibleParts, createdDirtyGroups, createdFallingGroups = GetDestructibleParts(params)
 	if #destructibleParts == 0 then return voxels, existingDebris end
 
-	if USE_CLIENT_SERVER and isServer then
+	if isServer then
 		ReplicateDestructionToClients(IMAGINARY, params, createdDirtyGroups)
 	end
 
@@ -2257,9 +2263,8 @@ function Shatterbox.InstantiateImaginaryVoxel(ImaginaryVoxel : Types.ImaginaryVo
 		members[voxel] = nil
 	end)
 
-	voxel.Parent = DirtyGroupData[DirtyGroupID].OriginalParent
-
-	return voxel
+	-- voxel.Parent = DirtyGroupData[DirtyGroupID].OriginalParent
+	return voxel, DirtyGroupData[DirtyGroupID].OriginalParent
 end
 
 
@@ -2590,6 +2595,11 @@ function Shatterbox.RegisterOnVoxelDestruct(name : string, callback : Types.OnVo
 	OnVoxelDestructRegistry[id] = callback
 end
 
+-- Registers a client-side handler that receives the imaginary voxel list produced by a server-initiated `Shatterbox.ImaginaryVoxels` after the cut is replicated. Use to spawn local visual debris without server-replicated physics.
+function Shatterbox.RegisterClientImaginaryHandler(callback : ((voxels : {Types.ImaginaryVoxel}, params : Types.DestructionParams) -> ())?)
+	ClientImaginaryHandler = callback
+end
+
 
 Shatterbox.Voxelize = Voxelize
 
@@ -2706,14 +2716,15 @@ if isServer then
 elseif isClient then
 
 	if USE_CLIENT_SERVER then
+		warn("[SHATTERBOX] INITIALIZING CLIENT...");
 		ClientEvents.ReplicateState.On(ReplicateStateFromServer)
-
-		ClientEvents.ReplicateDestruction.On(ReplicateDestructionFromServer)
-
-		ClientEvents.CreateDirtyGroupsFromServer.On(CreateSerialDirtyGroups)
 
 		ClientEvents.ClientInitComplete.Fire()
 	end
+
+	-- Imaginary-destruction replication is independent of USE_CLIENT_SERVER; the server always fires it so the client can spawn local visual debris via the ClientImaginaryHandler.
+	ClientEvents.ReplicateDestruction.On(ReplicateDestructionFromServer)
+	ClientEvents.CreateDirtyGroupsFromServer.On(CreateSerialDirtyGroups)
 
 	ClientEvents.SignalClearQueue.On(Shatterbox.ClearQueue)
 	ClientEvents.SignalReset.On(function(doNotRevertOwnership) Shatterbox.Reset(doNotRevertOwnership, true) end)
