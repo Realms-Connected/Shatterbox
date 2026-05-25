@@ -4,7 +4,7 @@ local Settings = {}
 
 -- These all-caps named settings cannot be changed at runtime. The rest are okay to do so.
 
-Settings.USE_CLIENT_SERVER = true -- Set this to false if you don't want to use client-server functionality (false = fully server side destructions)
+Settings.USE_CLIENT_SERVER = false -- Set this to false if you don't want to use client-server functionality (false = fully server side destructions)
 
 --Settings.USE_OBJECTCACHE = false -- whether or not to use ObjectCache (not fully implemented)
 --	Settings.CACHE_INITIAL_SIZE = 10000 -- The initial size of the part Caches
@@ -15,12 +15,13 @@ Settings.SkipInstanceCheck = function(i : Instance)
 
 	-- return true if you want to skip the instance "i"
 
+	
 	return false
 end
 
 
 
-Settings.NonDivisibleInteraction = "FALL" :: "FALL"|"DESTROY"|"NONE" -- What happens to destructible parts that cannot be divided by Shatterbox
+Settings.NonDivisibleInteraction = "NONE" :: "FALL"|"DESTROY"|"NONE" -- What happens to destructible parts that cannot be divided by Shatterbox
 
 
 
