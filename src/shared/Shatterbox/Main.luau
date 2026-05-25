@@ -278,6 +278,7 @@ local function InstantiatePart(DirtyGroupID, cframe, size)
 	if not USE_CLIENT_SERVER or not partIsDivisible then
 		part.Parent = dirtyGroupData.OriginalParent
 	else
+		warn("[SHATTERBOX] InstantiatePart - PARENTING TO...", mapContainer:GetFullName());
 		part.Parent = mapContainer
 	end
 
@@ -976,6 +977,7 @@ local function UndoDirtyGroup(DirtyGroupID : string)
 	if not USE_CLIENT_SERVER or not OriginalPart:IsA("Part") or OriginalPart.Shape ~= Enum.PartType.Block then
 		OriginalPart.Parent = groupData.OriginalParent
 	else
+		warn("[SHATTERBOX] UndoDirtyGroup - PARENTING TO...", mapContainer:GetFullName());
 		OriginalPart.Parent = mapContainer
 	end
 
@@ -996,6 +998,7 @@ local function PopulateDirtyGroup(Part : Part, DirtyGroupID : string?)
 	DirtyGroupMembers[DirtyGroupID] = {}
 
 	if USE_CLIENT_SERVER and Part:IsA("Part") and Part.Shape == Enum.PartType.Block then
+		warn("[SHATTERBOX] PopulateDirtyGroup - PARENTING TO...", mapContainer:GetFullName())
 		-- Inheritance of ancestor tags (hierarchy only changes with client server enabled)
 		for _, tag in ipairs(AncestorGroupTags(Part)) do Part:AddTag(tag) end
 		-- Put the part into the mapContainer (client side is "ClientMap" folder, server side is `workspace.CurrentCamera`)
@@ -1134,6 +1137,7 @@ local function GetDestructibleParts(destructionParams : Types.InternalImaginaryP
 	end
 
 	if USE_CLIENT_SERVER and not replicated and isClient then
+		warn("[SHATTERBOX] GetDestructibleParts - SENDING DIRTY GROUPS...");
 		local ToSendToServer = {}
 		for DirtyGroupID in pairs(createdDirtyGroups) do
 			local groupData = DirtyGroupData[DirtyGroupID]
@@ -1389,11 +1393,13 @@ end
 
 -- Uses the given callback from the OnVoxelDestruct registry to destroy the given voxel
 local function HandleVoxelDestruction(callbackName : string?, voxel : Part, info : Types.DestroyedVoxelInfo?)
+	
+    warn("[SHATTERBOX] traceback 0:", debug.traceback())
 	if not info then info = {} end
 
 	local s, e = pcall(OnVoxelDestructRegistry[callbackName], voxel, info)
 
-	if not s then warn("Voxel destruction failed: " .. e) end
+	if not s then warn("[SHATTERBOX] Voxel destruction failed: " .. e) end
 
 	if not info.IsAlreadyDebris then voxel:AddTag(DebrisTag) end
 end
@@ -2110,7 +2116,7 @@ function Shatterbox.Puppeteer(voxel : Part)
 
 	local s, e = pcall(voxel.SetNetworkOwner, voxel, nil)
 	if not s then
-		warn("Failed to set the network owner of the Puppet, is it welded to an anchored part?\n" .. e)
+		warn("[SHATTERBOX] Failed to set the network owner of the Puppet, is it welded to an anchored part?\n" .. e)
 	end
 
 	local noSleepCon : RBXScriptConnection
@@ -2215,6 +2221,7 @@ function Shatterbox.Destroy(intersectingPart : Part | Model | Types.WorldInfo | 
 		OperationBlacklistedVoxels[DestructionID] = {}
 
 		if USE_CLIENT_SERVER and isServer then
+			warn("[SHATTERBOX] Destroy - REPLICATING DESTRUCTION TO CLIENTS...")
 			ReplicateDestructionToClients(NORMAL, params, createdDirtyGroups)
 		end
 
@@ -2393,9 +2400,11 @@ function Shatterbox.Reset(doNotRevertOwnership : boolean?, replicated : boolean?
 	end
 
 	if doNotRevertOwnership and USE_CLIENT_SERVER then
+		
 		-- every operation is undone if the ownership is not meant to be reverted
 		for DirtyGroupID in pairs(DirtyGroupData) do UndoDirtyGroup(DirtyGroupID) end
 	else
+		warn("[SHATTERBOX] Reset - UNDOING DIRTY GROUP...")
 		for DirtyGroupID, groupData in pairs(DirtyGroupData) do
 			local OriginalPart = groupData.OriginalPart
 			if replicated then
@@ -2699,6 +2708,7 @@ RunService.Heartbeat:Connect(HeartbeatWorker)
 if isServer then
 
 	if USE_CLIENT_SERVER then
+		warn("[SHATTERBOX] INITIALIZING...");
 		ServerEvents.ClientInitComplete.On(ReplicateStateToPlayer)
 
 		ServerEvents.CreateDirtyGroupsFromClient.On(function(plr, DirtyGroups)

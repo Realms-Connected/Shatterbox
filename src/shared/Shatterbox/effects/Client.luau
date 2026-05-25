@@ -51,6 +51,7 @@ end
 -- An example effect that leaves rough edges around the destruction that are cleaned on smooth cleanup
 ClientEffects.Rough = function(voxel, info : Types.DestroyedVoxelInfo)
 
+    warn("[SHATTERBOX] traceback 1:", debug.traceback())
     if info.IsAlreadyDebris then -- the voxel is already debris
         if not info.IsEdge then voxel:Destroy() end -- fully contained debris is destroyed
         return
