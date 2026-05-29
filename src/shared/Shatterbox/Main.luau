@@ -2747,4 +2747,5 @@ elseif isClient then
 	ClientEvents.SignalPrintState.On(PrintState)
 end
 
+Shatterbox.MapContainer = mapContainer;
 return Shatterbox

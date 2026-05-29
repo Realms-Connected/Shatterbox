@@ -82,6 +82,8 @@ interface Shatterbox
 
     InstantiateImaginaryVoxel(this: void, voxel: ShatterImaginaryVoxel, doNotGiveDebrisTag?: boolean): LuaTuple<[Part, Instance]>
 
+    MapContainer?: Folder;
+
     ResetArea(this: void, area: Part | ShatterWorldInfo): void;
     Reset(this: void, doNotRevertOwnership?: boolean, replicated?: boolean): void;
     ClearQueue(this: void): void;
